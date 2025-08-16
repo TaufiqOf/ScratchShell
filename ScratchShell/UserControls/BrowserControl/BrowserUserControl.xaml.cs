@@ -54,7 +54,7 @@ namespace ScratchShell.UserControls.BrowserControl
                         SetMenuVisibility("Paste", true);
                         SetMenuVisibility("Separator", false);
                         SetMenuVisibility("Upload", true);
-                        SetMenuVisibility("Download", false);
+                        SetMenuVisibility("Download", true);
                         
                     }
                     else
