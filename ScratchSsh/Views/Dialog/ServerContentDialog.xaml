@@ -1,0 +1,99 @@
+﻿<ui:ContentDialog
+    x:Class="ScratchShell.View.Dialog.ServerContentDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ScratchShell.View.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Server"
+    d:DesignHeight="1000"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    CloseButtonText="Close"
+    PrimaryButtonText="Save"
+    mc:Ignorable="d">
+
+    <ui:ContentDialog.Resources>
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:ServerContentDialog}" />
+    </ui:ContentDialog.Resources>
+
+    <Grid Width="400">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel VerticalAlignment="Top">
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Server Name" />
+            <TextBox Text="{Binding Name, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Host" />
+            <TextBox Text="{Binding Host, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Port" />
+            <TextBox Text="{Binding Port, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Protocol" />
+            <ComboBox
+                Margin="0,5,0,0"
+                ItemsSource="{Binding ProtocolTypes}"
+                SelectedItem="{Binding ProtocolType, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Username" />
+            <TextBox Text="{Binding Username, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Password" />
+            <PasswordBox x:Name="PasswordInput" PasswordChanged="PasswordBox_PasswordChanged" />
+
+            <StackPanel
+                Margin="8"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding UseKeyFile, Mode=TwoWay}" />
+                <TextBlock VerticalAlignment="Center" Text="Use Key File" />
+            </StackPanel>
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Public Key File Path" />
+            <TextBox IsEnabled="{Binding UseKeyFile, Mode=TwoWay}" Text="{Binding PublicKeyFilePath, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Private Key File Path" />
+            <TextBox IsEnabled="{Binding UseKeyFile, Mode=TwoWay}" Text="{Binding PrivateKeyFilePath, Mode=TwoWay}" />
+
+            <TextBlock
+                Margin="0,10,0,0"
+                FontWeight="SemiBold"
+                Text="Key File Password" />
+            <PasswordBox
+                x:Name="KeyFilePasswordInput"
+                IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
+                PasswordChanged="KeyFilePasswordBox_PasswordChanged" />
+
+        </StackPanel>
+    </Grid>
+</ui:ContentDialog>

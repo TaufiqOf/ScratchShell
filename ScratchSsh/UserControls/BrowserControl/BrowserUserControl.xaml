@@ -1,0 +1,27 @@
+﻿<UserControl
+    x:Class="ScratchShell.UserControls.BrowserControl.BrowserUserControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <Grid>
+        <ui:ListView Name="BrowserList" MouseRightButtonUp="BrowserList_MouseRightButtonUp">
+            <ui:ListView.View>
+                <ui:GridView>
+                    <ui:GridViewColumn
+                        Width="300"
+                        DisplayMemberBinding="{Binding Name}"
+                        Header="Name" />
+                    <ui:GridViewColumn
+                        Width="100"
+                        DisplayMemberBinding="{Binding DisplayType}"
+                        Header="Type" />
+                    <ui:GridViewColumn
+                        Width="100"
+                        DisplayMemberBinding="{Binding SizeFormatted}"
+                        Header="Type" />
+                </ui:GridView>
+            </ui:ListView.View>
+        </ui:ListView>
+    </Grid>
+</UserControl>
