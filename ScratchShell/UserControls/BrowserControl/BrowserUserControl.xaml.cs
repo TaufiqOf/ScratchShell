@@ -46,6 +46,17 @@ namespace ScratchShell.UserControls.BrowserControl
 
                 if (depObj is ListViewItem listViewItem && listViewItem.DataContext is BrowserItem item)
                 {
+                    if(item.Name == "..")
+                    {
+                        SetMenuVisibility("Cut", false);
+                        SetMenuVisibility("Copy", false);
+                        SetMenuVisibility("Paste", false);
+                        SetMenuVisibility("Separator", false);
+                        SetMenuVisibility("Upload", false);
+                        SetMenuVisibility("Download", false);
+                        e.Handled = true;
+                        return;
+                    }
                     // Now you have the actual BrowserItem
                     if (item.IsFolder)
                     {
@@ -66,9 +77,6 @@ namespace ScratchShell.UserControls.BrowserControl
                         SetMenuVisibility("Upload", false);
                         SetMenuVisibility("Download", true);
                     }
-
-                    // Optional: select the item on right click
-                    listViewItem.IsSelected = true;
 
                     e.Handled = true;
                 }
@@ -119,10 +127,23 @@ namespace ScratchShell.UserControls.BrowserControl
 
         private void BrowserList_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (BrowserList.SelectedItem != null)
+            if (e.ChangedButton == MouseButton.Right)
             {
-                contextMenu.PlacementTarget = BrowserList;
-                contextMenu.IsOpen = true;
+                // Find the container that was clicked (ListViewItem / TreeViewItem / etc.)
+                var depObj = (DependencyObject)e.OriginalSource;
+                while (depObj != null && depObj is not ListViewItem)
+                {
+                    depObj = VisualTreeHelper.GetParent(depObj);
+                }
+
+                if (depObj is ListViewItem listViewItem && listViewItem.DataContext is BrowserItem item)
+                {
+                    if(item.Name != "..")
+                    {
+                        contextMenu.PlacementTarget = BrowserList;
+                        contextMenu.IsOpen = true;
+                    }
+                }
             }
         }
 

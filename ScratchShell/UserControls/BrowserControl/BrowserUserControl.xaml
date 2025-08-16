@@ -19,7 +19,7 @@
                     <ui:GridViewColumn
                         Width="100"
                         DisplayMemberBinding="{Binding SizeFormatted}"
-                        Header="Type" />
+                        Header="Size" />
                 </ui:GridView>
             </ui:ListView.View>
         </ui:ListView>
