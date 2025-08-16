@@ -8,8 +8,14 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ProgressBar x:Name="Progress" IsIndeterminate="False" />
         <local:TerminalUserControl
             x:Name="Terminal"
+            Grid.Row="1"
             Margin="0,0,0,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" />

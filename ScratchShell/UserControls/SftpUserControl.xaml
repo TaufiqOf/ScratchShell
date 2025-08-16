@@ -12,11 +12,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <Grid Grid.Row="0">
+        <ProgressBar x:Name="Progress" IsIndeterminate="False" />
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -62,7 +63,7 @@
             <!--  Browser control  -->
             <browsercontrol:BrowserUserControl x:Name="Browser" Grid.Row="1" />
         </Grid>
-        <ui:CardExpander Grid.Row="1" Header="Log">
+        <ui:CardExpander Grid.Row="2" Header="Log">
             <!--  Terminal  -->
             <local:TerminalUserControl
                 x:Name="Terminal"

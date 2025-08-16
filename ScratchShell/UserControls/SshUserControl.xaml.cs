@@ -48,8 +48,8 @@ namespace ScratchShell.UserControls
 
         private async Task ConnectToServer(ServerViewModel server)
         {
-
-
+            Terminal.IsReadOnly = true;
+            Progress.IsIndeterminate = true;
             if (server.UseKeyFile)
             {
                 // Use key file authentication
@@ -70,7 +70,6 @@ namespace ScratchShell.UserControls
                 _shellStream = _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096);
 
                 Terminal.AddOutput($"Connected to {server.Name} at {server.Host}:{server.Port}.");
-                Terminal.IsReadOnly = false;
                 StartReadLoop();
             }
             catch (Exception ex)
@@ -78,6 +77,8 @@ namespace ScratchShell.UserControls
                 Terminal.AddOutput($"Failed to connect to {server.Name}: {ex.Message}");
                 return;
             }
+            Terminal.IsReadOnly = false;
+            Progress.IsIndeterminate = false;
         }
 
         private async Task StartReadLoop()

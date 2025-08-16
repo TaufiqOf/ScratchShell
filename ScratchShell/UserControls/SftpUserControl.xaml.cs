@@ -40,6 +40,7 @@ namespace ScratchShell.UserControls
         private async Task GoToFolder(string path)
         {
             this.TopToolbar.IsEnabled = false;
+            Progress.IsIndeterminate = true;
             Browser.Clear();
             PathTextBox.Text = path;
 
@@ -60,6 +61,7 @@ namespace ScratchShell.UserControls
             }
 
             this.TopToolbar.IsEnabled = true;
+            Progress.IsIndeterminate = false;
         }
 
 
@@ -83,7 +85,8 @@ namespace ScratchShell.UserControls
 
         private async Task ConnectToServer(ServerViewModel server)
         {
-
+            this.TopToolbar.IsEnabled = false;
+            Progress.IsIndeterminate = true;
             if (server.UseKeyFile)
             {
                 // Use key file authentication
@@ -111,6 +114,8 @@ namespace ScratchShell.UserControls
                 Terminal.AddOutput($"Failed to connect to {server.Name}: {ex.Message}");
                 return;
             }
+            this.TopToolbar.IsEnabled = true;
+            Progress.IsIndeterminate = false;
         }
         private async IAsyncEnumerable<BrowserItem> FileDriveControlGetDirectory(
          string path,
