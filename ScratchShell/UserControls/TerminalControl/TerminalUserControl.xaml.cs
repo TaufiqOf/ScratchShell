@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace ScratchShell.UserControls.TerminalControl;
 
@@ -174,7 +175,7 @@ public partial class TerminalUserControl : UserControl
     private void TerminalState_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         // Ensure UI updates happen on UI thread
-        Dispatcher.Invoke(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             switch (e.PropertyName)
             {
@@ -199,7 +200,7 @@ public partial class TerminalUserControl : UserControl
 
                     // Add cases for other properties as needed
             }
-        });
+        }, DispatcherPriority.Background);
     }
     private void UpdateCursorVisibility()
     {
@@ -213,19 +214,58 @@ public partial class TerminalUserControl : UserControl
 
     private void UpdateCursorPosition()
     {
-        // Assuming CursorRow and CursorCol correspond to lines and columns in TerminalBox document
-        // Move Caret to that position
+        if (TerminalBox.Document == null)
+            return;
 
-        // NOTE: This requires mapping your terminal screen buffer rows/columns
-        // to WPF TextPointers, which can be complex. For demo:
-
-        // Here’s a basic approach to move caret to end of paragraph:
-        if (promptParagraph != null)
+        // Ensure enough paragraphs exist for the requested row
+        var paragraphs = TerminalBox.Document.Blocks.OfType<Paragraph>().ToList();
+        while (paragraphs.Count <= TerminalState.CursorRow)
         {
-            TerminalBox.CaretPosition = promptParagraph.ContentEnd;
+            var newParagraph = new Paragraph(new Run(""));
+            TerminalBox.Document.Blocks.Add(newParagraph);
+            paragraphs.Add(newParagraph);
+        }
+
+        Paragraph targetParagraph = paragraphs[TerminalState.CursorRow];
+        if (targetParagraph == null)
+            return;
+
+        // Get current paragraph text
+        string paragraphText = new TextRange(targetParagraph.ContentStart, targetParagraph.ContentEnd).Text;
+
+        // Pad paragraph with spaces if CursorCol is beyond current length
+        if (TerminalState.CursorCol > paragraphText.Length)
+        {
+            string padding = new string(' ', TerminalState.CursorCol - paragraphText.Length);
+            targetParagraph.Inlines.Add(new Run(padding));
+            paragraphText = new TextRange(targetParagraph.ContentStart, targetParagraph.ContentEnd).Text;
+        }
+
+        // Clamp col index
+        int col = Math.Max(0, Math.Min(TerminalState.CursorCol, paragraphText.Length));
+
+        // Find TextPointer at column
+        TextPointer pointer = targetParagraph.ContentStart;
+        for (int i = 0; i < col && pointer != null; i++)
+        {
+            pointer = pointer.GetNextInsertionPosition(LogicalDirection.Forward);
+            if (pointer == null)
+                break;
+        }
+
+        if (pointer != null)
+        {
+            TerminalBox.CaretPosition = pointer;
             TerminalBox.Focus();
+
+            // Ensure caret is visible
+            //TerminalBox.ScrollToHome(); // optional: reset scroll first
+            //TerminalBox.CaretPosition.Paragraph?.BringIntoView();
+            //TerminalBox.ScrollToVerticalOffset(TerminalBox.VerticalOffset + 1); // nudge to ensure caret shows
         }
     }
+
+
 
     private void UpdateColors()
     {

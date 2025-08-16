@@ -93,8 +93,9 @@ namespace ScratchShell.UserControls
                     if (!string.IsNullOrEmpty(output))
                     {
                         outputBuffer.Append(output);
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current.Dispatcher.Invoke(async () =>
                         {
+                            await Task.Delay(1000); // Small delay to allow UI to update
                             Terminal.AddOutput(outputBuffer.ToString());
                         });
                     }
