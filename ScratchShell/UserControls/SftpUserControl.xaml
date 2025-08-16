@@ -12,8 +12,8 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="1*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -62,14 +62,16 @@
             <!--  Browser control  -->
             <browsercontrol:BrowserUserControl x:Name="Browser" Grid.Row="1" />
         </Grid>
+        <ui:CardExpander Grid.Row="1" Header="Log">
+            <!--  Terminal  -->
+            <local:TerminalUserControl
+                x:Name="Terminal"
+                Height="200"
+                Margin="-10"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                IsReadOnly="True" />
+        </ui:CardExpander>
 
-        <!--  Terminal  -->
-        <local:TerminalUserControl
-            x:Name="Terminal"
-            Grid.Row="1"
-            Margin="0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            IsReadOnly="True" />
     </Grid>
 </UserControl>

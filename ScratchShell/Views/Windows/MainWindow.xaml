@@ -36,16 +36,7 @@
             IsBackButtonVisible="Visible"
             IsPaneToggleVisible="True"
             MenuItemsSource="{Binding ViewModel.MenuItems, Mode=OneWay}"
-            PaneDisplayMode="LeftFluent">
-            <!--<ui:NavigationView.Header>
-                <ui:BreadcrumbBar x:Name="BreadcrumbBar" Margin="42,32,42,20" />
-            </ui:NavigationView.Header>-->
-            <!--<ui:NavigationView.ContentOverlay>
-                <Grid>
-                    <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
-                </Grid>
-            </ui:NavigationView.ContentOverlay>-->
-        </ui:NavigationView>
+            PaneDisplayMode="LeftFluent" />
 
         <ContentPresenter
             x:Name="RootContentDialog"
@@ -56,9 +47,14 @@
             x:Name="TitleBar"
             Title="{Binding ViewModel.ApplicationTitle}"
             Grid.Row="0"
-            CloseWindowByDoubleClickOnIcon="True">
+            CloseWindowByDoubleClickOnIcon="True"
+            FontSize="15">
             <ui:TitleBar.Icon>
-                <ui:ImageIcon Source="pack://application:,,,/Assets/wpfui-icon-256.png" />
+                <ui:ImageIcon
+                    Width="25"
+                    Height="25"
+                    Margin="-5"
+                    Source="pack://application:,,,/Assets/icon.png" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
     </Grid>

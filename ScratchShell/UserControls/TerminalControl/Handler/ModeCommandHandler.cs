@@ -113,7 +113,7 @@ public class ModeCommandHandler : IAnsiCommandHandler
 
             default:
                 // Unhandled mode code
-                state.UnhandledModes.Add(code, enable);
+                //state.UnhandledModes.Add(code, enable);
                 break;
         }
     }
