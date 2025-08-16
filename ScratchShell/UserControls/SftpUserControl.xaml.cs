@@ -26,7 +26,39 @@ namespace ScratchShell.UserControls
             this._server = server;
             this.Loaded += ControlLoaded;
             this.Browser.EnterRequested += BrowserEnterRequested;
+            
+            this.Browser.CutRequested += BrowserCutRequested;
+            this.Browser.CopyRequested += BrowserCopyRequested;
+            this.Browser.PasteRequested += BrowserPasteRequested;
+            this.Browser.UploadRequested += BrowserUploadRequested;
+            this.Browser.DownloadRequested += BrowserDownloadRequested;
+
             this.TopToolbar.IsEnabled = false;
+        }
+
+        private void BrowserDownloadRequested(BrowserItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BrowserUploadRequested(BrowserItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BrowserPasteRequested(BrowserItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BrowserCutRequested(BrowserItem item)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BrowserCopyRequested(BrowserItem obj)
+        {
+            throw new NotImplementedException();
         }
 
         private async void BrowserEnterRequested(BrowserItem obj)
