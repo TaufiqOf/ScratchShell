@@ -61,7 +61,6 @@ namespace ScratchShell.ViewModels.Pages
         {
             await Task.CompletedTask;
         }
-
         private async Task ServerManagerOnServerRemoved(Server? server)
         {
             FilteredServers.Refresh();
@@ -166,6 +165,7 @@ namespace ScratchShell.ViewModels.Pages
                     });
             }
         }
+
         [RelayCommand]
         private async Task OnExport()
         {
@@ -184,8 +184,6 @@ namespace ScratchShell.ViewModels.Pages
                         CloseButtonText = "OK"
                     });
             }
-
-      
         }
 
         [RelayCommand]
@@ -193,7 +191,6 @@ namespace ScratchShell.ViewModels.Pages
         {
             try
             {
-
                 var saveDialog = new OpenFileDialog();
                 saveDialog.Filter = "(*.ss)|*.ss|All Files (*.*)|*.*";
                 if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -210,7 +207,6 @@ namespace ScratchShell.ViewModels.Pages
             }
             catch (BadPasswordException)
             {
-                // This happens if the user cancels the UAC prompt
                 await _contentDialogService.ShowSimpleDialogAsync(
                     new SimpleContentDialogCreateOptions
                     {
