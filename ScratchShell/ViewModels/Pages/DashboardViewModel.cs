@@ -1,13 +1,16 @@
-﻿using ScratchShell.Constants;
+﻿using Ionic.Zip;
+using ScratchShell.Constants;
 using ScratchShell.Enums;
 using ScratchShell.Models;
-using ScratchShell.Services;
 using ScratchShell.Properties;
+using ScratchShell.Services;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
+using ScratchShell.Views.Dialog;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
+using System.Windows.Forms;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions.Controls;
 using Wpf.Ui.Controls;
@@ -152,14 +155,81 @@ namespace ScratchShell.ViewModels.Pages
                         CloseButtonText = "OK"
                     });
             }
+            catch (Exception ex)
+            {
+                await _contentDialogService.ShowSimpleDialogAsync(
+                    new SimpleContentDialogCreateOptions
+                    {
+                        Title = "Error",
+                        Content = ex.Message,
+                        CloseButtonText = "OK"
+                    });
+            }
         }
         [RelayCommand]
         private async Task OnExport()
         {
+            try
+            {
+                var exportServersDialog = new ExportServersDialog(_contentDialogService, Servers);
+                var contentDialogResult = await exportServersDialog.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                await _contentDialogService.ShowSimpleDialogAsync(
+                    new SimpleContentDialogCreateOptions
+                    {
+                        Title = "Error",
+                        Content = ex.Message,
+                        CloseButtonText = "OK"
+                    });
+            }
+
+      
         }
+
         [RelayCommand]
         private async Task OnImport()
         {
+            try
+            {
+
+                var saveDialog = new OpenFileDialog();
+                saveDialog.Filter = "(*.ss)|*.ss|All Files (*.*)|*.*";
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var passwordDialog = new PasswordDialog(_contentDialogService);
+                    var contentDialogResult = await passwordDialog.ShowAsync();
+                    if (contentDialogResult != ContentDialogResult.Primary)
+                    {
+                        return;
+                    }
+                    var exported = await ServerExportImportService.ImportServers(saveDialog.FileName, passwordDialog.PasswordBox.Password);
+                    exported.ForEach(ServerManager.AddServer);
+                }
+            }
+            catch (BadPasswordException)
+            {
+                // This happens if the user cancels the UAC prompt
+                await _contentDialogService.ShowSimpleDialogAsync(
+                    new SimpleContentDialogCreateOptions
+                    {
+                        Title = "Import",
+                        Content = "Invalid Password",
+                        CloseButtonText = "OK"
+                    });
+            }
+            catch (Exception ex)
+            {
+                await _contentDialogService.ShowSimpleDialogAsync(
+                    new SimpleContentDialogCreateOptions
+                    {
+                        Title = "Error",
+                        Content = ex.Message,
+                        CloseButtonText = "OK"
+                    });
+            }
+
         }
 
     }

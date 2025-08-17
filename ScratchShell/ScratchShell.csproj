@@ -23,6 +23,7 @@
     <PackageReference Include="WPF-UI.DependencyInjection" Version="4.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0 " />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -191,10 +191,15 @@ namespace ScratchShell.ViewModels.Models
             ServerManager.RemoveServer(this.ToServer());
         }
 
-        internal Server ToServer()
+        internal Server ToServer(bool setNewIds = false)
         {
+            var id = Id;
+            if (setNewIds)
+            {
+                id = Guid.NewGuid().ToString();
+            }
             var server = new Server(
-                Id,
+                id,
                 Name,
                 Host,
                 Port,

@@ -1,0 +1,116 @@
+<ui:ContentDialog
+    x:Class="ScratchShell.Views.Dialog.ExportServersDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ScratchShell.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Export Servers"
+    MinWidth="500"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonText="Export"
+    mc:Ignorable="d">
+    <ui:ContentDialog.Resources>
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:ExportServersDialog}" />
+    </ui:ContentDialog.Resources>
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <TextBlock
+            x:Name="ServerListTextBlock"
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            FontWeight="SemiBold"
+            Text="Select servers to export:" />
+
+        <!--  Server List  -->
+        <Border
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="4">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!--  Select All Checkbox  -->
+                <CheckBox
+                    x:Name="SelectAllCheckBox"
+                    Grid.Row="0"
+                    Margin="10,10,10,5"
+                    Checked="SelectAllCheckBox_Checked"
+                    Content="Select All"
+                    Unchecked="SelectAllCheckBox_Unchecked" />
+
+                <!--  Servers List  -->
+                <ListBox
+                    x:Name="ServersListBox"
+                    Grid.Row="1"
+                    Margin="10,0,10,10"
+                    IsSynchronizedWithCurrentItem="True"
+                    SelectionMode="Multiple">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="2" Orientation="Horizontal">
+                                <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                                <TextBlock Foreground="Gray" Text="  -  " />
+                                <TextBlock Foreground="DarkGray" Text="{Binding ProtocolType}" />
+                                <TextBlock Foreground="DarkGray" Text=" " />
+                                <TextBlock Foreground="DarkGray" Text="{Binding Host}" />
+                                <TextBlock Foreground="DarkGray" Text=":" />
+                                <TextBlock Foreground="DarkGray" Text="{Binding Port}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+        <StackPanel Grid.Row="2">
+            <!--  Password Input  -->
+            <StackPanel Margin="0,10,0,10">
+                <ui:TextBlock
+                    x:Name="PasswordTextBlock"
+                    Margin="0,0,0,5"
+                    Text="Password:" />
+                <ui:PasswordBox x:Name="PasswordInput" PlaceholderText="Enter password to encrypt the export file" />
+            </StackPanel>
+
+            <!--  Info  -->
+            <StackPanel Grid.Row="2" Margin="0,10,0,10">
+                <ui:TextBlock
+                    x:Name="ExportFilePathTextBlock"
+                    Grid.Row="3"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="Export to file"
+                    TextWrapping="Wrap" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox x:Name="ExportFilePathTextBox" Grid.Column="0" />
+                    <ui:Button
+                        x:Name="ExportFilePathBrowseButton"
+                        Grid.Column="1"
+                        Click="ExportFilePathBrowseButtonClick"
+                        FontSize="20"
+                        Icon="{ui:SymbolIcon Symbol=Open24}" />
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</ui:ContentDialog>
