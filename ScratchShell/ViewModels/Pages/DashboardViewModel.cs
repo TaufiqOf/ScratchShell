@@ -103,7 +103,7 @@ namespace ScratchShell.ViewModels.Pages
         [RelayCommand]
         private async Task OnSearch()
         {
-            FilteredServers.Filter = o => o is ServerViewModel svm && !svm.IsDeleted && (svm.Name.Contains(SearchText) || svm.Host.Contains(SearchText) || svm.Port.ToString().Contains(SearchText));
+            FilteredServers.Filter = o => o is ServerViewModel svm && !svm.IsDeleted && (svm.Name.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase) || svm.Host.Contains(SearchText, StringComparison.InvariantCultureIgnoreCase) || svm.Port.ToString().Contains(SearchText, StringComparison.InvariantCultureIgnoreCase));
             FilteredServers.Refresh();
             await Task.CompletedTask;
         }
@@ -153,5 +153,14 @@ namespace ScratchShell.ViewModels.Pages
                     });
             }
         }
+        [RelayCommand]
+        private async Task OnExport()
+        {
+        }
+        [RelayCommand]
+        private async Task OnImport()
+        {
+        }
+
     }
 }

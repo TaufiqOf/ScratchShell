@@ -73,17 +73,49 @@
                 <TextBlock VerticalAlignment="Center" Text="Use Key File" />
             </StackPanel>
 
-            <TextBlock
-                Margin="0,10,0,0"
-                FontWeight="SemiBold"
-                Text="Public Key File Path" />
-            <TextBox IsEnabled="{Binding UseKeyFile, Mode=TwoWay}" Text="{Binding PublicKeyFilePath, Mode=TwoWay}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    Margin="0,10,0,0"
+                    FontWeight="SemiBold"
+                    Text="Public Key" />
+                <TextBox
+                    Grid.Column="1"
+                    IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
+                    Text="{Binding PublicKeyFilePath, Mode=TwoWay}" />
+                <ui:Button
+                    Grid.Column="2"
+                    Click="PublicKeyFilePath_Click"
+                    FontSize="20"
+                    Icon="{ui:SymbolIcon Symbol=Open24}" />
+            </Grid>
 
-            <TextBlock
-                Margin="0,10,0,0"
-                FontWeight="SemiBold"
-                Text="Private Key File Path" />
-            <TextBox IsEnabled="{Binding UseKeyFile, Mode=TwoWay}" Text="{Binding PrivateKeyFilePath, Mode=TwoWay}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    Margin="0,10,0,0"
+                    FontWeight="SemiBold"
+                    Text="Private Key" />
+                <TextBox
+                    Grid.Column="1"
+                    IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
+                    Text="{Binding PrivateKeyFilePath, Mode=TwoWay}" />
+                <ui:Button
+                    Grid.Column="2"
+                    Click="PrivateKeyFilePath_Click"
+                    FontSize="20"
+                    Icon="{ui:SymbolIcon Symbol=Open24}" />
+            </Grid>
 
             <TextBlock
                 Margin="0,10,0,0"

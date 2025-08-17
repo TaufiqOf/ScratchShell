@@ -1,4 +1,6 @@
-﻿using ScratchShell.ViewModels.Models;
+﻿using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
 
@@ -51,9 +53,37 @@ namespace ScratchShell.View.Dialog
                     ViewModel.Password =viewModel.Password;
                     ViewModel.KeyFilePassword = viewModel.KeyFilePassword;
                     ViewModel.ProtocolType = viewModel.ProtocolType;
+                    ViewModel.PrivateKeyFilePath = viewModel.PrivateKeyFilePath;
+                    ViewModel.PublicKeyFilePath = viewModel.PublicKeyFilePath;
                 }
             }
             base.OnButtonClick(button);
+        }
+
+        private void PublicKeyFilePath_Click(object sender, RoutedEventArgs e)
+        {
+            var openDiaglog = new OpenFileDialog();
+            openDiaglog.Filter = "Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*";
+            if (openDiaglog.ShowDialog() == true)
+            {
+                if (DataContext is ServerViewModel viewModel)
+                {
+                    viewModel.PublicKeyFilePath = openDiaglog.FileName;
+                }
+            }
+        }
+
+        private void PrivateKeyFilePath_Click(object sender, RoutedEventArgs e)
+        {
+            var openDialog = new OpenFileDialog();
+            openDialog.Filter = "Private Key Files (*.pem,*.key)|*.pem;*.key|All Files (*.*)|*.*";
+            if (openDialog.ShowDialog() == true)
+            {
+                if (DataContext is ServerViewModel viewModel)
+                {
+                    viewModel.PrivateKeyFilePath = openDialog.FileName;
+                }
+            }
         }
     }
 }

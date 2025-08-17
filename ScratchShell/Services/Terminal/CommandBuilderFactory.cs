@@ -10,6 +10,7 @@ namespace ScratchShell.Services.Terminal
             {
                 Constants.TerminalConstant.Builder.SSH => new SshCommandBuilder(),
                 Constants.TerminalConstant.Builder.FTP => new FtpCommandBuilder(),
+                Constants.TerminalConstant.Builder.SFTP => new SftpCommandBuilder(),
                 Constants.TerminalConstant.Builder.Open => new OpenCommandBuilder(),
                 _ => throw new NotSupportedException($"Builder {builderName} is not supported.")
             };

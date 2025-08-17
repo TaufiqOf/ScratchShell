@@ -7,8 +7,8 @@ public class WindowsTerminalLauncher : ITerminalLauncher
     public void Launch(string command, string? title = null, bool asAdmin = false)
     {
         var args = string.IsNullOrWhiteSpace(title)
-            ? command
-            : $"--title \"{title}\" {command}";
+            ? $"new-tab {command}"
+            : $"new-tab --title \"{title}\" {command}";
 
         var startInfo = new ProcessStartInfo
         {
