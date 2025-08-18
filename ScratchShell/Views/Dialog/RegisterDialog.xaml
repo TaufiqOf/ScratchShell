@@ -1,0 +1,134 @@
+<ui:ContentDialog
+    x:Class="ScratchShell.Views.Dialog.RegisterDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:ScratchShell.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Register"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonText="Register"
+    SecondaryButtonText="Back to Login"
+    mc:Ignorable="d">
+    <ui:ContentDialog.Resources>
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:RegisterDialog}" />
+    </ui:ContentDialog.Resources>
+    <Grid Width="400">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  First Name Section  -->
+        <TextBlock
+            x:Name="FirstNameTextBlock"
+            Grid.Row="0"
+            Margin="0,0,0,0"
+            FontWeight="SemiBold"
+            Text="First Name:" />
+        <ui:TextBox
+            x:Name="FirstNameTextBox"
+            Grid.Row="1"
+            PlaceholderText="Enter your first name" />
+
+        <!--  Last Name Section  -->
+        <TextBlock
+            x:Name="LastNameTextBlock"
+            Grid.Row="2"
+            Margin="0,10,0,0"
+            FontWeight="SemiBold"
+            Text="Last Name:" />
+        <ui:TextBox
+            x:Name="LastNameTextBox"
+            Grid.Row="3"
+            PlaceholderText="Enter your last name" />
+
+        <!--  Email Section  -->
+        <TextBlock
+            x:Name="EmailTextBlock"
+            Grid.Row="4"
+            Margin="0,10,0,0"
+            FontWeight="SemiBold"
+            Text="Email:" />
+        <ui:TextBox
+            x:Name="EmailTextBox"
+            Grid.Row="5"
+            PlaceholderText="Enter your email address" />
+
+        <!--  Username Section (Optional)  -->
+        <TextBlock
+            x:Name="UserNameTextBlock"
+            Grid.Row="6"
+            Margin="0,10,0,0"
+            FontWeight="SemiBold"
+            Text="Username (Optional):" />
+        <ui:TextBox
+            x:Name="UserNameTextBox"
+            Grid.Row="7"
+            PlaceholderText="Enter a username (optional)" />
+
+        <!--  Password Section  -->
+        <TextBlock
+            x:Name="PasswordTextBlock"
+            Grid.Row="8"
+            Margin="0,10,0,0"
+            FontWeight="SemiBold"
+            Text="Password:" />
+        <ui:PasswordBox
+            x:Name="PasswordBox"
+            Grid.Row="9"
+            PasswordChar="*"
+            PlaceholderText="Enter your password" />
+
+        <!--  Confirm Password Section  -->
+        <TextBlock
+            x:Name="ConfirmPasswordTextBlock"
+            Grid.Row="10"
+            Margin="0,10,0,0"
+            FontWeight="SemiBold"
+            Text="Confirm Password:" />
+        <ui:PasswordBox
+            x:Name="ConfirmPasswordBox"
+            Grid.Row="11"
+            PasswordChar="*"
+            PlaceholderText="Confirm your password" />
+
+        <!--  Status Message  -->
+        <TextBlock
+            x:Name="StatusTextBlock"
+            Grid.Row="12"
+            Margin="10,5,10,5"
+            HorizontalAlignment="Center"
+            FontSize="12"
+            Foreground="Red"
+            Text=""
+            Visibility="Collapsed" />
+
+        <!--  Loading Indicator  -->
+        <ui:ProgressRing
+            x:Name="LoadingProgressRing"
+            Grid.Row="13"
+            Width="24"
+            Height="24"
+            Margin="10,5,10,10"
+            HorizontalAlignment="Center"
+            IsIndeterminate="True"
+            Visibility="Collapsed" />
+    </Grid>
+</ui:ContentDialog>

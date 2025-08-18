@@ -22,12 +22,20 @@ namespace ScratchShell.Views.Windows
 
             SystemThemeWatcher.Watch(this);
 
+            this.Loaded += MainWindowLoaded;
+
             InitializeComponent();
             SetPageService(navigationViewPageProvider);
 
             navigationService.SetNavigationControl(RootNavigation);
             contentDialogService.SetDialogHost(RootContentDialog);
 
+
+        }
+
+        private void MainWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.Loaded();
         }
 
         #region INavigationWindow methods

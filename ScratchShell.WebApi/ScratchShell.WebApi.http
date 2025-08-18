@@ -1,0 +1,6 @@
+@ScratchShell.WebApi_HostAddress = http://localhost:5087
+
+GET {{ScratchShell.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

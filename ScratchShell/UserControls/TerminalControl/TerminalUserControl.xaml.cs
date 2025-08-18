@@ -26,6 +26,7 @@ public partial class TerminalUserControl : UserControl
 
     public event Action<TerminalUserControl, string>? CommandEntered;
     public event Action<TerminalUserControl, string>? TitleChanged;
+    public event Action<TerminalUserControl, Size>? SizeChanged;
 
     public bool IsReadOnly
     {
@@ -40,26 +41,44 @@ public partial class TerminalUserControl : UserControl
     public static readonly DependencyProperty IsReadOnlyProperty =
         DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(TerminalUserControl), new PropertyMetadata(true));
 
+
+
+
+    public string Text
+    {
+        get { return new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd).Text; }
+    }
+
+
     public TerminalUserControl()
     {
         InitializeComponent();
         Loaded += TerminalControl_Loaded;
 
         TerminalBox.PreviewKeyDown += TerminalBox_PreviewKeyDown;
-
+        TerminalBox.SizeChanged += TerminalBoxSizeChanged;
         TerminalState = new TerminalState();
         TerminalState.PropertyChanged += TerminalState_PropertyChanged;
-
+        
         AddOutput("");
+    }
+
+    private void TerminalBoxSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        SizeChanged?.Invoke(this, e.NewSize);
     }
 
     public void Clear()
     {
         TerminalBox.Document.Blocks.Clear();
     }
-
+    
     public void AddOutput(string text)
     {
+        if(string.Equals(Text,text))
+        {
+            return;
+        }
         var parser = new AnsiParser();
         var renderer = new TextRenderer();
         var control = new AnsiControlParser();

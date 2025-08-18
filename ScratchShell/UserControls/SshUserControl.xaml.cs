@@ -4,6 +4,7 @@ using ScratchShell.UserControls.TerminalControl;
 using ScratchShell.ViewModels.Models;
 using System.Text;
 using System.Windows.Controls;
+using System.Reflection;
 
 
 namespace ScratchShell.UserControls
@@ -24,9 +25,39 @@ namespace ScratchShell.UserControls
             this._server = server;
             Terminal.InputLineSyntax = "";
             Terminal.CommandEntered += TerminalCommandEntered;
+            Terminal.SizeChanged += TerminalSizeChanged;
             this.Loaded += ControlLoaded;
+            
         }
 
+        private void TerminalSizeChanged(TerminalUserControl terminal, Size newSize)
+        {
+            if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
+            {
+                var cols = (uint)Math.Max(1, newSize.Width / 8);
+                var rows = (uint)Math.Max(1, newSize.Height / 16);
+                var pixelWidth = (uint)newSize.Width;
+                var pixelHeight = (uint)newSize.Height;
+                
+                try
+                {
+                    // Use reflection to access the internal _channel field
+                    var channelField = _shellStream.GetType()
+                        .GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var channel = channelField?.GetValue(_shellStream);
+                    
+                    // Call SendWindowChangeRequest on the channel
+                    var method = channel?.GetType()
+                        .GetMethod("SendWindowChangeRequest", BindingFlags.Public | BindingFlags.Instance);
+                    method?.Invoke(channel, new object[] { cols, rows, pixelWidth, pixelHeight });
+                }
+                catch (Exception ex)
+                {
+                    // Log or handle the error if reflection fails
+                    Terminal.AddOutput($"Failed to resize terminal: {ex.Message}");
+                }
+            }
+        }
 
         private async void ControlLoaded(object sender, RoutedEventArgs e)
         {

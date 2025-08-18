@@ -81,7 +81,7 @@
                             Symbol="ArrowDownload20" />
                     </ui:Button>
                     <ui:Button
-                        Margin="0,0,0,0"
+                        Margin="5,0,0,0"
                         Command="{Binding ViewModel.ImportCommand, Mode=OneWay}"
                         ToolTip="Import">
                         <ui:SymbolIcon

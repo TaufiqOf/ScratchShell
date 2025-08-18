@@ -127,5 +127,4 @@ internal static class ServerManager
         Settings.Default.Servers = encrypted;
         Settings.Default.Save();
     }
-
 }
