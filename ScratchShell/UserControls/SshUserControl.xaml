@@ -10,93 +10,98 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <ProgressBar
-            x:Name="Progress"
-            Grid.Row="0"
-            IsIndeterminate="False" />
-        <!--  Top toolbar  -->
-        <Grid
-            x:Name="TopToolbar"
-            Grid.Row="1"
-            Margin="5"
-            VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <!--  Separator  -->
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <!--  Copy  -->
-            <ui:Button
-                Grid.Column="0"
-                Margin="2"
-                VerticalAlignment="Stretch"
-                Command="Copy"
-                FontSize="20"
-                Icon="{ui:SymbolIcon Symbol=Copy20}"
-                ToolTip="Copy" />
-
-            <!--  Paste  -->
-            <ui:Button
-                Grid.Column="1"
-                Margin="2"
-                VerticalAlignment="Stretch"
-                Command="Paste"
-                FontSize="20"
-                Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
-                ToolTip="Paste" />
-            <!--  Separator  -->
-            <Border
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ProgressBar
+                x:Name="Progress"
+                Grid.Row="0"
                 Grid.Column="2"
-                Width="1"
-                Margin="5,0"
-                Background="{DynamicResource TextFillColorSecondaryBrush}" />
-            <!--  Command Snippet  -->
+                IsIndeterminate="False" />
+            <!--  Top toolbar  -->
+            <Grid
+                x:Name="TopToolbar"
+                Grid.Row="1"
+                Margin="5"
+                VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <!--  Separator  -->
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <ToggleButton
-                x:Name="SnippetToggleButton"
-                Grid.Column="3"
-                Margin="2"
-                VerticalAlignment="Stretch"
-                Checked="SnippetToggleButtonChecked"
-                FontSize="20"
-                ToolTip="Command Snippet"
-                Unchecked="SnippetToggleButtonUnchecked">
-                <ui:SymbolIcon Symbol="Code20" />
-            </ToggleButton>
-            <!--  Full Screen  -->
-            <ui:Button
-                Grid.Column="4"
-                Margin="2"
-                VerticalAlignment="Stretch"
-                FontSize="20"
-                Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
-                ToolTip="Full Screen" />
-        </Grid>
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+                <!--  Copy  -->
+                <ui:Button
+                    Grid.Column="0"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    Command="Copy"
+                    FontSize="20"
+                    Icon="{ui:SymbolIcon Symbol=Copy20}"
+                    ToolTip="Copy" />
+
+                <!--  Paste  -->
+                <ui:Button
+                    Grid.Column="1"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    Command="Paste"
+                    FontSize="20"
+                    Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
+                    ToolTip="Paste" />
+                <!--  Separator  -->
+                <Border
+                    Grid.Column="2"
+                    Width="1"
+                    Margin="5,0"
+                    Background="{DynamicResource TextFillColorSecondaryBrush}" />
+                <!--  Command Snippet  -->
+
+                <ToggleButton
+                    x:Name="SnippetToggleButton"
+                    Grid.Column="3"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    Checked="SnippetToggleButtonChecked"
+                    FontSize="20"
+                    ToolTip="Command Snippet"
+                    Unchecked="SnippetToggleButtonUnchecked">
+                    <ui:SymbolIcon Symbol="Code20" />
+                </ToggleButton>
+                <!--  Full Screen  -->
+                <ui:Button
+                    Grid.Column="4"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    FontSize="20"
+                    Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
+                    ToolTip="Full Screen" />
+            </Grid>
             <local:TerminalUserControl
                 x:Name="Terminal"
+                Grid.Row="2"
+                Grid.Column="0"
                 Margin="0,0,0,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch" />
-            <local1:SnippetUserControl
-                x:Name="SnippetControl"
-                Grid.Column="1"
-                Width="300"
-                Visibility="Collapsed" />
         </Grid>
+        <local1:SnippetUserControl
+            x:Name="SnippetControl"
+            Grid.Column="1"
+            Width="300"
+            Margin="10"
+            Visibility="Collapsed" />
+
     </Grid>
 </UserControl>

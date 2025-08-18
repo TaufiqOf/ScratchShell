@@ -5,8 +5,67 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+
+        <!--  Buttons Grid  -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ui:Button
+                x:Name="NewButton"
+                Grid.Column="0"
+                Margin="0,0,5,0"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=Add24}"
+                ToolTip="New Snippet" />
+
+            <ui:Button
+                x:Name="EditButton"
+                Grid.Column="1"
+                Margin="0,0,5,0"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=Edit24}"
+                ToolTip="Edit Snippet" />
+
+            <ui:Button
+                x:Name="DeleteButton"
+                Grid.Column="2"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=Delete24}"
+                ToolTip="Delete Snippet" />
+        </Grid>
+
+        <!--  ListBox  -->
+        <ListBox
+            x:Name="SnippetsListBox"
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            SelectionMode="Single" />
+
+        <!--  Multiline TextBox  -->
+        <ui:TextBox
+            x:Name="SnippetContentTextBox"
+            Grid.Row="2"
+            AcceptsReturn="True"
+            AcceptsTab="True"
+            ClearButtonEnabled="False"
+            HorizontalScrollBarVisibility="Auto"
+            PlaceholderText="Enter your code snippet here..."
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
+    </Grid>
 </UserControl>
