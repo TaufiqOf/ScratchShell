@@ -9,7 +9,7 @@ namespace ScratchShell.Views.Dialog
 {
     public partial class RegisterDialog : ContentDialog
     {
-        private readonly AuthenticationService _registerService;
+        private readonly AuthenticationService _authenticationService;
         
         public string FirstName => FirstNameTextBox.Text;
         public string LastName => LastNameTextBox.Text;
@@ -19,17 +19,18 @@ namespace ScratchShell.Views.Dialog
         public string ConfirmPassword => ConfirmPasswordBox.Password;
         public string Token { get; private set; } = string.Empty;
         public bool IsRegistrationSuccessful { get; private set; } = false;
+        public bool IsFirstTimeLogin { get; private set; } = true; // Registration is always first time
 
         public RegisterDialog(IContentDialogService contentDialogService) : base(contentDialogService.GetDialogHost())
         {
             InitializeComponent();
-            _registerService = new AuthenticationService(new HttpClient());
+            _authenticationService = new AuthenticationService(new HttpClient());
         }
 
         public RegisterDialog(IContentDialogService contentDialogService, AuthenticationService registerService) : base(contentDialogService.GetDialogHost())
         {
             InitializeComponent();
-            _registerService = registerService;
+            _authenticationService = registerService;
         }
 
         protected override async void OnButtonClick(ContentDialogButton button)
@@ -58,7 +59,7 @@ namespace ScratchShell.Views.Dialog
             try
             {
                 // Call register API
-                var result = await _registerService.RegisterAsync(
+                var result = await _authenticationService.RegisterAsync(
                     Email, 
                     Password, 
                     ConfirmPassword, 
@@ -68,12 +69,15 @@ namespace ScratchShell.Views.Dialog
                 
                 if (result.IsSuccess)
                 {
+                    AuthenticationService.Token = result.Token;
                     Token = result.Token;
                     IsRegistrationSuccessful = true;
-                    ShowStatusMessage("Registration successful!", Colors.Green);
+                    IsFirstTimeLogin = result.IsFirstTimeLogin;
+                    
+                    ShowStatusMessage("Registration successful! Your credentials have been saved for future logins.", Colors.Green);
                     
                     // Small delay to show success message
-                    await Task.Delay(500);
+                    await Task.Delay(1500);
                     
                     base.OnButtonClick(ContentDialogButton.Primary);
                 }

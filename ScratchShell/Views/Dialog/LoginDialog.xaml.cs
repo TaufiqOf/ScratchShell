@@ -16,17 +16,36 @@ namespace ScratchShell.Views.Dialog
         public string Password => PasswordBox.Password;
         public string Token { get; private set; } = string.Empty;
         public bool IsLoginSuccessful { get; private set; } = false;
+        public bool IsFirstTimeLogin { get; private set; } = false;
 
         public LoginDialog(IContentDialogService contentDialogService) : base(contentDialogService.GetDialogHost())
         {
             InitializeComponent();
             _loginService = new AuthenticationService(new HttpClient());
+            
+            // Pre-fill username if stored
+            var storedUsername = UserSettingsService.GetStoredUsername();
+            if (!string.IsNullOrEmpty(storedUsername))
+            {
+                UsernameTextBox.Text = storedUsername;
+                // Focus on password field if username is pre-filled
+                PasswordBox.Focus();
+            }
         }
 
         public LoginDialog(IContentDialogService contentDialogService, AuthenticationService loginService) : base(contentDialogService.GetDialogHost())
         {
             InitializeComponent();
             _loginService = loginService;
+            
+            // Pre-fill username if stored
+            var storedUsername = UserSettingsService.GetStoredUsername();
+            if (!string.IsNullOrEmpty(storedUsername))
+            {
+                UsernameTextBox.Text = storedUsername;
+                // Focus on password field if username is pre-filled
+                PasswordBox.Focus();
+            }
         }
 
         protected override async void OnButtonClick(ContentDialogButton button)
@@ -59,12 +78,23 @@ namespace ScratchShell.Views.Dialog
                 
                 if (result.IsSuccess)
                 {
+                    AuthenticationService.Token = result.Token;
                     Token = result.Token;
                     IsLoginSuccessful = true;
-                    ShowStatusMessage("Login successful!", Colors.Green);
+                    IsFirstTimeLogin = result.IsFirstTimeLogin;
+                    
+                    // Show appropriate success message
+                    if (result.IsFirstTimeLogin)
+                    {
+                        ShowStatusMessage("Welcome! Your credentials have been saved for future logins.", Colors.Green);
+                    }
+                    else
+                    {
+                        ShowStatusMessage("Login successful!", Colors.Green);
+                    }
                     
                     // Small delay to show success message
-                    await Task.Delay(500);
+                    await Task.Delay(1000);
                     
                     base.OnButtonClick(ContentDialogButton.Primary);
                 }
@@ -130,6 +160,7 @@ namespace ScratchShell.Views.Dialog
             UsernameTextBox.IsEnabled = !isLoading;
             PasswordBox.IsEnabled = !isLoading;
             IsPrimaryButtonEnabled = !isLoading;
+            IsSecondaryButtonEnabled = !isLoading;
         }
 
         private void ShowStatusMessage(string message, Color color)
@@ -142,6 +173,28 @@ namespace ScratchShell.Views.Dialog
         private void HideStatusMessage()
         {
             StatusTextBlock.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Method to check if user has stored credentials for auto-login
+        /// </summary>
+        public static bool HasStoredCredentials()
+        {
+            return AuthenticationService.HasStoredCredentials();
+        }
+
+        /// <summary>
+        /// Method to attempt auto-login with stored credentials
+        /// </summary>
+        public static bool TryAutoLogin()
+        {
+            var storedCredentials = UserSettingsService.GetStoredCredentials();
+            if (storedCredentials.HasValue && !string.IsNullOrEmpty(storedCredentials.Value.token))
+            {
+                AuthenticationService.Token = storedCredentials.Value.token;
+                return true;
+            }
+            return false;
         }
     }
 }

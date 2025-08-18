@@ -27,7 +27,7 @@ namespace ScratchShell.WebApi.Services
             var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
             var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
             var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
-            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
+            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000"); // Very long expiry (10 years)
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -47,7 +47,7 @@ namespace ScratchShell.WebApi.Services
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes), // Very long expiry (10 years)
                 signingCredentials: credentials
             );
 
@@ -74,8 +74,8 @@ namespace ScratchShell.WebApi.Services
                     ValidIssuer = issuer,
                     ValidateAudience = true,
                     ValidAudience = audience,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
+                    ValidateLifetime = false, // Disable lifetime validation to prevent expiration
+                    ClockSkew = TimeSpan.FromDays(365 * 10) // Very large clock skew as backup (10 years)
                 };
 
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);

@@ -6,14 +6,36 @@ namespace ScratchShell.Services
 {
     public class AuthenticationService
     {
-        public static string Token { get; set; }
+        public static string Token { get; set; } = string.Empty;
         private readonly HttpClient _httpClient;
         private readonly string _baseUrl;
 
-        public AuthenticationService(HttpClient httpClient, string baseUrl = "https://localhost:7000")
+        public AuthenticationService(HttpClient httpClient, string baseUrl = "https://localhost:7110")
         {
             _httpClient = httpClient;
             _baseUrl = baseUrl;
+            
+            // Try to load stored credentials on initialization
+            LoadStoredCredentials();
+            
+            // Set default headers for all requests if token exists
+            if (!string.IsNullOrEmpty(Token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+            }
+        }
+
+        /// <summary>
+        /// Loads stored credentials from settings if available
+        /// </summary>
+        private void LoadStoredCredentials()
+        {
+            var storedCredentials = UserSettingsService.GetStoredCredentials();
+            if (storedCredentials.HasValue)
+            {
+                Token = storedCredentials.Value.token ?? string.Empty;
+            }
         }
 
         public async Task<LoginResult> LoginAsync(string username, string password)
@@ -34,15 +56,39 @@ namespace ScratchShell.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent, new JsonSerializerOptions
+                    var loginResponse = JsonSerializer.Deserialize<AuthResponse>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
+                    var token = loginResponse?.Token ?? string.Empty;
+                    var userInfo = loginResponse?.User;
+
+                    // Store credentials in settings
+                    if (!string.IsNullOrEmpty(token) && userInfo != null)
+                    {
+                        var displayName = !string.IsNullOrEmpty(userInfo.UserName) ? userInfo.UserName : userInfo.Email;
+                        
+                        // Check if this is first time login
+                        var isFirstTime = UserSettingsService.IsFirstTimeLogin();
+                        
+                        // Store credentials (always store for persistence)
+                        UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
+                        
+                        return new LoginResult
+                        {
+                            IsSuccess = true,
+                            Token = token,
+                            Message = "Login successful",
+                            IsFirstTimeLogin = isFirstTime,
+                            UserInfo = userInfo
+                        };
+                    }
+
                     return new LoginResult
                     {
                         IsSuccess = true,
-                        Token = loginResponse?.Token,
+                        Token = token,
                         Message = "Login successful"
                     };
                 }
@@ -96,15 +142,36 @@ namespace ScratchShell.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var registerResponse = JsonSerializer.Deserialize<RegisterResponse>(responseContent, new JsonSerializerOptions
+                    var registerResponse = JsonSerializer.Deserialize<AuthResponse>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
+                    var token = registerResponse?.Token ?? string.Empty;
+                    var userInfo = registerResponse?.User;
+
+                    // Store credentials in settings for new registration
+                    if (!string.IsNullOrEmpty(token) && userInfo != null)
+                    {
+                        var displayName = !string.IsNullOrEmpty(userInfo.UserName) ? userInfo.UserName : userInfo.Email;
+                        
+                        // Registration is always first time login
+                        UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
+                        
+                        return new RegisterResult
+                        {
+                            IsSuccess = true,
+                            Token = token,
+                            Message = "Registration successful",
+                            IsFirstTimeLogin = true,
+                            UserInfo = userInfo
+                        };
+                    }
+
                     return new RegisterResult
                     {
                         IsSuccess = true,
-                        Token = registerResponse?.Token,
+                        Token = token,
                         Message = "Registration successful"
                     };
                 }
@@ -135,6 +202,105 @@ namespace ScratchShell.Services
                 };
             }
         }
+
+        // Method to refresh token (even though it won't expire, useful for testing)
+        public async Task<LoginResult> RefreshTokenAsync()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Token))
+                {
+                    return new LoginResult
+                    {
+                        IsSuccess = false,
+                        Message = "No token available to refresh"
+                    };
+                }
+
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/auth/refresh", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var refreshResponse = JsonSerializer.Deserialize<AuthResponse>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    var newToken = refreshResponse?.Token ?? string.Empty;
+                    
+                    // Update stored token
+                    if (!string.IsNullOrEmpty(newToken))
+                    {
+                        var storedCredentials = UserSettingsService.GetStoredCredentials();
+                        if (storedCredentials.HasValue)
+                        {
+                            UserSettingsService.StoreAuthenticationCredentials(
+                                newToken, 
+                                storedCredentials.Value.username ?? "", 
+                                storedCredentials.Value.rememberMe);
+                        }
+                    }
+
+                    return new LoginResult
+                    {
+                        IsSuccess = true,
+                        Token = newToken,
+                        Message = "Token refreshed successfully"
+                    };
+                }
+                else
+                {
+                    return new LoginResult
+                    {
+                        IsSuccess = false,
+                        Message = $"Token refresh failed: {response.StatusCode}"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new LoginResult
+                {
+                    IsSuccess = false,
+                    Message = $"Token refresh error: {ex.Message}"
+                };
+            }
+        }
+
+        // Method to validate if token is still valid (even though it won't expire)
+        public static bool IsTokenValid()
+        {
+            return !string.IsNullOrEmpty(Token);
+        }
+
+        // Method to check if user has stored credentials
+        public static bool HasStoredCredentials()
+        {
+            return UserSettingsService.GetStoredCredentials().HasValue;
+        }
+
+        // Method to get stored username
+        public static string? GetStoredUsername()
+        {
+            return UserSettingsService.GetStoredUsername();
+        }
+
+        // Method to clear token (logout)
+        public static void ClearToken()
+        {
+            Token = string.Empty;
+            UserSettingsService.ClearStoredCredentials();
+        }
+
+        // Method to logout and clear all stored data
+        public static void Logout()
+        {
+            ClearToken();
+        }
     }
 
     // Login DTOs
@@ -144,11 +310,14 @@ namespace ScratchShell.Services
         public string Password { get; set; } = string.Empty;
     }
 
-    public class LoginResponse
+    public class AuthResponse
     {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
+        public UserInfo? User { get; set; }
     }
 
     public class LoginResult
@@ -156,6 +325,8 @@ namespace ScratchShell.Services
         public bool IsSuccess { get; set; }
         public string Token { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+        public bool IsFirstTimeLogin { get; set; } = false;
+        public UserInfo? UserInfo { get; set; }
     }
 
     // Register DTOs
@@ -169,19 +340,13 @@ namespace ScratchShell.Services
         public string? UserName { get; set; }
     }
 
-    public class RegisterResponse
-    {
-        public string Token { get; set; } = string.Empty;
-        public string RefreshToken { get; set; } = string.Empty;
-        public DateTime ExpiresAt { get; set; }
-        public UserInfo? User { get; set; }
-    }
-
     public class RegisterResult
     {
         public bool IsSuccess { get; set; }
         public string Token { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
+        public bool IsFirstTimeLogin { get; set; } = true;
+        public UserInfo? UserInfo { get; set; }
     }
 
     public class UserInfo

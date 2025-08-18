@@ -48,8 +48,8 @@ namespace ScratchShell.ViewModels.Windows
                     // Registration successful, continue with the app
                     if (registerDialog.IsRegistrationSuccessful)
                     {
-                        // You can store the token or user info here if needed
-                        // For now, just continue to the main app
+                        // Registration automatically stores credentials for first-time login
+                        // Continue to the main app
                         return;
                     }
                 }
@@ -61,14 +61,81 @@ namespace ScratchShell.ViewModels.Windows
                 else if (contentDialogResult == ContentDialogResult.None)
                 {
                     // Cancel or close - back to login
-                    ShowLogin();
+                    Application.Current.Shutdown();
                 }
             }
         }
 
         internal void Loaded()
         {
+            // Check if user has stored credentials for auto-login
+            if (TryAutoLogin())
+            {
+                // User is already authenticated, continue to main app
+                return;
+            }
+
+            // No stored credentials, show login dialog
             ShowLogin();
+        }
+
+        /// <summary>
+        /// Attempts to automatically log in the user using stored credentials
+        /// </summary>
+        /// <returns>True if auto-login was successful, false otherwise</returns>
+        private bool TryAutoLogin()
+        {
+            try
+            {
+                // Check if there are stored credentials
+                var storedCredentials = UserSettingsService.GetStoredCredentials();
+                if (!storedCredentials.HasValue || string.IsNullOrEmpty(storedCredentials.Value.token))
+                {
+                    return false;
+                }
+
+                // Set the token in the AuthenticationService
+                AuthenticationService.Token = storedCredentials.Value.token;
+
+                // Log successful auto-login (for debugging)
+                System.Diagnostics.Debug.WriteLine($"Auto-login successful for user: {storedCredentials.Value.username}");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error and fall back to normal login
+                System.Diagnostics.Debug.WriteLine($"Auto-login failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Handles user logout by clearing stored credentials and showing login dialog
+        /// </summary>
+        public void Logout()
+        {
+            // Clear stored credentials
+            AuthenticationService.Logout();
+
+            // Show login dialog again
+            ShowLogin();
+        }
+
+        /// <summary>
+        /// Gets the currently logged in username from stored settings
+        /// </summary>
+        public string? GetCurrentUsername()
+        {
+            return UserSettingsService.GetStoredUsername();
+        }
+
+        /// <summary>
+        /// Checks if user is currently authenticated
+        /// </summary>
+        public bool IsUserAuthenticated()
+        {
+            return AuthenticationService.IsTokenValid();
         }
 
         [ObservableProperty]

@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ScratchShell.WebApi.DTOs;
 using ScratchShell.WebApi.Models;
 using ScratchShell.WebApi.Services;
+using System.Security.Claims;
 
 namespace ScratchShell.WebApi.Controllers
 {
@@ -14,17 +16,20 @@ namespace ScratchShell.WebApi.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IJwtService _jwtService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IConfiguration _configuration;
 
         public AuthController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IJwtService jwtService,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtService = jwtService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         [HttpPost("login")]
@@ -71,7 +76,11 @@ namespace ScratchShell.WebApi.Controllers
                 }
 
                 var token = _jwtService.GenerateToken(user);
-                var expiresAt = DateTime.UtcNow.AddMinutes(60); // Match with JWT expiry
+                
+                // Get expiry from configuration to match JWT token expiry
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");
+                var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
                 return Ok(new AuthResponseDto
                 {
@@ -164,7 +173,11 @@ namespace ScratchShell.WebApi.Controllers
 
                 // Generate token for immediate login
                 var token = _jwtService.GenerateToken(user);
-                var expiresAt = DateTime.UtcNow.AddMinutes(60);
+                
+                // Get expiry from configuration to match JWT token expiry
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");
+                var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
                 _logger.LogInformation("User registered successfully: {Email}", request.Email);
 
@@ -191,6 +204,67 @@ namespace ScratchShell.WebApi.Controllers
                 {
                     IsSuccess = false,
                     Message = "An error occurred during registration"
+                });
+            }
+        }
+
+        [HttpPost("refresh")]
+        [Authorize]
+        public async Task<ActionResult<AuthResponseDto>> RefreshToken()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new AuthResponseDto
+                    {
+                        IsSuccess = false,
+                        Message = "Invalid token"
+                    });
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null || !user.IsActive)
+                {
+                    return Unauthorized(new AuthResponseDto
+                    {
+                        IsSuccess = false,
+                        Message = "User not found or deactivated"
+                    });
+                }
+
+                // Generate new token
+                var token = _jwtService.GenerateToken(user);
+                
+                // Get expiry from configuration
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");
+                var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
+
+                return Ok(new AuthResponseDto
+                {
+                    IsSuccess = true,
+                    Message = "Token refreshed successfully",
+                    Token = token,
+                    ExpiresAt = expiresAt,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Email = user.Email ?? string.Empty,
+                        UserName = user.UserName ?? string.Empty,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during token refresh");
+                return StatusCode(500, new AuthResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred during token refresh"
                 });
             }
         }

@@ -64,9 +64,9 @@ namespace ScratchShell.WebApi
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = true,
+                    ValidateLifetime = false, // Disable lifetime validation to prevent token expiration
                     ValidateIssuerSigningKey = true,
-                    ClockSkew = TimeSpan.Zero,
+                    ClockSkew = TimeSpan.FromDays(365 * 10), // Very large clock skew (10 years) as backup
                     ValidIssuer = jwtSettings["Issuer"],
                     ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
