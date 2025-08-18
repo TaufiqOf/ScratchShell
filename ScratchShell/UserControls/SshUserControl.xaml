@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
+    xmlns:local1="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -60,14 +61,18 @@
                 Margin="5,0"
                 Background="{DynamicResource TextFillColorSecondaryBrush}" />
             <!--  Command Snippet  -->
-            <ui:Button
+
+            <ToggleButton
+                x:Name="SnippetToggleButton"
                 Grid.Column="3"
                 Margin="2"
                 VerticalAlignment="Stretch"
+                Checked="SnippetToggleButtonChecked"
                 FontSize="20"
-                Icon="{ui:SymbolIcon Symbol=Code20}"
-                ToolTip="Command Snippet" />
-
+                ToolTip="Command Snippet"
+                Unchecked="SnippetToggleButtonUnchecked">
+                <ui:SymbolIcon Symbol="Code20" />
+            </ToggleButton>
             <!--  Full Screen  -->
             <ui:Button
                 Grid.Column="4"
@@ -76,16 +81,22 @@
                 FontSize="20"
                 Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
                 ToolTip="Full Screen" />
-
-
         </Grid>
-
-
-        <local:TerminalUserControl
-            x:Name="Terminal"
-            Grid.Row="2"
-            Margin="0,0,0,0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" />
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <local:TerminalUserControl
+                x:Name="Terminal"
+                Margin="0,0,0,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+            <local1:SnippetUserControl
+                x:Name="SnippetControl"
+                Grid.Column="1"
+                Width="300"
+                Visibility="Collapsed" />
+        </Grid>
     </Grid>
 </UserControl>

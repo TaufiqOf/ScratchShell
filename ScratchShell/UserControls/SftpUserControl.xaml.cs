@@ -24,7 +24,7 @@ namespace ScratchShell.UserControls
             this._server = server;
             this.Loaded += ControlLoaded;
             this.Browser.EnterRequested += BrowserEnterRequested;
-            
+
             this.Browser.CutRequested += BrowserCutRequested;
             this.Browser.CopyRequested += BrowserCopyRequested;
             this.Browser.PasteRequested += BrowserPasteRequested;
@@ -34,7 +34,7 @@ namespace ScratchShell.UserControls
             this.TopToolbar.IsEnabled = false;
         }
 
-      
+
 
         private async void BrowserEnterRequested(BrowserItem obj)
         {
@@ -77,7 +77,7 @@ namespace ScratchShell.UserControls
 
         private async void ControlLoaded(object sender, RoutedEventArgs e)
         {
-            if(_isInitialized)
+            if (_isInitialized)
             {
                 return;
             }
@@ -184,7 +184,7 @@ namespace ScratchShell.UserControls
 
         public void Dispose()
         {
-            if(_sftpClient is not null)
+            if (_sftpClient is not null)
             {
                 this._sftpClient.Disconnect();
                 this._sftpClient.Dispose();
@@ -375,5 +375,14 @@ namespace ScratchShell.UserControls
             ShowProgress(false);
         }
 
+        private void LogToggleButtonChecked(object sender, RoutedEventArgs e)
+        {
+            LogGrid.Visibility = Visibility.Visible;
+        }
+        private void LogToggleButtonUnChecked(object sender, RoutedEventArgs e)
+        {
+
+            LogGrid.Visibility = Visibility.Collapsed;
+        }
     }
 }

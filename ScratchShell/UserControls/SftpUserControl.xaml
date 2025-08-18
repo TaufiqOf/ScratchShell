@@ -33,6 +33,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <ui:Button
                     Grid.Column="0"
@@ -58,21 +59,35 @@
                     Icon="{ui:FontIcon FontFamily='Segoe Fluent Icons',
                                        Glyph='&#xF08F;'}"
                     KeyDown="PathTextBox_KeyDown" />
+                <ToggleButton
+                    x:Name="LogToggleButton"
+                    Grid.Column="3"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    Checked="LogToggleButtonChecked"
+                    FontSize="20"
+                    ToolTip="Log"
+                    Unchecked="LogToggleButtonUnChecked">
+                    <ui:SymbolIcon Symbol="Notebook20" />
+                </ToggleButton>
+
             </Grid>
 
             <!--  Browser control  -->
             <browsercontrol:BrowserUserControl x:Name="Browser" Grid.Row="1" />
         </Grid>
-        <ui:CardExpander Grid.Row="2" Header="Log">
+        <Grid
+            x:Name="LogGrid"
+            Grid.Row="2"
+            Height="200"
+            Visibility="Collapsed">
             <!--  Terminal  -->
             <local:TerminalUserControl
                 x:Name="Terminal"
-                Height="200"
-                Margin="-10"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 IsReadOnly="True" />
-        </ui:CardExpander>
+        </Grid>
 
     </Grid>
 </UserControl>

@@ -380,8 +380,5 @@ public partial class TerminalUserControl : UserControl
 
         e.Handled = true;
     }
-    private void TerminalBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
-    {
 
-    }
 }

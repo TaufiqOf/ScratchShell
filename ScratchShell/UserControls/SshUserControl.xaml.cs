@@ -154,5 +154,15 @@ namespace ScratchShell.UserControls
                 this._sshClient.Dispose();
             }
         }
+
+        private void SnippetToggleButtonChecked(object sender, RoutedEventArgs e)
+        {
+            SnippetControl.Visibility = Visibility.Visible;
+        }
+
+        private void SnippetToggleButtonUnchecked(object sender, RoutedEventArgs e)
+        {
+            SnippetControl.Visibility = Visibility.Collapsed;
+        }
     }
 }
