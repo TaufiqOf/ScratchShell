@@ -59,7 +59,9 @@ public partial class TerminalUserControl : UserControl
         TerminalBox.SizeChanged += TerminalBoxSizeChanged;
         TerminalState = new TerminalState();
         TerminalState.PropertyChanged += TerminalState_PropertyChanged;
-        
+        // Bind copy/paste commands
+        TerminalBox.CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
+        TerminalBox.CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
         AddOutput("");
     }
 
@@ -114,6 +116,25 @@ public partial class TerminalUserControl : UserControl
     private void TerminalControl_Loaded(object sender, RoutedEventArgs e)
     {
         TerminalBox.IsReadOnly = IsReadOnly;
+        ContextMenu menu = new ContextMenu();
+
+        var copyItem = new MenuItem
+        {
+            Header = "Copy",
+            Command = ApplicationCommands.Copy
+        };
+        menu.Items.Add(copyItem);
+
+        var pasteItem = new MenuItem
+        {
+            Header = "Paste",
+            Command = ApplicationCommands.Paste
+        };
+        menu.Items.Add(pasteItem);
+
+        // Do NOT add Cut
+
+        TerminalBox.ContextMenu = menu;
         //AddOutput(InputLineSyntax);
     }
 
@@ -311,5 +332,56 @@ public partial class TerminalUserControl : UserControl
         // You may want to refresh text colors in the document as well,
         // or handle palette colors in renderer.
     }
+    private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        e.CanExecute = TerminalBox.Selection != null && !TerminalBox.Selection.IsEmpty;
+        e.Handled = true;
+    }
 
+    private void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        if (TerminalBox.Selection != null && !TerminalBox.Selection.IsEmpty)
+        {
+            Clipboard.SetText(TerminalBox.Selection.Text);
+        }
+        e.Handled = true;
+    }
+
+    private void PasteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        // Allow paste only if control is editable
+        e.CanExecute = !IsReadOnly;
+        e.Handled = true;
+    }
+
+    private void PasteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        if (IsReadOnly || promptStart == null)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (Clipboard.ContainsText())
+        {
+            string pasteText = Clipboard.GetText(TextDataFormat.Text);
+
+            // sanitize: strip newlines if you want single-line pastes only
+            pasteText = pasteText.Replace("\r", "").Replace("\n", "");
+
+            // insert only at or after prompt
+            if (!IsCaretAfterPrompt())
+            {
+                TerminalBox.CaretPosition = TerminalBox.Document.ContentEnd;
+            }
+
+            TerminalBox.CaretPosition.InsertTextInRun(pasteText);
+        }
+
+        e.Handled = true;
+    }
+    private void TerminalBox_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+
+    }
 }

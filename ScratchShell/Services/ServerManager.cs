@@ -2,6 +2,7 @@
 using ScratchShell.Enums;
 using ScratchShell.Models;
 using ScratchShell.Properties;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -45,11 +46,11 @@ internal static class ServerManager
                 // Encryption keys have changed or data is corrupted
                 System.Diagnostics.Debug.WriteLine($"Failed to decrypt existing server data: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine("This is expected after logout/login - servers may be restored from cloud sync");
-                
+
                 // Don't clear the encrypted data immediately - cloud sync might restore it
                 // Just continue with empty server list for now
                 _servers.Clear();
-                
+
                 // Set a flag to indicate that we need cloud sync to recover data
                 _needsCloudRestore = true;
             }
@@ -57,18 +58,18 @@ internal static class ServerManager
             {
                 // Other decryption or deserialization errors
                 System.Diagnostics.Debug.WriteLine($"Error loading servers: {ex.Message}");
-                
+
                 // For other errors, clear the potentially corrupted data
                 Settings.Default.Servers = string.Empty;
                 Settings.Default.Save();
-                
+
                 // Continue with empty server list
                 _servers.Clear();
             }
         }
 
 #if DEBUG
-        if(!_servers.Any())
+        if (!_servers.Any())
         {
             var random = new Random();
 
@@ -113,7 +114,7 @@ internal static class ServerManager
         _servers.Clear();
         _servers.AddRange(servers);
         SelectedServer = null;
-        
+
         // If we successfully restored servers, clear the restore flag
         _needsCloudRestore = false;
         OnServerInitialized?.Invoke();
@@ -172,13 +173,13 @@ internal static class ServerManager
             // We have successfully restored servers from cloud, so clear the old encrypted data
             System.Diagnostics.Debug.WriteLine("Clearing old encrypted server data after successful cloud restore");
             _needsCloudRestore = false;
-            
+
             // Save the newly restored servers with current encryption keys
             SaveSettings();
         }
     }
 
-    private static void SaveSettings()
+    private static async void SaveSettings()
     {
         try
         {
@@ -186,11 +187,13 @@ internal static class ServerManager
             var encrypted = EncryptionHelper.Encrypt(json);
             Settings.Default.Servers = encrypted;
             Settings.Default.Save();
+            var _cloudSyncService = new CloudSyncService(new HttpClient());
+            await UserSettingsService.TriggerCloudSyncIfEnabled();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error saving servers: {ex.Message}");
-            
+
             // Try to save without encryption as fallback
             try
             {

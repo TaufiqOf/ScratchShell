@@ -22,13 +22,6 @@
             FontSize="14"
             Foreground="LightGreen"
             IsUndoEnabled="False"
-            VerticalScrollBarVisibility="Auto">
-            <RichTextBox.CommandBindings>
-                <CommandBinding
-                    CanExecute="CutCommand_CanExecute"
-                    Command="Cut"
-                    Executed="CutCommand_Executed" />
-            </RichTextBox.CommandBindings>
-        </RichTextBox>
+            VerticalScrollBarVisibility="Auto" />
     </Border>
 </UserControl>

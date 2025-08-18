@@ -26,6 +26,37 @@
     </Page.Resources>
 
     <StackPanel Margin="0,0,0,20">
+
+
+        <!--  Personalization Section  -->
+        <TextBlock
+            Margin="0,20,0,0"
+            FontSize="20"
+            FontWeight="Medium"
+            Text="Personalization" />
+        <TextBlock Margin="0,12,0,0" Text="Theme" />
+        <RadioButton
+            Margin="0,12,0,0"
+            Command="{Binding ViewModel.ChangeThemeCommand, Mode=OneWay}"
+            CommandParameter="theme_light"
+            Content="Light"
+            GroupName="themeSelect"
+            IsChecked="{Binding ViewModel.CurrentTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}" />
+        <RadioButton
+            Margin="0,8,0,0"
+            Command="{Binding ViewModel.ChangeThemeCommand, Mode=OneWay}"
+            CommandParameter="theme_dark"
+            Content="Dark"
+            GroupName="themeSelect"
+            IsChecked="{Binding ViewModel.CurrentTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}" />
+
+        <TextBlock Margin="0,12,0,0" Text="Default Shell" />
+        <ComboBox
+            Margin="0,5,0,0"
+            ItemsSource="{Binding ViewModel.ShellTypes}"
+            SelectedItem="{Binding ViewModel.ShellType, Mode=TwoWay}" />
+        <Separator Margin="0,20,0,0" />
+
         <!--  Account Section  -->
         <TextBlock
             FontSize="20"
@@ -113,36 +144,6 @@
             HorizontalAlignment="Left"
             IsIndeterminate="{Binding ViewModel.IsSyncing, Mode=OneWay}"
             Visibility="{Binding ViewModel.IsSyncing, Converter={StaticResource BoolToVisibilityConverter}}" />
-
-        <Separator Margin="0,20,0,0" />
-
-        <!--  Personalization Section  -->
-        <TextBlock
-            Margin="0,20,0,0"
-            FontSize="20"
-            FontWeight="Medium"
-            Text="Personalization" />
-        <TextBlock Margin="0,12,0,0" Text="Theme" />
-        <RadioButton
-            Margin="0,12,0,0"
-            Command="{Binding ViewModel.ChangeThemeCommand, Mode=OneWay}"
-            CommandParameter="theme_light"
-            Content="Light"
-            GroupName="themeSelect"
-            IsChecked="{Binding ViewModel.CurrentTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}" />
-        <RadioButton
-            Margin="0,8,0,0"
-            Command="{Binding ViewModel.ChangeThemeCommand, Mode=OneWay}"
-            CommandParameter="theme_dark"
-            Content="Dark"
-            GroupName="themeSelect"
-            IsChecked="{Binding ViewModel.CurrentTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}" />
-
-        <TextBlock Margin="0,12,0,0" Text="Default Shell" />
-        <ComboBox
-            Margin="0,5,0,0"
-            ItemsSource="{Binding ViewModel.ShellTypes}"
-            SelectedItem="{Binding ViewModel.ShellType, Mode=TwoWay}" />
 
         <Separator Margin="0,20,0,0" />
 

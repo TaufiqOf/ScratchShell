@@ -13,6 +13,7 @@ using System.Windows.Threading;
 using Wpf.Ui;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.DependencyInjection;
+using ScratchShell.Enums;
 
 namespace ScratchShell
 {
@@ -75,11 +76,17 @@ namespace ScratchShell
             if(string.IsNullOrEmpty(theme))
             {
                 ApplicationThemeManager.Apply(ApplicationTheme.Dark);
+                Settings.Default.CurrentTheme = ApplicationTheme.Dark.ToString();
             }
             else
             {
                 // Apply the saved theme
                 ApplicationThemeManager.Apply((ApplicationTheme)Enum.Parse(typeof(ApplicationTheme), theme));
+            }
+            var defaultShellType = Settings.Default.DefaultShellType;
+            if (string.IsNullOrEmpty(defaultShellType))
+            {
+                Settings.Default.DefaultShellType = ShellType.WindowsTerminal.ToString();
             }
         }
 

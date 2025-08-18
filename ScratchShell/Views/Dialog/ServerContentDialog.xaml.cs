@@ -1,8 +1,8 @@
 ﻿using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
+using TextBox = Wpf.Ui.Controls.TextBox;
 
 namespace ScratchShell.View.Dialog
 {
@@ -41,16 +41,25 @@ namespace ScratchShell.View.Dialog
 
         protected override void OnButtonClick(ContentDialogButton button)
         {
-            if(button == ContentDialogButton.Primary)
+            if (button == ContentDialogButton.Primary)
             {
                 if (DataContext is ServerViewModel viewModel)
                 {
+                    // Check if the form is valid
+                    if (!viewModel.IsValid)
+                    {
+                        // Find and show validation errors
+                        ShowValidationErrors();
+                        return;
+                    }
+                    
+                    // Update the original view model with validated data
                     ViewModel.Name = viewModel.Name;
                     ViewModel.Host = viewModel.Host;
                     ViewModel.Port = viewModel.Port;
                     ViewModel.Username = viewModel.Username;
                     ViewModel.UseKeyFile = viewModel.UseKeyFile;
-                    ViewModel.Password =viewModel.Password;
+                    ViewModel.Password = viewModel.Password;
                     ViewModel.KeyFilePassword = viewModel.KeyFilePassword;
                     ViewModel.ProtocolType = viewModel.ProtocolType;
                     ViewModel.PrivateKeyFilePath = viewModel.PrivateKeyFilePath;
@@ -60,23 +69,101 @@ namespace ScratchShell.View.Dialog
             base.OnButtonClick(button);
         }
 
+        private void ShowValidationErrors()
+        {
+            // Force validation on all named textboxes by finding them
+            var nameTextBox = FindChild<TextBox>(this, "NameTextBox");
+            var hostTextBox = FindChild<TextBox>(this, "HostTextBox");
+            var portTextBox = FindChild<TextBox>(this, "PortTextBox");
+            var usernameTextBox = FindChild<TextBox>(this, "UsernameTextBox");
+            var validationSummary = FindChild<Border>(this, "ValidationSummary");
+            var validationSummaryText = FindChild<System.Windows.Controls.TextBlock>(this, "ValidationSummaryText");
+
+            // Force validation updates
+            nameTextBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            hostTextBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            portTextBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            usernameTextBox?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+
+            // Show validation summary
+            if (validationSummary != null && validationSummaryText != null && DataContext is ServerViewModel viewModel)
+            {
+                var errors = new List<string>();
+                
+                var nameError = viewModel[nameof(viewModel.Name)];
+                if (!string.IsNullOrEmpty(nameError))
+                    errors.Add($"• {nameError}");
+                
+                var hostError = viewModel[nameof(viewModel.Host)];
+                if (!string.IsNullOrEmpty(hostError))
+                    errors.Add($"• {hostError}");
+                
+                var portError = viewModel[nameof(viewModel.Port)];
+                if (!string.IsNullOrEmpty(portError))
+                    errors.Add($"• {portError}");
+                
+                var usernameError = viewModel[nameof(viewModel.Username)];
+                if (!string.IsNullOrEmpty(usernameError))
+                    errors.Add($"• {usernameError}");
+                
+                if (errors.Any())
+                {
+                    validationSummaryText.Text = string.Join("\n", errors);
+                    validationSummary.Visibility = System.Windows.Visibility.Visible;
+                }
+            }
+        }
+
+        // Helper method to find child controls by name
+        private static T? FindChild<T>(DependencyObject parent, string childName) where T : DependencyObject
+        {
+            if (parent == null) return null;
+
+            T? foundChild = null;
+
+            int childrenCount = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childrenCount; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+
+                if (child is T t && (child as FrameworkElement)?.Name == childName)
+                {
+                    foundChild = t;
+                    break;
+                }
+
+                foundChild = FindChild<T>(child, childName);
+                if (foundChild != null) break;
+            }
+
+            return foundChild;
+        }
+
         private void PublicKeyFilePath_Click(object sender, RoutedEventArgs e)
         {
-            var openDiaglog = new OpenFileDialog();
-            openDiaglog.Filter = "Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*";
-            if (openDiaglog.ShowDialog() == true)
+            var openDialog = new OpenFileDialog
+            {
+                Filter = "Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*",
+                Title = "Select Public Key File"
+            };
+            
+            if (openDialog.ShowDialog() == true)
             {
                 if (DataContext is ServerViewModel viewModel)
                 {
-                    viewModel.PublicKeyFilePath = openDiaglog.FileName;
+                    viewModel.PublicKeyFilePath = openDialog.FileName;
                 }
             }
         }
 
         private void PrivateKeyFilePath_Click(object sender, RoutedEventArgs e)
         {
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = "Private Key Files (*.pem,*.key)|*.pem;*.key|All Files (*.*)|*.*";
+            var openDialog = new OpenFileDialog
+            {
+                Filter = "Private Key Files (*.pem;*.key)|*.pem;*.key|All Files (*.*)|*.*",
+                Title = "Select Private Key File"
+            };
+            
             if (openDialog.ShowDialog() == true)
             {
                 if (DataContext is ServerViewModel viewModel)

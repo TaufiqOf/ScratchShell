@@ -5,17 +5,85 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <ProgressBar x:Name="Progress" IsIndeterminate="False" />
+        <ProgressBar
+            x:Name="Progress"
+            Grid.Row="0"
+            IsIndeterminate="False" />
+        <!--  Top toolbar  -->
+        <Grid
+            x:Name="TopToolbar"
+            Grid.Row="1"
+            Margin="5"
+            VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <!--  Separator  -->
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Copy  -->
+            <ui:Button
+                Grid.Column="0"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                Command="Copy"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=Copy20}"
+                ToolTip="Copy" />
+
+            <!--  Paste  -->
+            <ui:Button
+                Grid.Column="1"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                Command="Paste"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
+                ToolTip="Paste" />
+            <!--  Separator  -->
+            <Border
+                Grid.Column="2"
+                Width="1"
+                Margin="5,0"
+                Background="{DynamicResource TextFillColorSecondaryBrush}" />
+            <!--  Command Snippet  -->
+            <ui:Button
+                Grid.Column="3"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=Code20}"
+                ToolTip="Command Snippet" />
+
+            <!--  Full Screen  -->
+            <ui:Button
+                Grid.Column="4"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                FontSize="20"
+                Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
+                ToolTip="Full Screen" />
+
+
+        </Grid>
+
+
         <local:TerminalUserControl
             x:Name="Terminal"
-            Grid.Row="1"
+            Grid.Row="2"
             Margin="0,0,0,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" />
