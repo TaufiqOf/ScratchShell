@@ -1,4 +1,5 @@
 using ScratchShell.Properties;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -7,6 +8,21 @@ namespace ScratchShell.Services
     public class UserSettingsService
     {
         private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("ScratchShellEntropy2024");
+        private static CloudSyncService? _cloudSyncService;
+
+        /// <summary>
+        /// Initializes cloud sync service
+        /// </summary>
+        public static void InitializeCloudSync(CloudSyncService cloudSyncService)
+        {
+            _cloudSyncService = cloudSyncService;
+            
+            // Subscribe to settings changes for auto-sync
+            if (Settings.Default.AutoSyncOnChange)
+            {
+                // We'll implement this when settings change events are available
+            }
+        }
 
         /// <summary>
         /// Checks if this is the user's first time logging in
@@ -22,7 +38,7 @@ namespace ScratchShell.Services
         /// <param name="token">JWT authentication token</param>
         /// <param name="username">Username/email of the user</param>
         /// <param name="rememberMe">Whether to remember the user for auto-login</param>
-        public static void StoreAuthenticationCredentials(string token, string username, bool rememberMe = true)
+        public static async void StoreAuthenticationCredentials(string token, string username, bool rememberMe = true)
         {
             try
             {
@@ -37,6 +53,23 @@ namespace ScratchShell.Services
 
                 // Update the AuthenticationService static token
                 AuthenticationService.Token = token;
+
+                // Trigger cloud sync if enabled and user is logging in for first time
+                if (Settings.Default.EnableCloudSync && _cloudSyncService != null && AuthenticationService.IsTokenValid())
+                {
+                    await Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // Try to download settings from cloud on first login
+                            await _cloudSyncService.SyncFromCloudAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Error during initial cloud sync: {ex.Message}");
+                        }
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -81,13 +114,24 @@ namespace ScratchShell.Services
         /// <summary>
         /// Clears stored authentication credentials (logout)
         /// </summary>
-        public static void ClearStoredCredentials()
+        public static async void ClearStoredCredentials()
         {
-            Settings.Default.AuthToken = string.Empty;
-            Settings.Default.Username = string.Empty;
-            Settings.Default.RememberMe = false;
-            Settings.Default.Save();
+            try
+            {
+                // Clear cloud settings if enabled
+                if (Settings.Default.EnableCloudSync && _cloudSyncService != null && AuthenticationService.IsTokenValid())
+                {
+                    // Don't delete cloud settings, just stop syncing
+                    // User might login again later
+                }
 
+                // Clear all local settings
+                CloudSyncService.ClearAllLocalSettings();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error clearing stored credentials: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -109,7 +153,7 @@ namespace ScratchShell.Services
         /// <summary>
         /// Updates the remember me preference
         /// </summary>
-        public static void SetRememberMe(bool rememberMe)
+        public static async void SetRememberMe(bool rememberMe)
         {
             Settings.Default.RememberMe = rememberMe;
             Settings.Default.Save();
@@ -120,6 +164,9 @@ namespace ScratchShell.Services
                 Settings.Default.AuthToken = string.Empty;
                 Settings.Default.Save();
             }
+
+            // Trigger cloud sync if enabled
+            await TriggerCloudSyncIfEnabled();
         }
 
         /// <summary>
@@ -128,6 +175,166 @@ namespace ScratchShell.Services
         public static void ResetFirstTimeLogin()
         {
             Settings.Default.IsFirstTimeLogin = true;
+            Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Updates cloud sync settings
+        /// </summary>
+        public static async void UpdateCloudSyncSettings(bool enableCloudSync, bool autoSyncOnStartup, bool autoSyncOnChange)
+        {
+            Settings.Default.EnableCloudSync = enableCloudSync;
+            Settings.Default.AutoSyncOnStartup = autoSyncOnStartup;
+            Settings.Default.AutoSyncOnChange = autoSyncOnChange;
+            Settings.Default.Save();
+
+            // If cloud sync was just enabled, trigger initial sync
+            if (enableCloudSync && _cloudSyncService != null && AuthenticationService.IsTokenValid())
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _cloudSyncService.SyncToCloudAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error during cloud sync setup: {ex.Message}");
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Triggers cloud sync if enabled and conditions are met
+        /// </summary>
+        public static async Task TriggerCloudSyncIfEnabled()
+        {
+            if (Settings.Default.EnableCloudSync && 
+                Settings.Default.AutoSyncOnChange && 
+                _cloudSyncService != null && 
+                AuthenticationService.IsTokenValid())
+            {
+                try
+                {
+                    // Check if we have encryption keys available
+                    if (!AuthenticationService.HasCloudEncryptionKeys)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Cloud sync requested but encryption keys not available (auto-login scenario)");
+                        // In this case, skip the sync - user would need to manually sync or re-login
+                        return;
+                    }
+                    
+                    await _cloudSyncService.SyncToCloudAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error during auto cloud sync: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs startup sync if enabled
+        /// </summary>
+        public static async Task PerformStartupSyncIfEnabled()
+        {
+            if (Settings.Default.EnableCloudSync && 
+                Settings.Default.AutoSyncOnStartup && 
+                _cloudSyncService != null && 
+                AuthenticationService.IsTokenValid())
+            {
+                try
+                {
+                    // Check if we need to restore servers from cloud due to encryption key changes
+                    if (ServerManager.NeedsCloudRestore)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Attempting to restore servers from cloud due to encryption key changes");
+                        
+                        // Try to download from cloud first to restore data
+                        var downloadResult = await _cloudSyncService.SyncFromCloudAsync();
+                        if (downloadResult.IsSuccess)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Successfully restored servers from cloud");
+                            ServerManager.ClearOldEncryptedData();
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to restore servers from cloud: {downloadResult.Message}");
+                        }
+                    }
+                    else
+                    {
+                        // Normal startup sync
+                        await _cloudSyncService.SyncFromCloudAsync();
+                        await _cloudSyncService.SyncToCloudAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error during startup cloud sync: {ex.Message}");
+                }
+            }
+            else if (ServerManager.NeedsCloudRestore)
+            {
+                System.Diagnostics.Debug.WriteLine("Cloud sync is disabled but servers need restoration - data may be lost");
+            }
+        }
+
+        /// <summary>
+        /// Gets cloud sync status
+        /// </summary>
+        public static (bool enabled, bool autoStartup, bool autoChange) GetCloudSyncSettings()
+        {
+            return (
+                Settings.Default.EnableCloudSync,
+                Settings.Default.AutoSyncOnStartup,
+                Settings.Default.AutoSyncOnChange
+            );
+        }
+
+        /// <summary>
+        /// Gets last sync timestamp
+        /// </summary>
+        public static DateTime? GetLastSyncTimestamp()
+        {
+            // First try to read from Settings
+            if (!string.IsNullOrEmpty(Settings.Default.LastSyncTimestamp) && 
+                DateTime.TryParse(Settings.Default.LastSyncTimestamp, out var timestamp))
+            {
+                return timestamp;
+            }
+
+            // Fallback to file-based timestamp (for backward compatibility)
+            try
+            {
+                var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ScratchShell");
+                var syncFile = Path.Combine(appDataPath, "lastsync.txt");
+                if (File.Exists(syncFile))
+                {
+                    var timestampStr = File.ReadAllText(syncFile);
+                    if (DateTime.TryParse(timestampStr, out var fileTimestamp))
+                    {
+                        // Migrate file timestamp to Settings
+                        UpdateLastSyncTimestamp(fileTimestamp);
+                        return fileTimestamp;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error reading sync timestamp from file: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Updates last sync timestamp
+        /// </summary>
+        public static void UpdateLastSyncTimestamp(DateTime timestamp)
+        {
+            Settings.Default.LastSyncTimestamp = timestamp.ToString("O");
             Settings.Default.Save();
         }
 

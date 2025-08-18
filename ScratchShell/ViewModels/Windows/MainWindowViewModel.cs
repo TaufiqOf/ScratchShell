@@ -4,6 +4,7 @@ using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
 using ScratchShell.Views.Dialog;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 
@@ -12,10 +13,25 @@ namespace ScratchShell.ViewModels.Windows
     public partial class MainWindowViewModel : ObservableObject
     {
         private readonly IContentDialogService _contentDialogService;
+        private CloudSyncService? _cloudSyncService;
 
         public MainWindowViewModel(IContentDialogService contentDialogService)
         {
             this._contentDialogService = contentDialogService;
+            InitializeCloudSync();
+        }
+
+        private void InitializeCloudSync()
+        {
+            try
+            {
+                _cloudSyncService = new CloudSyncService(new HttpClient());
+                UserSettingsService.InitializeCloudSync(_cloudSyncService);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing cloud sync: {ex.Message}");
+            }
         }
 
         private async void ShowLogin()
@@ -33,6 +49,11 @@ namespace ScratchShell.ViewModels.Windows
                 {
                     Application.Current.Shutdown();
                 }
+                else if (contentDialogResult == ContentDialogResult.Primary && loginDialog.IsLoginSuccessful)
+                {
+                    // Perform startup sync after successful login
+                    await PerformStartupSync();
+                }
             }
         }
 
@@ -49,7 +70,8 @@ namespace ScratchShell.ViewModels.Windows
                     if (registerDialog.IsRegistrationSuccessful)
                     {
                         // Registration automatically stores credentials for first-time login
-                        // Continue to the main app
+                        // Perform startup sync after successful registration
+                        await PerformStartupSync();
                         return;
                     }
                 }
@@ -66,17 +88,33 @@ namespace ScratchShell.ViewModels.Windows
             }
         }
 
-        internal void Loaded()
+        internal async void Loaded()
         {
             // Check if user has stored credentials for auto-login
             if (TryAutoLogin())
             {
-                // User is already authenticated, continue to main app
+                // User is already authenticated, perform startup sync
+                await PerformStartupSync();
                 return;
             }
 
             // No stored credentials, show login dialog
             ShowLogin();
+        }
+
+        /// <summary>
+        /// Performs startup sync if enabled
+        /// </summary>
+        private async Task PerformStartupSync()
+        {
+            try
+            {
+                await UserSettingsService.PerformStartupSyncIfEnabled();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during startup sync: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -94,11 +132,14 @@ namespace ScratchShell.ViewModels.Windows
                     return false;
                 }
 
+                SecureKeyStore.InitializeForUser(storedCredentials.Value.username);
                 // Set the token in the AuthenticationService
                 AuthenticationService.Token = storedCredentials.Value.token;
 
-                // Log successful auto-login (for debugging)
+                // Note: User encryption keys are not available during auto-login since we don't have the password
+                // Cloud sync will require user to re-enter password or login manually
                 System.Diagnostics.Debug.WriteLine($"Auto-login successful for user: {storedCredentials.Value.username}");
+                System.Diagnostics.Debug.WriteLine("Note: Cloud encryption keys not available - user may need to re-enter password for cloud sync");
 
                 return true;
             }
@@ -115,7 +156,7 @@ namespace ScratchShell.ViewModels.Windows
         /// </summary>
         public void Logout()
         {
-            // Clear stored credentials
+            // Clear stored credentials and all local settings
             AuthenticationService.Logout();
 
             // Show login dialog again

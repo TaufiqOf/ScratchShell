@@ -163,11 +163,11 @@ namespace ScratchShell.WebApi.Controllers
                 var result = await _userManager.CreateAsync(user, request.Password);
                 if (!result.Succeeded)
                 {
-                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    var errors = string.Join("\n", result.Errors.Select(e => e.Description));
                     return BadRequest(new AuthResponseDto
                     {
                         IsSuccess = false,
-                        Message = $"Failed to create user: {errors}"
+                        Message = $"Failed to create user:\n{errors}"
                     });
                 }
 

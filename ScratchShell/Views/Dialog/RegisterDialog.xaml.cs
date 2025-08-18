@@ -73,7 +73,7 @@ namespace ScratchShell.Views.Dialog
                     Token = result.Token;
                     IsRegistrationSuccessful = true;
                     IsFirstTimeLogin = result.IsFirstTimeLogin;
-                    
+
                     ShowStatusMessage("Registration successful! Your credentials have been saved for future logins.", Colors.Green);
                     
                     // Small delay to show success message

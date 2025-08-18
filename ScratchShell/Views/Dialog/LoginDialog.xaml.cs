@@ -22,7 +22,10 @@ namespace ScratchShell.Views.Dialog
         {
             InitializeComponent();
             _loginService = new AuthenticationService(new HttpClient());
-            
+#if DEBUG
+            UsernameTextBox.Text = "dfsdf@asd.com";
+            PasswordBox.Password = "123456Ta";
+#endif
             // Pre-fill username if stored
             var storedUsername = UserSettingsService.GetStoredUsername();
             if (!string.IsNullOrEmpty(storedUsername))
@@ -79,6 +82,7 @@ namespace ScratchShell.Views.Dialog
                 if (result.IsSuccess)
                 {
                     AuthenticationService.Token = result.Token;
+                    //SecureKeyStore.InitializeForUser(Username);
                     Token = result.Token;
                     IsLoginSuccessful = true;
                     IsFirstTimeLogin = result.IsFirstTimeLogin;

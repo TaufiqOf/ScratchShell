@@ -54,7 +54,19 @@ namespace ScratchShell.ViewModels.Pages
             ServerManager.OnServerSelected += ServerManagerOnServerSelected;
             ServerManager.OnServerAdded += ServerManagerOnServerAdded;
             ServerManager.OnServerRemoved += ServerManagerOnServerRemoved;
-            ServerManager.OnServerEdited += ServerManagerOnServerEdited; ;
+            ServerManager.OnServerEdited += ServerManagerOnServerEdited;
+            ServerManager.OnServerInitialized += ServerManagerOnServerInitialized;
+        }
+
+        private async Task ServerManagerOnServerInitialized()
+        {
+            Servers.Clear();
+            ServerManager.Servers.Where(q => !q.IsDeleted).Select(q => new ServerViewModel(q, _contentDialogService)).ToList().ForEach(q =>
+            {
+                Servers.Add(q);
+            });
+            FilteredServers.Refresh();
+            await Task.CompletedTask;
         }
 
         private async Task ServerManagerOnServerEdited(Server? server)

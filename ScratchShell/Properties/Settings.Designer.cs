@@ -106,5 +106,53 @@ namespace ScratchShell.Properties {
                 this["RememberMe"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool EnableCloudSync {
+            get {
+                return ((bool)(this["EnableCloudSync"]));
+            }
+            set {
+                this["EnableCloudSync"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoSyncOnStartup {
+            get {
+                return ((bool)(this["AutoSyncOnStartup"]));
+            }
+            set {
+                this["AutoSyncOnStartup"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoSyncOnChange {
+            get {
+                return ((bool)(this["AutoSyncOnChange"]));
+            }
+            set {
+                this["AutoSyncOnChange"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastSyncTimestamp {
+            get {
+                return ((string)(this["LastSyncTimestamp"]));
+            }
+            set {
+                this["LastSyncTimestamp"] = value;
+            }
+        }
     }
 }

@@ -9,5 +9,8 @@ namespace ScratchShell.WebApi.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
+        
+        // Cloud settings sync properties
+        public virtual UserSettings? UserSettings { get; set; }
     }
 }

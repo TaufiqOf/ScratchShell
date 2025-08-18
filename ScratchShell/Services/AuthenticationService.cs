@@ -1,3 +1,4 @@
+using System.Dynamic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -35,6 +36,8 @@ namespace ScratchShell.Services
             if (storedCredentials.HasValue)
             {
                 Token = storedCredentials.Value.token ?? string.Empty;
+                // Note: We cannot initialize user encryption keys here because we don't have the password
+                // User will need to re-enter password for cloud sync functionality
             }
         }
 
@@ -71,10 +74,14 @@ namespace ScratchShell.Services
                         
                         // Check if this is first time login
                         var isFirstTime = UserSettingsService.IsFirstTimeLogin();
+
+                        // Initialize user-specific encryption keys for cloud sync
                         
                         // Store credentials (always store for persistence)
                         UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
-                        
+                        SecureKeyStore.InitializeForUser(UserSettingsService.GetStoredUsername());
+
+
                         return new LoginResult
                         {
                             IsSuccess = true,
@@ -154,10 +161,14 @@ namespace ScratchShell.Services
                     if (!string.IsNullOrEmpty(token) && userInfo != null)
                     {
                         var displayName = !string.IsNullOrEmpty(userInfo.UserName) ? userInfo.UserName : userInfo.Email;
+
+                        // Initialize user-specific encryption keys for cloud sync
                         
                         // Registration is always first time login
                         UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
-                        
+                        SecureKeyStore.InitializeForUser(UserSettingsService.GetStoredUsername());
+
+
                         return new RegisterResult
                         {
                             IsSuccess = true,
@@ -178,10 +189,11 @@ namespace ScratchShell.Services
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
+                    dynamic messageD = JsonSerializer.Deserialize<ExpandoObject>(errorContent);
                     return new RegisterResult
                     {
                         IsSuccess = false,
-                        Message = $"Registration failed: {response.StatusCode}"
+                        Message = $"Registration failed: {messageD.message}"
                     };
                 }
             }
@@ -289,6 +301,35 @@ namespace ScratchShell.Services
             return UserSettingsService.GetStoredUsername();
         }
 
+        /// <summary>
+        /// Re-initializes user encryption keys for cloud sync (needed when auto-logged in)
+        /// </summary>
+        /// <param name="password">User's password for key derivation</param>
+        /// <returns>True if keys were successfully initialized</returns>
+        public static bool InitializeEncryptionKeys(string password)
+        {
+            try
+            {
+                var username = GetStoredUsername();
+                if (!string.IsNullOrEmpty(username))
+                {
+                    SecureKeyStore.InitializeForUser(username);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing encryption keys: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks if cloud encryption keys are available
+        /// </summary>
+        public static bool HasCloudEncryptionKeys => SecureKeyStore.HasUserKeys;
+
         // Method to clear token (logout)
         public static void ClearToken()
         {
@@ -299,6 +340,8 @@ namespace ScratchShell.Services
         // Method to logout and clear all stored data
         public static void Logout()
         {
+            // Clear user-specific encryption keys
+            SecureKeyStore.ClearUserKeys();
             ClearToken();
         }
     }
