@@ -88,13 +88,14 @@
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
                     ToolTip="Full Screen" />
             </Grid>
-            <local:TerminalUserControl
-                x:Name="Terminal"
+            <ContentControl
+                x:Name="TerminalContentControl"
                 Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,0,0,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch" />
+
         </Grid>
         <local1:SnippetUserControl
             x:Name="SnippetControl"

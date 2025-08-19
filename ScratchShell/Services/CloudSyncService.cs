@@ -462,6 +462,7 @@ namespace ScratchShell.Services
             {
                 CurrentTheme = Settings.Default.CurrentTheme,
                 DefaultShellType = Settings.Default.DefaultShellType,
+                Snippets = Settings.Default.Snippets,
                 EncryptedServers = cloudEncryptedServers,
                 AdditionalSettings = new Dictionary<string, string>
                 {
@@ -515,6 +516,22 @@ namespace ScratchShell.Services
                     System.Diagnostics.Debug.WriteLine($"Error loading servers from cloud: {ex.Message}");
                 }
             }
+            // Apply shell type
+            if (!string.IsNullOrEmpty(cloudSettings.Snippets))
+            {
+                // Decrypt using cloud keys (user-specific)
+                var decryptedServers = EncryptionHelper.Decrypt(cloudSettings.Snippets);
+
+                // Re-encrypt using local keys (device-specific) for local storage
+                var localEncryptedServers = EncryptionHelper.Encrypt(decryptedServers);
+                Settings.Default.Snippets = localEncryptedServers;
+                var servers = JsonConvert.DeserializeObject<List<Models.Snippet>>(decryptedServers);
+                if (servers != null)
+                {
+                    SnippetManager.InitializeSnippets(servers);
+                }
+            }
+
 
             // Update sync timestamp
             UpdateLocalSyncTimestamp(cloudSettings.LastSyncedAt);

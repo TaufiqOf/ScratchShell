@@ -7,6 +7,7 @@ namespace ScratchShell.WebApi.DTOs
         public string? CurrentTheme { get; set; }
         public string? DefaultShellType { get; set; }
         public string? EncryptedServers { get; set; }
+        public string? Snippets { get; set; }
         public Dictionary<string, string> AdditionalSettings { get; set; } = new();
         public DateTime LastSyncedAt { get; set; }
         public string DeviceId { get; set; } = string.Empty;

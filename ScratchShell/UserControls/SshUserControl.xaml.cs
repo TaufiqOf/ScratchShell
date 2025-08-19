@@ -1,9 +1,18 @@
 ﻿using Renci.SshNet;
+using ScratchShell.Models;
+using ScratchShell.Services;
 using ScratchShell.UserControls.TerminalControl;
+using ScratchShell.UserControls.XtermTerminalControl;
+using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Windows.Controls;
+using Wpf.Ui;
+using Wpf.Ui.Controls;
+using Wpf.Ui.Extensions;
 
 namespace ScratchShell.UserControls
 {
@@ -13,26 +22,67 @@ namespace ScratchShell.UserControls
     public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         private ServerViewModel _server;
+        private readonly IContentDialogService _contentDialogService;
         private SshClient? _sshClient;
         private ShellStream _shellStream;
         private bool _isInitialized = false;
-
-        public SshUserControl(ServerViewModel server)
+        public ITerminal Terminal { get; private set; } 
+        public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
         {
             InitializeComponent();
-            this._server = server;
+            Terminal = new XTermTerminalUserControl();
+            TerminalContentControl.Content = Terminal;
+            _server = server;
+            _contentDialogService = contentDialogService;
             Terminal.InputLineSyntax = "";
             Terminal.CommandEntered += TerminalCommandEntered;
-            Terminal.SizeChanged += TerminalSizeChanged;
-            this.Loaded += ControlLoaded;
+            Terminal.TerminalSizeChanged += TerminalSizeChanged;
+            Loaded += ControlLoaded;
+            SnippetControl.OnDeleteSnippet += SnippetControlOnDeleteSnippet;
+            SnippetControl.OnEditSnippet += SnippetControlOnEditSnippet;
+            SnippetControl.OnNewSnippet += SnippetControlOnNewSnippet;
+            SnippetManager.OnSnippetInitialized += SnippetManagerOnSnippetInitialized;
+        }
+
+
+
+        private async Task SnippetManagerOnSnippetInitialized()
+        {
+            if (!_isInitialized)
+            {
+                return;
+            }
+            var snippetList = SnippetManager.Snippets
+           .Select(q => new SnippetViewModel(q, _contentDialogService))
+           .ToList();
+
+            foreach (var snip in snippetList)
+            {
+                snip.ExecuteSnippet += SnippetExecuteSnippet;
+            }
+
+            SnippetControl.Snippets = new ObservableCollection<SnippetViewModel>(snippetList);
+            await Task.CompletedTask;
         }
 
         private async void ControlLoaded(object sender, RoutedEventArgs e)
         {
+
             if (_isInitialized)
             {
                 return;
             }
+            var snippetList = SnippetManager.Snippets
+                .Select(q => new SnippetViewModel(q, _contentDialogService))
+                .ToList();
+
+            foreach (var snip in snippetList)
+            {
+                snip.ExecuteSnippet += SnippetExecuteSnippet;
+            }
+
+            SnippetControl.Snippets = new ObservableCollection<SnippetViewModel>(snippetList);
+            _isInitialized = true;
             if (_server == null)
             {
                 Terminal.AddOutput("Server is not initialized.");
@@ -42,7 +92,7 @@ namespace ScratchShell.UserControls
             // Here you would typically initiate the SSH connection using the server details.
             // For example, you might call a method to connect to the server.
             await ConnectToServer(_server);
-            _isInitialized = true;
+        
         }
 
         private async Task ConnectToServer(ServerViewModel server)
@@ -84,37 +134,23 @@ namespace ScratchShell.UserControls
         {
             await Task.Run(() =>
             {
-                var outputBuffer = new StringBuilder();
 
                 while (_sshClient is not null && _sshClient.IsConnected)
                 {
                     string output = _shellStream.Read();
                     if (!string.IsNullOrEmpty(output))
                     {
-                        outputBuffer.Append(output);
                         Application.Current.Dispatcher.Invoke(async () =>
                         {
-                            await Task.Delay(1000); // Small delay to allow UI to update
-                            Terminal.AddOutput(outputBuffer.ToString());
+                            Terminal.AddOutput(output.ToString());
                         });
                     }
                 }
             });
         }
 
-        private void TerminalCommandEntered(TerminalUserControl sender, string command)
-        {
-            try
-            {
-                _shellStream.WriteLine(command);
-            }
-            catch (Exception ex)
-            {
-                Terminal.AddOutput("Error: " + ex.Message);
-            }
-        }
-
-        private void TerminalSizeChanged(TerminalUserControl terminal, Size newSize)
+    
+        private void TerminalSizeChanged(ITerminal obj, Size newSize)
         {
             if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
             {
@@ -143,6 +179,18 @@ namespace ScratchShell.UserControls
             }
         }
 
+        private void TerminalCommandEntered(ITerminal obj, string command)
+        {
+            try
+            {
+                _shellStream.WriteLine(command);
+            }
+            catch (Exception ex)
+            {
+                Terminal.AddOutput("Error: " + ex.Message);
+            }
+        }
+
         public void Dispose()
         {
             if (_sshClient is not null)
@@ -160,6 +208,82 @@ namespace ScratchShell.UserControls
         private void SnippetToggleButtonUnchecked(object sender, RoutedEventArgs e)
         {
             SnippetControl.Visibility = Visibility.Collapsed;
+        }
+        private async Task SnippetControlOnNewSnippet(SnippetUserControl obj)
+        {
+            if (_contentDialogService is not null)
+            {
+                var snippetViewModel = new SnippetViewModel(_contentDialogService);
+                if (_contentDialogService is not null)
+                {
+                    var snippetContentDialog = new SnippetContentDialog(_contentDialogService.GetDialogHost(), snippetViewModel);
+
+                    var contentDialogResult = await snippetContentDialog.ShowAsync();
+                    if (contentDialogResult == ContentDialogResult.Primary)
+                    {
+                        await SnippetManager.Add(snippetViewModel.ToSnippet());
+                        SnippetControl.Snippets.Add(snippetViewModel);
+                        snippetViewModel.ExecuteSnippet += SnippetExecuteSnippet;
+
+                    }
+                }
+            }
+        }
+
+        private async Task SnippetControlOnEditSnippet(SnippetUserControl obj, SnippetViewModel? snippet)
+        {
+            if (_contentDialogService is not null && snippet is not null)
+            {
+                var snippetViewModel = snippet;
+                if (_contentDialogService is not null)
+                {
+                    var snippetContentDialog = new SnippetContentDialog(_contentDialogService.GetDialogHost(), snippetViewModel);
+
+                    var contentDialogResult = await snippetContentDialog.ShowAsync();
+                    if (contentDialogResult == ContentDialogResult.Primary)
+                    {
+                        await SnippetManager.Edit(snippetViewModel.ToSnippet());
+                    }
+                }
+            }
+        }
+
+        private async Task SnippetControlOnDeleteSnippet(SnippetUserControl obj, SnippetViewModel? snippet)
+        {
+            if (_contentDialogService is not null)
+            {
+                ContentDialogResult result = await _contentDialogService.ShowSimpleDialogAsync(
+                        new SimpleContentDialogCreateOptions()
+                        {
+                            Title = "Delete this snippet?",
+                            Content = $"Are you sure you want to delete {Name}?",
+                            PrimaryButtonText = "Delete",
+                            CloseButtonText = "Cancel",
+                        }
+                    );
+                if (result == ContentDialogResult.Primary)
+                {
+                    SnippetManager.Remove(snippet?.ToSnippet());
+                    snippet.ExecuteSnippet -= SnippetExecuteSnippet;
+                    SnippetControl.Snippets.Remove(snippet);
+                }
+            }
+        }
+
+        private async Task SnippetExecuteSnippet(SnippetViewModel? snippet)
+        {
+            if(snippet?.Code is null)
+            {
+                return;
+            }
+            string text1 = Terminal.Text.TrimEnd();
+            System.Diagnostics.Debug.WriteLine($"Terminal.Text = '{text1}'");
+            System.Diagnostics.Debug.WriteLine($"snippet.Code = '{snippet.Code}'");
+
+            string text = $"{text1}test{snippet.Code}";
+            System.Diagnostics.Debug.WriteLine($"RESULT = '{text}'");
+            //Terminal.AddOutput(text);
+            await Task.CompletedTask;
         }
     }
 }

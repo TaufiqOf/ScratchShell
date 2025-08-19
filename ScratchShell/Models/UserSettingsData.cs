@@ -9,5 +9,6 @@ namespace ScratchShell.Models
         public DateTime LastSyncedAt { get; set; }
         public string DeviceId { get; set; } = string.Empty;
         public string DeviceName { get; set; } = string.Empty;
+        public string Snippets { get; set; } = string.Empty;
     }
 }

@@ -154,5 +154,17 @@ namespace ScratchShell.Properties {
                 this["LastSyncTimestamp"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Snippets {
+            get {
+                return ((string)(this["Snippets"]));
+            }
+            set {
+                this["Snippets"] = value;
+            }
+        }
     }
 }

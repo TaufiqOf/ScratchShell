@@ -12,7 +12,7 @@ namespace ScratchShell.UserControls.TerminalControl;
 /// <summary>
 /// Interaction logic for TerminalControl.xaml
 /// </summary>
-public partial class TerminalUserControl : UserControl
+public partial class TerminalUserControl : UserControl, ITerminal
 {
     public string InputLineSyntax { get; set; } = "";
     public string Output => (new TextRange(TerminalBox.Document?.ContentStart, TerminalBox.Document?.ContentEnd)).Text;
@@ -22,11 +22,6 @@ public partial class TerminalUserControl : UserControl
 
     public TerminalState TerminalState { get; set; }
 
-    public event Action<TerminalUserControl, string>? CommandEntered;
-
-    public event Action<TerminalUserControl, string>? TitleChanged;
-
-    public event Action<TerminalUserControl, Size>? SizeChanged;
 
     public bool IsReadOnly
     {
@@ -41,10 +36,11 @@ public partial class TerminalUserControl : UserControl
     public static readonly DependencyProperty IsReadOnlyProperty =
         DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(TerminalUserControl), new PropertyMetadata(true));
 
-    public string Text
-    {
-        get { return new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd).Text; }
-    }
+    public event ITerminal.TerminalCommandHandler CommandEntered;
+    public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
+
+    public string Text => new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd)
+        .Text.TrimEnd('\r', '\n');
 
     public TerminalUserControl()
     {
@@ -61,9 +57,11 @@ public partial class TerminalUserControl : UserControl
         AddOutput("");
     }
 
+ 
+
     private void TerminalBoxSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        SizeChanged?.Invoke(this, e.NewSize);
+        TerminalSizeChanged?.Invoke(this, e.NewSize);
     }
 
     public void Clear()
@@ -97,7 +95,7 @@ public partial class TerminalUserControl : UserControl
             });
         }
 
-        TerminalBox.Document.Blocks.Clear();
+        //TerminalBox.Document.Blocks.Clear();
         TerminalBox.Document.Blocks.Add(paragraph);
 
         promptStart = paragraph.ElementEnd.GetInsertionPosition(LogicalDirection.Forward);
@@ -173,10 +171,15 @@ public partial class TerminalUserControl : UserControl
         if (promptStart == null || promptParagraph == null)
             return "";
 
+        // Get the range from the prompt start to the end of paragraph
         var inputRange = new TextRange(promptStart, promptParagraph.ContentEnd);
         string input = inputRange.Text.TrimEnd('\r', '\n');
 
         Debug.WriteLine($"Raw Input: [{input}]");
+
+        // Delete the input text from the RichTextBox, but keep the prompt
+        inputRange.Text = string.Empty;
+
         return input;
     }
 
@@ -246,7 +249,6 @@ public partial class TerminalUserControl : UserControl
 
     private void UpdateWindowTitle()
     {
-        TitleChanged?.Invoke(this, TerminalState.WindowTitle);
     }
 
     private void UpdateCursorPosition()

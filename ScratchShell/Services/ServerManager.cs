@@ -200,20 +200,6 @@ internal static class ServerManager
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error saving servers: {ex.Message}");
-
-            // Try to save without encryption as fallback
-            try
-            {
-                var json = JsonConvert.SerializeObject(_servers);
-                Settings.Default.Servers = json; // Store unencrypted as last resort
-                Settings.Default.Save();
-                System.Diagnostics.Debug.WriteLine("Warning: Servers saved without encryption due to encryption failure");
-            }
-            catch (Exception saveEx)
-            {
-                System.Diagnostics.Debug.WriteLine($"Critical error: Failed to save servers even without encryption: {saveEx.Message}");
-                // Don't throw - just log the error to prevent app crashes
-            }
         }
     }
 }

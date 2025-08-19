@@ -1,8 +1,9 @@
 ﻿using ScratchShell.Constants;
 using ScratchShell.Enums;
 using ScratchShell.Models;
-using ScratchShell.Services;
 using ScratchShell.Properties;
+using ScratchShell.Services;
+using ScratchShell.UserControls;
 using ScratchShell.View.Dialog;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -17,6 +18,8 @@ namespace ScratchShell.ViewModels.Models
 {
     public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
     {
+
+
         [ObservableProperty]
         private IEnumerable<ProtocolType> _protocolTypes;
 
@@ -346,6 +349,7 @@ namespace ScratchShell.ViewModels.Models
         {
             var item = new TabItemViewModel()
             {
+                ContentDialogService = ContentDialogService,
                 Server = this,
             };
             return item;

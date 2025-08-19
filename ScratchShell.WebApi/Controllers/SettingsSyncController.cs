@@ -69,7 +69,8 @@ namespace ScratchShell.WebApi.Controllers
                         AdditionalSettings = userSettings.AdditionalSettings,
                         LastSyncedAt = userSettings.LastSyncedAt,
                         DeviceId = userSettings.DeviceId,
-                        DeviceName = userSettings.DeviceName
+                        DeviceName = userSettings.DeviceName,
+                        Snippets = userSettings.Snippets
                     }
                 });
             }
@@ -113,6 +114,7 @@ namespace ScratchShell.WebApi.Controllers
                         CurrentTheme = request.Settings.CurrentTheme,
                         DefaultShellType = request.Settings.DefaultShellType,
                         EncryptedServers = request.Settings.EncryptedServers,
+                        Snippets = request.Settings.Snippets,
                         AdditionalSettings = request.Settings.AdditionalSettings,
                         DeviceId = request.Settings.DeviceId,
                         DeviceName = request.Settings.DeviceName,
@@ -148,6 +150,7 @@ namespace ScratchShell.WebApi.Controllers
                             CurrentTheme = existingSettings.CurrentTheme,
                             DefaultShellType = existingSettings.DefaultShellType,
                             EncryptedServers = existingSettings.EncryptedServers,
+                            Snippets = request.Settings.Snippets,
                             AdditionalSettings = existingSettings.AdditionalSettings,
                             LastSyncedAt = existingSettings.LastSyncedAt,
                             DeviceId = existingSettings.DeviceId,
@@ -163,6 +166,7 @@ namespace ScratchShell.WebApi.Controllers
                 existingSettings.DefaultShellType = request.Settings.DefaultShellType;
                 existingSettings.EncryptedServers = request.Settings.EncryptedServers;
                 existingSettings.AdditionalSettings = request.Settings.AdditionalSettings;
+                existingSettings.Snippets = request.Settings.Snippets;
                 existingSettings.DeviceId = request.Settings.DeviceId;
                 existingSettings.DeviceName = request.Settings.DeviceName;
                 existingSettings.LastSyncedAt = now;

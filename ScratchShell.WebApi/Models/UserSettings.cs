@@ -17,6 +17,9 @@ namespace ScratchShell.WebApi.Models
         [Column(TypeName = "text")]
         public string? EncryptedServers { get; set; }
 
+        [Column(TypeName = "text")]
+        public string? Snippets { get; set; }
+
         [Column(TypeName = "jsonb")]
         public string? AdditionalSettingsJson { get; set; }
 

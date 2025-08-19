@@ -24,14 +24,16 @@ namespace ScratchShell.UserControls
             Terminal.CommandEntered += TerminalSentMessage;
         }
 
+        private void TerminalSentMessage(ITerminal obj, string command)
+        {
+            var output = $"{Terminal.Output}\nYou Said to the FTP=>{command}";
+            Terminal.AddOutput(output);
+        }
+
         public void Dispose()
         {
         }
 
-        private void TerminalSentMessage(TerminalUserControl control, string arg2)
-        {
-            var output = $"{Terminal.Output}\nYou Said to the FTP=>{arg2}";
-            Terminal.AddOutput(output);
-        }
+
     }
 }

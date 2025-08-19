@@ -1,5 +1,6 @@
 ﻿using ScratchShell.Enums;
 using ScratchShell.Services;
+using Wpf.Ui;
 
 namespace ScratchShell.ViewModels.Models;
 
@@ -33,13 +34,15 @@ public partial class TabItemViewModel : ObservableObject
                 Content = server.ProtocolType switch
                 {
                     ProtocolType.FTP => new UserControls.FtpUserControl(server),
-                    ProtocolType.SSH => new UserControls.SshUserControl(server),
+                    ProtocolType.SSH => new UserControls.SshUserControl(server, ContentDialogService),
                     ProtocolType.SFTP => new UserControls.SftpUserControl(server),
                     _ => null
                 };
             }
         }
     }
+
+    public IContentDialogService ContentDialogService { get; internal set; }
 
     [RelayCommand]
     private void OnCloseTab(TabItemViewModel tab)
