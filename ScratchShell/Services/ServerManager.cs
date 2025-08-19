@@ -1,22 +1,27 @@
 ﻿using Newtonsoft.Json;
-using ScratchShell.Enums;
 using ScratchShell.Models;
 using ScratchShell.Properties;
 using System.Net.Http;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 namespace ScratchShell.Services;
 
 internal static class ServerManager
 {
     internal delegate Task ServerDelegate(Server? server);
+
     internal delegate Task MangerDelegate();
+
     internal static event ServerDelegate OnServerAdded;
+
     internal static event ServerDelegate OnServerRemoved;
+
     internal static event ServerDelegate OnServerEdited;
+
     internal static event ServerDelegate OnServerSelected;
+
     internal static event MangerDelegate OnServerInitialized;
+
     private static List<Server> _servers;
     internal static Server? SelectedServer { get; private set; }
 
@@ -25,6 +30,7 @@ internal static class ServerManager
 
     internal static IReadOnlyList<Server> Servers => _servers.AsReadOnly();
     internal static bool NeedsCloudRestore => _needsCloudRestore;
+
     static ServerManager()
     {
         _servers = new List<Server>();
@@ -104,11 +110,13 @@ internal static class ServerManager
         }
 #endif
     }
+
     internal static void ClearServers()
     {
         _servers.Clear();
         SelectedServer = null;
     }
+
     internal static void InitializeServers(List<Server> servers)
     {
         _servers.Clear();
@@ -127,7 +135,6 @@ internal static class ServerManager
         SaveSettings();
         OnServerRemoved?.Invoke(serverViewModel);
     }
-
 
     internal static void ServerSelected(Server server)
     {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ScratchShell.Constants
+﻿namespace ScratchShell.Constants
 {
     internal static class ApplicationConstant
     {
@@ -12,9 +6,11 @@ namespace ScratchShell.Constants
 
         internal const string Credit = "ScratchShell(2025) is developed by Taufiq Abdur Rahman.";
     }
+
     internal static class TerminalConstant
     {
         internal const string Elevated = "Elevated";
+
         internal static class Builder
         {
             internal const string FTP = "FTP";

@@ -1,7 +1,5 @@
 ﻿using ScratchShell.Constants;
 using ScratchShell.Services;
-using ScratchShell.View.Dialog;
-using ScratchShell.ViewModels.Models;
 using ScratchShell.Views.Dialog;
 using System.Collections.ObjectModel;
 using System.Net.Http;
@@ -41,7 +39,7 @@ namespace ScratchShell.ViewModels.Windows
                 var loginDialog = new LoginDialog(_contentDialogService);
 
                 var contentDialogResult = await loginDialog.ShowAsync();
-                if(contentDialogResult == ContentDialogResult.Secondary)
+                if (contentDialogResult == ContentDialogResult.Secondary)
                 {
                     await Register();
                 }

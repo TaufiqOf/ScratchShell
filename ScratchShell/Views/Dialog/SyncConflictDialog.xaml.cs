@@ -1,6 +1,5 @@
 using ScratchShell.Enums;
 using ScratchShell.Models;
-using ScratchShell.Services;
 using System.ComponentModel;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
@@ -16,8 +15,8 @@ namespace ScratchShell.Views.Dialog
         private DateTime? _clientLastSynced;
         private DateTime? _serverLastSynced;
 
-        public UserSettingsData? LocalSettings 
-        { 
+        public UserSettingsData? LocalSettings
+        {
             get => _localSettings;
             set
             {
@@ -29,8 +28,8 @@ namespace ScratchShell.Views.Dialog
             }
         }
 
-        public UserSettingsData? ServerSettings 
-        { 
+        public UserSettingsData? ServerSettings
+        {
             get => _serverSettings;
             set
             {
@@ -42,8 +41,8 @@ namespace ScratchShell.Views.Dialog
             }
         }
 
-        public DateTime? ClientLastSynced 
-        { 
+        public DateTime? ClientLastSynced
+        {
             get => _clientLastSynced;
             set
             {
@@ -55,8 +54,8 @@ namespace ScratchShell.Views.Dialog
             }
         }
 
-        public DateTime? ServerLastSynced 
-        { 
+        public DateTime? ServerLastSynced
+        {
             get => _serverLastSynced;
             set
             {
@@ -83,18 +82,20 @@ namespace ScratchShell.Views.Dialog
                 case ContentDialogButton.Primary:
                     SelectedResolution = ConflictResolution.UseLocal;
                     break;
+
                 case ContentDialogButton.Secondary:
                     SelectedResolution = ConflictResolution.UseServer;
                     break;
+
                 default:
                     SelectedResolution = ConflictResolution.UseLocal; // Default fallback
                     break;
             }
-            
+
             base.OnButtonClick(button);
         }
 
-        public void SetConflictData(UserSettingsData localSettings, UserSettingsData serverSettings, 
+        public void SetConflictData(UserSettingsData localSettings, UserSettingsData serverSettings,
                                    DateTime? clientLastSynced, DateTime? serverLastSynced)
         {
             LocalSettings = localSettings;

@@ -1,5 +1,3 @@
-using ScratchShell.Models;
-
 namespace ScratchShell.Models
 {
     public class SyncSettingsResponse

@@ -1,6 +1,4 @@
-using Microsoft.Win32;
 using ScratchShell.Services;
-using ScratchShell.ViewModels.Models;
 using System.Net.Http;
 using System.Windows.Media;
 using Wpf.Ui;
@@ -11,7 +9,7 @@ namespace ScratchShell.Views.Dialog
     public partial class LoginDialog : ContentDialog
     {
         private readonly AuthenticationService _loginService;
-        
+
         public string Username => UsernameTextBox.Text;
         public string Password => PasswordBox.Password;
         public string Token { get; private set; } = string.Empty;
@@ -40,7 +38,7 @@ namespace ScratchShell.Views.Dialog
         {
             InitializeComponent();
             _loginService = loginService;
-            
+
             // Pre-fill username if stored
             var storedUsername = UserSettingsService.GetStoredUsername();
             if (!string.IsNullOrEmpty(storedUsername))
@@ -73,12 +71,12 @@ namespace ScratchShell.Views.Dialog
 
             // Show loading state
             SetLoadingState(true);
-            
+
             try
             {
                 // Call login API
                 var result = await _loginService.LoginAsync(Username, Password);
-                
+
                 if (result.IsSuccess)
                 {
                     AuthenticationService.Token = result.Token;
@@ -86,7 +84,7 @@ namespace ScratchShell.Views.Dialog
                     Token = result.Token;
                     IsLoginSuccessful = true;
                     IsFirstTimeLogin = result.IsFirstTimeLogin;
-                    
+
                     // Show appropriate success message
                     if (result.IsFirstTimeLogin)
                     {
@@ -96,10 +94,10 @@ namespace ScratchShell.Views.Dialog
                     {
                         ShowStatusMessage("Login successful!", Colors.Green);
                     }
-                    
+
                     // Small delay to show success message
                     await Task.Delay(1000);
-                    
+
                     base.OnButtonClick(ContentDialogButton.Primary);
                 }
                 else

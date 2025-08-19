@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
-using ScratchShell.Properties;
 using ScratchShell.Enums;
 using ScratchShell.Models;
+using ScratchShell.Properties;
 using System.IO;
 using System.Management;
 using System.Net.Http;
@@ -17,9 +17,10 @@ namespace ScratchShell.Services
         private readonly string _baseUrl;
         private static readonly string DeviceId = GetDeviceId();
         private static readonly string DeviceName = Environment.MachineName;
-        
+
         // Track recent sync operations to prevent false conflicts
         private DateTime _lastUploadTime = DateTime.MinValue;
+
         private readonly TimeSpan _recentSyncWindow = TimeSpan.FromMinutes(2);
 
         public CloudSyncService(HttpClient httpClient, string baseUrl = "https://localhost:7110")
@@ -29,6 +30,7 @@ namespace ScratchShell.Services
         }
 
         public event EventHandler<SyncStatusEventArgs>? SyncStatusChanged;
+
         public event EventHandler<ConflictDetectedEventArgs>? ConflictDetected;
 
         /// <summary>
@@ -73,12 +75,12 @@ namespace ScratchShell.Services
                 }
 
                 // Set authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthenticationService.Token);
 
                 // Gather current local settings
                 var localSettings = GatherLocalSettings();
-                
+
                 var syncRequest = new SyncSettingsRequest
                 {
                     Settings = localSettings,
@@ -122,7 +124,7 @@ namespace ScratchShell.Services
 
                         // Update local sync timestamp
                         UpdateLocalSyncTimestamp(syncResponse.ServerLastSyncedAt ?? DateTime.UtcNow);
-                        
+
                         // Track this upload to prevent false conflicts
                         _lastUploadTime = DateTime.UtcNow;
 
@@ -208,7 +210,7 @@ namespace ScratchShell.Services
                 }
 
                 // Set authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthenticationService.Token);
 
                 var response = await _httpClient.GetAsync($"{_baseUrl}/api/settingssync");
@@ -373,7 +375,7 @@ namespace ScratchShell.Services
                 }
 
                 // Set authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthenticationService.Token);
 
                 var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/settingssync");
@@ -382,7 +384,7 @@ namespace ScratchShell.Services
                 {
                     // Clear local sync timestamp completely to reset sync state
                     ClearLocalSyncTimestamp();
-                    
+
                     // Reset upload tracking since we deleted cloud data
                     _lastUploadTime = DateTime.MinValue;
 
@@ -431,14 +433,14 @@ namespace ScratchShell.Services
         {
             // For cloud sync, we need to decrypt locally encrypted servers and re-encrypt them with cloud keys
             string cloudEncryptedServers = string.Empty;
-            
+
             if (!string.IsNullOrEmpty(Settings.Default.Servers))
             {
                 try
                 {
                     // Decrypt using local keys (device-specific)
                     var decryptedServers = EncryptionHelper.Decrypt(Settings.Default.Servers);
-                    
+
                     // Re-encrypt using cloud keys (user-specific)
                     cloudEncryptedServers = EncryptionHelper.Encrypt(decryptedServers);
                 }
@@ -496,11 +498,11 @@ namespace ScratchShell.Services
                 {
                     // Decrypt using cloud keys (user-specific)
                     var decryptedServers = EncryptionHelper.Decrypt(cloudSettings.EncryptedServers);
-                    
+
                     // Re-encrypt using local keys (device-specific) for local storage
                     var localEncryptedServers = EncryptionHelper.Encrypt(decryptedServers);
                     Settings.Default.Servers = localEncryptedServers;
-                    
+
                     // Reload servers in ServerManager
                     var servers = JsonConvert.DeserializeObject<List<Models.Server>>(decryptedServers);
                     if (servers != null)
@@ -639,14 +641,14 @@ namespace ScratchShell.Services
         private bool HasLocalChanges(DateTime serverLastSync)
         {
             var localLastSync = GetLocalSyncTimestamp();
-            
+
             // If local timestamp is DateTime.MinValue, it means we haven't synced or data was deleted
             // In this case, we should not consider it as having local changes
             if (localLastSync == DateTime.MinValue)
             {
                 return false;
             }
-            
+
             // Use a small tolerance (1 second) to handle timing precision issues
             var tolerance = TimeSpan.FromSeconds(1);
             return localLastSync > serverLastSync.Add(tolerance);

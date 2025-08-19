@@ -1,8 +1,6 @@
-﻿using ScratchShell.UserControls.TerminalControl;
-using ScratchShell.UserControls.TerminalControl.Parser;
+﻿using ScratchShell.UserControls.TerminalControl.Parser;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -25,7 +23,9 @@ public partial class TerminalUserControl : UserControl
     public TerminalState TerminalState { get; set; }
 
     public event Action<TerminalUserControl, string>? CommandEntered;
+
     public event Action<TerminalUserControl, string>? TitleChanged;
+
     public event Action<TerminalUserControl, Size>? SizeChanged;
 
     public bool IsReadOnly
@@ -41,14 +41,10 @@ public partial class TerminalUserControl : UserControl
     public static readonly DependencyProperty IsReadOnlyProperty =
         DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(TerminalUserControl), new PropertyMetadata(true));
 
-
-
-
     public string Text
     {
         get { return new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd).Text; }
     }
-
 
     public TerminalUserControl()
     {
@@ -74,10 +70,10 @@ public partial class TerminalUserControl : UserControl
     {
         TerminalBox.Document.Blocks.Clear();
     }
-    
+
     public void AddOutput(string text)
     {
-        if(string.Equals(Text,text))
+        if (string.Equals(Text, text))
         {
             return;
         }
@@ -242,6 +238,7 @@ public partial class TerminalUserControl : UserControl
             }
         }, DispatcherPriority.Background);
     }
+
     private void UpdateCursorVisibility()
     {
         TerminalBox.Cursor = TerminalState.CursorVisible ? Cursors.IBeam : Cursors.None;
@@ -305,8 +302,6 @@ public partial class TerminalUserControl : UserControl
         }
     }
 
-
-
     private void UpdateColors()
     {
         // Update TerminalBox foreground/background colors
@@ -332,6 +327,7 @@ public partial class TerminalUserControl : UserControl
         // You may want to refresh text colors in the document as well,
         // or handle palette colors in renderer.
     }
+
     private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
         e.CanExecute = TerminalBox.Selection != null && !TerminalBox.Selection.IsEmpty;
@@ -380,5 +376,4 @@ public partial class TerminalUserControl : UserControl
 
         e.Handled = true;
     }
-
 }

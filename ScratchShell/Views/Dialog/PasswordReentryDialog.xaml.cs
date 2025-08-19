@@ -12,10 +12,10 @@ namespace ScratchShell.Views.Dialog
         public PasswordReentryDialog(IContentDialogService contentDialogService, string username) : base(contentDialogService.GetDialogHost())
         {
             InitializeComponent();
-            
+
             // Set the username in the dialog
             UsernameTextBlock.Text = username;
-            
+
             // Focus on password field
             PasswordBox.Focus();
         }
@@ -43,20 +43,20 @@ namespace ScratchShell.Views.Dialog
 
             // Show loading state
             SetLoadingState(true);
-            
+
             try
             {
                 var username = UsernameTextBlock.Text;
-                
+
                 // Try to initialize encryption keys with the provided password
                 if (ScratchShell.Services.AuthenticationService.InitializeEncryptionKeys(Password))
                 {
                     ShowStatusMessage("Password verified successfully!", Colors.Green);
                     IsPasswordEntrySuccessful = true;
-                    
+
                     // Small delay to show success message
                     await Task.Delay(1000);
-                    
+
                     base.OnButtonClick(ContentDialogButton.Primary);
                 }
                 else

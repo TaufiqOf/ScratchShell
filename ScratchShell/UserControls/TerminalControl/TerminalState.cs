@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace ScratchShell.UserControls.TerminalControl
 {
@@ -368,16 +366,20 @@ namespace ScratchShell.UserControls.TerminalControl
                 case "104":
                     ForegroundColor = null;
                     break;
+
                 case "105":
                     BackgroundColor = null;
                     break;
+
                 case "106":
                     CursorColor = null;
                     break;
+
                 case "107":
                     ColorPalette.Clear();
                     OnPropertyChanged(nameof(ColorPalette));
                     break;
+
                 case "110":
                     ForegroundColor = null;
                     BackgroundColor = null;

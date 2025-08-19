@@ -69,12 +69,16 @@ namespace ScratchShell.ViewModels.Models
                 {
                     case nameof(Name):
                         return ValidateName();
+
                     case nameof(Host):
                         return ValidateHost();
+
                     case nameof(Port):
                         return ValidatePort();
+
                     case nameof(Username):
                         return ValidateUsername();
+
                     default:
                         return string.Empty;
                 }
@@ -96,15 +100,15 @@ namespace ScratchShell.ViewModels.Models
         {
             if (string.IsNullOrWhiteSpace(Name))
                 return "Server name is required.";
-            
+
             if (Name.Length > 100)
                 return "Server name cannot exceed 100 characters.";
-            
+
             // Check for invalid characters
             var invalidChars = new char[] { '<', '>', ':', '"', '|', '?', '*', '\\', '/' };
             if (Name.IndexOfAny(invalidChars) >= 0)
                 return "Server name contains invalid characters.";
-            
+
             return string.Empty;
         }
 
@@ -112,20 +116,20 @@ namespace ScratchShell.ViewModels.Models
         {
             if (string.IsNullOrWhiteSpace(Host))
                 return "Host is required.";
-            
+
             // Trim whitespace
             var hostToValidate = Host.Trim();
-            
+
             // Check if it's a valid IP address
             if (IPAddress.TryParse(hostToValidate, out _))
                 return string.Empty;
-            
+
             // Check if it's a valid hostname/domain
             if (Uri.CheckHostName(hostToValidate) == UriHostNameType.Dns ||
                 Uri.CheckHostName(hostToValidate) == UriHostNameType.IPv4 ||
                 Uri.CheckHostName(hostToValidate) == UriHostNameType.IPv6)
                 return string.Empty;
-            
+
             return "Please enter a valid IP address or hostname.";
         }
 
@@ -133,7 +137,7 @@ namespace ScratchShell.ViewModels.Models
         {
             if (Port <= 0 || Port > 65535)
                 return "Port must be between 1 and 65535.";
-            
+
             return string.Empty;
         }
 
@@ -141,10 +145,10 @@ namespace ScratchShell.ViewModels.Models
         {
             if (string.IsNullOrWhiteSpace(Username))
                 return "Username is required.";
-            
+
             if (Username.Length > 255)
                 return "Username cannot exceed 255 characters.";
-            
+
             return string.Empty;
         }
 
@@ -152,7 +156,7 @@ namespace ScratchShell.ViewModels.Models
         {
             ContentDialogService = contentDialogService;
             ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>();
-            
+
             // Set default port based on protocol
             SetDefaultPortForProtocol();
         }
@@ -211,9 +215,11 @@ namespace ScratchShell.ViewModels.Models
                     case ProtocolType.SSH:
                         Port = 22;
                         break;
+
                     case ProtocolType.FTP:
                         Port = 21;
                         break;
+
                     case ProtocolType.SFTP:
                         Port = 22;
                         break;

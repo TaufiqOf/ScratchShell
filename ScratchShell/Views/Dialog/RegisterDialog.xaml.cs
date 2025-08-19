@@ -10,7 +10,7 @@ namespace ScratchShell.Views.Dialog
     public partial class RegisterDialog : ContentDialog
     {
         private readonly AuthenticationService _authenticationService;
-        
+
         public string FirstName => FirstNameTextBox.Text;
         public string LastName => LastNameTextBox.Text;
         public string Email => EmailTextBox.Text;
@@ -55,18 +55,18 @@ namespace ScratchShell.Views.Dialog
 
             // Show loading state
             SetLoadingState(true);
-            
+
             try
             {
                 // Call register API
                 var result = await _authenticationService.RegisterAsync(
-                    Email, 
-                    Password, 
-                    ConfirmPassword, 
-                    FirstName, 
-                    LastName, 
+                    Email,
+                    Password,
+                    ConfirmPassword,
+                    FirstName,
+                    LastName,
                     string.IsNullOrWhiteSpace(UserName) ? null : UserName);
-                
+
                 if (result.IsSuccess)
                 {
                     AuthenticationService.Token = result.Token;
@@ -75,10 +75,10 @@ namespace ScratchShell.Views.Dialog
                     IsFirstTimeLogin = result.IsFirstTimeLogin;
 
                     ShowStatusMessage("Registration successful! Your credentials have been saved for future logins.", Colors.Green);
-                    
+
                     // Small delay to show success message
                     await Task.Delay(1500);
-                    
+
                     base.OnButtonClick(ContentDialogButton.Primary);
                 }
                 else

@@ -17,6 +17,7 @@ namespace ScratchShell.WebApi.DTOs
     {
         [Required]
         public UserSettingsDto Settings { get; set; } = new();
+
         public bool ForceOverwrite { get; set; } = false;
     }
 

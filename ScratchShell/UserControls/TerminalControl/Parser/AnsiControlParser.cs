@@ -1,6 +1,4 @@
 ﻿using ScratchShell.UserControls.TerminalControl.Handler;
-using ScratchShell.UserControls.TerminalControl.Handler;
-using ScratchShell.UserControls.TerminalControl.Parser;
 using System.Text.RegularExpressions;
 
 namespace ScratchShell.UserControls.TerminalControl.Parser;

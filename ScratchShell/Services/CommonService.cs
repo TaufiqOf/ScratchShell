@@ -10,6 +10,7 @@ internal static class CommonService
                         ? type
                         : default(T);
     }
+
     internal static string GetUserPath()
     {
         var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

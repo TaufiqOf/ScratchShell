@@ -52,7 +52,7 @@ namespace ScratchShell.View.Dialog
                         ShowValidationErrors();
                         return;
                     }
-                    
+
                     // Update the original view model with validated data
                     ViewModel.Name = viewModel.Name;
                     ViewModel.Host = viewModel.Host;
@@ -89,23 +89,23 @@ namespace ScratchShell.View.Dialog
             if (validationSummary != null && validationSummaryText != null && DataContext is ServerViewModel viewModel)
             {
                 var errors = new List<string>();
-                
+
                 var nameError = viewModel[nameof(viewModel.Name)];
                 if (!string.IsNullOrEmpty(nameError))
                     errors.Add($"• {nameError}");
-                
+
                 var hostError = viewModel[nameof(viewModel.Host)];
                 if (!string.IsNullOrEmpty(hostError))
                     errors.Add($"• {hostError}");
-                
+
                 var portError = viewModel[nameof(viewModel.Port)];
                 if (!string.IsNullOrEmpty(portError))
                     errors.Add($"• {portError}");
-                
+
                 var usernameError = viewModel[nameof(viewModel.Username)];
                 if (!string.IsNullOrEmpty(usernameError))
                     errors.Add($"• {usernameError}");
-                
+
                 if (errors.Any())
                 {
                     validationSummaryText.Text = string.Join("\n", errors);
@@ -146,7 +146,7 @@ namespace ScratchShell.View.Dialog
                 Filter = "Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*",
                 Title = "Select Public Key File"
             };
-            
+
             if (openDialog.ShowDialog() == true)
             {
                 if (DataContext is ServerViewModel viewModel)
@@ -163,7 +163,7 @@ namespace ScratchShell.View.Dialog
                 Filter = "Private Key Files (*.pem;*.key)|*.pem;*.key|All Files (*.*)|*.*",
                 Title = "Select Private Key File"
             };
-            
+
             if (openDialog.ShowDialog() == true)
             {
                 if (DataContext is ServerViewModel viewModel)

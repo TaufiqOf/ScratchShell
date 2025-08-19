@@ -73,6 +73,7 @@ namespace ScratchShell.ViewModels.Pages
         {
             await Task.CompletedTask;
         }
+
         private async Task ServerManagerOnServerRemoved(Server? server)
         {
             FilteredServers.Refresh();
@@ -237,8 +238,6 @@ namespace ScratchShell.ViewModels.Pages
                         CloseButtonText = "OK"
                     });
             }
-
         }
-
     }
 }

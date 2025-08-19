@@ -29,8 +29,6 @@ namespace ScratchShell.Views.Windows
 
             navigationService.SetNavigationControl(RootNavigation);
             contentDialogService.SetDialogHost(RootContentDialog);
-
-
         }
 
         private void MainWindowLoaded(object sender, RoutedEventArgs e)

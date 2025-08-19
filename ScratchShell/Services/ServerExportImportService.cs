@@ -8,7 +8,7 @@ namespace ScratchShell.Services
     internal static class ServerExportImportService
     {
         private const string TEMP_JSON_NAME = "servers.json";
-        
+
         /// <summary>
         /// Exports selected servers to a password-protected .ss file
         /// </summary>
@@ -27,16 +27,16 @@ namespace ScratchShell.Services
 
                 // Serialize servers to JSON
                 var json = JsonConvert.SerializeObject(servers, Formatting.Indented);
-                
+
                 // Create a temporary directory for the JSON file
                 var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                 Directory.CreateDirectory(tempDir);
-                
+
                 try
                 {
                     var tempJsonPath = Path.Combine(tempDir, TEMP_JSON_NAME);
                     await File.WriteAllTextAsync(tempJsonPath, json);
-                    
+
                     // Create ZIP file
                     using (var zip = new ZipFile())
                     {
@@ -46,14 +46,14 @@ namespace ScratchShell.Services
                             zip.Password = password;
                             zip.Encryption = EncryptionAlgorithm.WinZipAes256;
                         }
-                        
+
                         // Add the JSON file to the ZIP
                         zip.AddFile(tempJsonPath, "");
-                        
+
                         // Save the ZIP file
                         zip.Save(filePath);
                     }
-                    
+
                     return true;
                 }
                 finally
@@ -71,7 +71,7 @@ namespace ScratchShell.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// Imports servers from a .ss file
         /// </summary>
@@ -87,11 +87,11 @@ namespace ScratchShell.Services
                 {
                     throw new FileNotFoundException("Import file not found", filePath);
                 }
-                
+
                 // Create a temporary directory for extraction
                 var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
                 Directory.CreateDirectory(tempDir);
-                
+
                 try
                 {
                     // Extract ZIP file
@@ -102,23 +102,23 @@ namespace ScratchShell.Services
                         {
                             zip.Password = password;
                         }
-                        
+
                         // Extract to temporary directory
                         zip.ExtractAll(tempDir, ExtractExistingFileAction.OverwriteSilently);
                     }
-                    
+
                     // Read the JSON file
                     var jsonPath = Path.Combine(tempDir, TEMP_JSON_NAME);
                     if (!File.Exists(jsonPath))
                     {
                         throw new InvalidOperationException("Invalid import file format");
                     }
-                    
+
                     var json = await File.ReadAllTextAsync(jsonPath);
-                    
+
                     // Deserialize servers
                     var servers = JsonConvert.DeserializeObject<List<Server>>(json);
-                    
+
                     // Generate new IDs to avoid conflicts
                     if (servers != null)
                     {
@@ -127,7 +127,7 @@ namespace ScratchShell.Services
                             server.Id = Guid.NewGuid().ToString();
                         }
                     }
-                    
+
                     return servers;
                 }
                 finally
@@ -150,7 +150,7 @@ namespace ScratchShell.Services
                 throw;
             }
         }
-        
+
         /// <summary>
         /// Validates if a file is a valid .ss export file
         /// </summary>
@@ -164,7 +164,7 @@ namespace ScratchShell.Services
                 {
                     return false;
                 }
-                
+
                 // Try to read the ZIP file structure
                 using (var zip = ZipFile.Read(filePath))
                 {

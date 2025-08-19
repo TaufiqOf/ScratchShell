@@ -1,8 +1,6 @@
 ﻿using ScratchShell.Services;
-using ScratchShell.Models;
 using ScratchShell.ViewModels.Models;
 using System.Collections.ObjectModel;
-using System.Windows.Media;
 using Wpf.Ui.Abstractions.Controls;
 
 namespace ScratchShell.ViewModels.Pages
@@ -16,16 +14,16 @@ namespace ScratchShell.ViewModels.Pages
 
         [ObservableProperty]
         private TabItemViewModel _selectedTab;
+
         public SessionViewModel()
         {
             Tabs = SessionService.Sessions;
             SessionService.SessionSelected += SessionServiceSessionSelected;
-
         }
 
         private Task SessionServiceSessionSelected(TabItemViewModel tabViewModel)
         {
-            SelectedTab = Tabs.FirstOrDefault(t => t.Id == tabViewModel.Id)?? Tabs.First();
+            SelectedTab = Tabs.FirstOrDefault(t => t.Id == tabViewModel.Id) ?? Tabs.First();
             return Task.CompletedTask;
         }
 
@@ -41,7 +39,6 @@ namespace ScratchShell.ViewModels.Pages
 
         private void InitializeViewModel()
         {
-          
             _isInitialized = true;
         }
     }

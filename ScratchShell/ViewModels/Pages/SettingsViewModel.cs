@@ -1,13 +1,12 @@
 ﻿using ScratchShell.Constants;
 using ScratchShell.Enums;
-using ScratchShell.Services;
 using ScratchShell.Properties;
+using ScratchShell.Services;
+using System.Net.Http;
+using Wpf.Ui;
 using Wpf.Ui.Abstractions.Controls;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
-using Wpf.Ui;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace ScratchShell.ViewModels.Pages
 {
@@ -58,7 +57,7 @@ namespace ScratchShell.ViewModels.Pages
                 {
                     Settings.Default.DefaultShellType = value.ToString();
                     Settings.Default.Save();
-                    
+
                     // Trigger cloud sync if enabled
                     _ = Task.Run(async () => await UserSettingsService.TriggerCloudSyncIfEnabled());
                 }
@@ -67,14 +66,14 @@ namespace ScratchShell.ViewModels.Pages
 
         [ObservableProperty]
         private ApplicationTheme _currentTheme = ApplicationTheme.Unknown;
-        
+
         public SettingsViewModel(IContentDialogService contentDialogService)
         {
             _contentDialogService = contentDialogService;
             ShellTypes = Enum.GetValues(typeof(ShellType)).Cast<ShellType>();
             InitializeCloudSync();
         }
-        
+
         public Task OnNavigatedToAsync()
         {
             if (!_isInitialized)
@@ -93,10 +92,10 @@ namespace ScratchShell.ViewModels.Pages
             Credit = ApplicationConstant.Credit;
             AppVersion = $"{ApplicationConstant.Name} - {GetAssemblyVersion()}";
             ShellType = CommonService.GetEnumValue<ShellType>(Settings.Default.DefaultShellType);
-            
+
             RefreshUserInfo();
             RefreshCloudSyncInfo();
-            
+
             _isInitialized = true;
         }
 
@@ -149,7 +148,7 @@ namespace ScratchShell.ViewModels.Pages
                 LastSyncStatus = "Never synced";
             }
         }
-        
+
         private string GetAssemblyVersion()
         {
             return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString()
@@ -181,7 +180,7 @@ namespace ScratchShell.ViewModels.Pages
             }
             Settings.Default.CurrentTheme = CurrentTheme.ToString();
             Settings.Default.Save();
-            
+
             // Trigger cloud sync if enabled
             _ = Task.Run(async () => await UserSettingsService.TriggerCloudSyncIfEnabled());
         }
@@ -242,7 +241,7 @@ namespace ScratchShell.ViewModels.Pages
             {
                 // Clear all stored authentication data and local settings
                 AuthenticationService.Logout();
-                
+
                 // Update UI to reflect logout state
                 CurrentUsername = "Not logged in";
 
@@ -273,9 +272,9 @@ namespace ScratchShell.ViewModels.Pages
             {
                 IsSyncing = true;
                 SyncStatusMessage = "Syncing to cloud...";
-                
+
                 var result = await _cloudSyncService.SyncToCloudAsync();
-                
+
                 if (result.IsSuccess)
                 {
                     SyncStatusMessage = "Sync to cloud successful";
@@ -312,14 +311,14 @@ namespace ScratchShell.ViewModels.Pages
             {
                 IsSyncing = true;
                 SyncStatusMessage = "Syncing from cloud...";
-                
+
                 var result = await _cloudSyncService.SyncFromCloudAsync();
-                
+
                 if (result.IsSuccess)
                 {
                     SyncStatusMessage = "Sync from cloud successful";
                     RefreshCloudSyncInfo();
-                    
+
                     // Refresh UI to reflect downloaded settings
                     InitializeViewModel();
                 }
@@ -372,7 +371,7 @@ namespace ScratchShell.ViewModels.Pages
                 {
                     // Password was successfully entered and encryption keys initialized
                     SyncStatusMessage = "Password verified. Retrying sync...";
-                    
+
                     // Retry the original operation
                     await retryAction();
                 }
@@ -397,9 +396,9 @@ namespace ScratchShell.ViewModels.Pages
             {
                 IsSyncing = true;
                 SyncStatusMessage = "Deleting cloud settings...";
-                
+
                 var result = await _cloudSyncService.DeleteCloudSettingsAsync();
-                
+
                 if (result.IsSuccess)
                 {
                     SyncStatusMessage = "Cloud settings deleted successfully";
@@ -427,7 +426,7 @@ namespace ScratchShell.ViewModels.Pages
         {
             UserSettingsService.UpdateCloudSyncSettings(EnableCloudSync, AutoSyncOnStartup, AutoSyncOnChange);
             SyncStatusMessage = "Cloud sync settings updated";
-            
+
             // Clear status message after 2 seconds
             _ = Task.Delay(2000).ContinueWith(_ => SyncStatusMessage = string.Empty);
         }
@@ -438,7 +437,7 @@ namespace ScratchShell.ViewModels.Pages
             {
                 SyncStatusMessage = e.Message;
                 IsSyncing = e.Status == SyncStatus.Uploading || e.Status == SyncStatus.Downloading;
-                
+
                 if (e.Status == SyncStatus.UploadCompleted || e.Status == SyncStatus.DownloadCompleted)
                 {
                     RefreshCloudSyncInfo();
@@ -451,7 +450,7 @@ namespace ScratchShell.ViewModels.Pages
             Application.Current.Dispatcher.Invoke(() =>
             {
                 SyncStatusMessage = "Sync conflict detected. Manual resolution required.";
-                
+
                 // For now, we'll auto-resolve by using server settings since this might be a false positive
                 // In the future, show a proper conflict resolution dialog
                 if (_cloudSyncService != null)
@@ -462,7 +461,7 @@ namespace ScratchShell.ViewModels.Pages
                         {
                             // Auto-resolve by using server settings for now
                             var result = await _cloudSyncService.ResolveConflictAsync(ConflictResolution.UseServer);
-                            
+
                             Application.Current.Dispatcher.Invoke(() =>
                             {
                                 if (result.IsSuccess)
@@ -475,7 +474,7 @@ namespace ScratchShell.ViewModels.Pages
                                 {
                                     SyncStatusMessage = $"Failed to resolve conflict: {result.Message}";
                                 }
-                                
+
                                 // Clear status message after 5 seconds
                                 _ = Task.Delay(5000).ContinueWith(_ => SyncStatusMessage = string.Empty);
                             });

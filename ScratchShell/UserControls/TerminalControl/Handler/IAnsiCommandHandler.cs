@@ -1,6 +1,4 @@
-﻿using ScratchShell.UserControls.TerminalControl;
-
-namespace ScratchShell.UserControls.TerminalControl.Handler;
+﻿namespace ScratchShell.UserControls.TerminalControl.Handler;
 
 public interface IAnsiCommandHandler
 {

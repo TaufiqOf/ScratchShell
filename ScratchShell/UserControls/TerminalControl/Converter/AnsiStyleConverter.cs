@@ -14,15 +14,19 @@ public static class AnsiStyleConverter
             case 0:
                 style.Reset();
                 break;
+
             case 1:
                 style.FontWeight = FontWeights.Bold;
                 break;
+
             case 3:
                 style.FontStyle = FontStyles.Italic;
                 break;
+
             case 4:
                 style.TextDecorations.Add(TextDecorations.Underline[0]);
                 break;
+
             case 9:
                 style.TextDecorations.Add(TextDecorations.Strikethrough[0]);
                 break;

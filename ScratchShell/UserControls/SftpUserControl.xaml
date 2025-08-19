@@ -70,7 +70,6 @@
                     Unchecked="LogToggleButtonUnChecked">
                     <ui:SymbolIcon Symbol="Notebook20" />
                 </ToggleButton>
-
             </Grid>
 
             <!--  Browser control  -->
@@ -88,6 +87,5 @@
                 VerticalAlignment="Stretch"
                 IsReadOnly="True" />
         </Grid>
-
     </Grid>
 </UserControl>

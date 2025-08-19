@@ -1,5 +1,4 @@
-﻿using ScratchShell.ViewModels.Models;
-using ScratchShell.UserControls.TerminalControl;
+﻿using ScratchShell.UserControls.TerminalControl;
 using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 
@@ -23,7 +22,6 @@ namespace ScratchShell.UserControls
             this.server = server;
             Terminal.InputLineSyntax = ">";
             Terminal.CommandEntered += TerminalSentMessage;
-
         }
 
         public void Dispose()

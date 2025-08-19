@@ -9,7 +9,6 @@ namespace ScratchShell.Views.Dialog
 {
     public partial class ExportServersDialog : ContentDialog
     {
-
         public string Password => PasswordInput.Password;
 
         public IContentDialogService ContentDialogService { get; }
@@ -29,7 +28,7 @@ namespace ScratchShell.Views.Dialog
                 if (ServersListBox.SelectedItems.Count == 0)
                 {
                     ServerListTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red);
-                    isValid= false;
+                    isValid = false;
                 }
                 else
                 {
@@ -47,7 +46,7 @@ namespace ScratchShell.Views.Dialog
                 if (string.IsNullOrEmpty(PasswordInput.Text))
                 {
                     PasswordTextBlock.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Red);
-                    isValid= false;
+                    isValid = false;
                 }
                 else
                 {
@@ -64,14 +63,11 @@ namespace ScratchShell.Views.Dialog
                     PasswordInput.Password);
 
                 base.OnButtonClick(button);
-
             }
             else
             {
                 base.OnButtonClick(button);
-
             }
-
         }
 
         private void ExportFilePathBrowseButtonClick(object sender, RoutedEventArgs e)

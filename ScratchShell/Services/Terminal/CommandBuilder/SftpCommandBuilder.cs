@@ -30,4 +30,3 @@ public class SftpCommandBuilder : IShellCommandBuilder
         return cmd;
     }
 }
-

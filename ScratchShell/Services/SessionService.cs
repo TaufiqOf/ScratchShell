@@ -1,16 +1,12 @@
 ﻿using ScratchShell.ViewModels.Models;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScratchShell.Services
 {
     internal static class SessionService
     {
         internal delegate Task SessionDelegate(TabItemViewModel tabViewModel);
+
         internal static event SessionDelegate SessionSelected;
 
         internal static ObservableCollection<TabItemViewModel> Sessions;
@@ -28,6 +24,7 @@ namespace ScratchShell.Services
                 SessionSelected?.Invoke(value);
             }
         }
+
         static SessionService()
         {
             Sessions = new ObservableCollection<TabItemViewModel>();
@@ -41,11 +38,11 @@ namespace ScratchShell.Services
             Sessions.Add(item);
             SelectedSession = item;
         }
+
         internal static void RemoveSession(TabItemViewModel tabViewModel)
         {
             Sessions.Remove(tabViewModel);
             tabViewModel.Dispose();
         }
-
     }
 }

@@ -1,5 +1,4 @@
-﻿using ScratchShell.Services.Terminal;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace ScratchShell.Services.Terminal.Launcher;
 

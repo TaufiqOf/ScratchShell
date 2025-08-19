@@ -1,5 +1,4 @@
-﻿using ScratchShell.UserControls.BrowserControl;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,10 +14,15 @@ namespace ScratchShell.UserControls.BrowserControl
 
         // Delegate events
         public event Action<BrowserItem>? CopyRequested;
+
         public event Action<BrowserItem>? CutRequested;
+
         public event Action<BrowserItem>? PasteRequested;
+
         public event Action<BrowserItem>? UploadRequested;
+
         public event Action<BrowserItem>? DownloadRequested;
+
         public event Action<BrowserItem>? EnterRequested;
 
         private ContextMenu contextMenu;
@@ -46,7 +50,7 @@ namespace ScratchShell.UserControls.BrowserControl
 
                 if (depObj is ListViewItem listViewItem && listViewItem.DataContext is BrowserItem item)
                 {
-                    if(item.Name == "..")
+                    if (item.Name == "..")
                     {
                         SetMenuVisibility("Cut", false);
                         SetMenuVisibility("Copy", false);
@@ -66,7 +70,6 @@ namespace ScratchShell.UserControls.BrowserControl
                         SetMenuVisibility("Separator", false);
                         SetMenuVisibility("Upload", true);
                         SetMenuVisibility("Download", true);
-                        
                     }
                     else
                     {
@@ -82,7 +85,6 @@ namespace ScratchShell.UserControls.BrowserControl
                 }
             }
         }
-
 
         private void BrowserListMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -108,16 +110,15 @@ namespace ScratchShell.UserControls.BrowserControl
 
         private void AddMenuItem(string header, RoutedEventHandler handler, SymbolRegular? icon = null)
         {
-            var menuItem = new MenuItem 
-            { 
-                Header = header, 
+            var menuItem = new MenuItem
+            {
+                Header = header,
             };
             menuItem.Icon = icon.HasValue ? new SymbolIcon(icon.Value) : null;
             menuItem.Click += handler;
             contextMenu.Items.Add(menuItem);
             menuItems[header] = menuItem;
         }
-
 
         private void RaiseContextEvent(Action<BrowserItem>? action)
         {
@@ -138,7 +139,7 @@ namespace ScratchShell.UserControls.BrowserControl
 
                 if (depObj is ListViewItem listViewItem && listViewItem.DataContext is BrowserItem item)
                 {
-                    if(item.Name != "..")
+                    if (item.Name != "..")
                     {
                         contextMenu.PlacementTarget = BrowserList;
                         contextMenu.IsOpen = true;
@@ -165,10 +166,12 @@ namespace ScratchShell.UserControls.BrowserControl
         {
             Items.Remove(item);
         }
+
         public void Clear()
         {
             Items.Clear();
         }
+
         public void Refresh()
         {
             BrowserList.Items.Refresh();
@@ -187,6 +190,5 @@ namespace ScratchShell.UserControls.BrowserControl
             if (menuItems.TryGetValue(menuHeader, out var item))
                 item.IsEnabled = enabled;
         }
-
     }
 }

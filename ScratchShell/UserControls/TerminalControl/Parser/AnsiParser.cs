@@ -1,7 +1,4 @@
-﻿using ScratchShell.UserControls.TerminalControl;
-using ScratchShell.UserControls.TerminalControl.Converter;
-using ScratchShell.UserControls.TerminalControl;
-using System.Diagnostics;
+﻿using ScratchShell.UserControls.TerminalControl.Converter;
 using System.Text.RegularExpressions;
 
 namespace ScratchShell.UserControls.TerminalControl.Parser;

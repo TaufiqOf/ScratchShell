@@ -135,7 +135,7 @@ namespace ScratchShell.WebApi.Controllers
 
                 // Check for conflicts
                 bool hasConflict = existingSettings.LastSyncedAt > request.Settings.LastSyncedAt && !request.ForceOverwrite;
-                
+
                 if (hasConflict)
                 {
                     return Ok(new SyncSettingsResponseDto

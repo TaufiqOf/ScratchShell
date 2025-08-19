@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
 
 namespace ScratchShell.Helpers
@@ -12,7 +11,7 @@ namespace ScratchShell.Helpers
             {
                 return boolValue ? Visibility.Visible : Visibility.Collapsed;
             }
-            
+
             return Visibility.Collapsed;
         }
 
@@ -22,7 +21,7 @@ namespace ScratchShell.Helpers
             {
                 return visibility == Visibility.Visible;
             }
-            
+
             return false;
         }
     }

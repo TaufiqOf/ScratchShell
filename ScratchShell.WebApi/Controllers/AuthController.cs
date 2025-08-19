@@ -76,7 +76,7 @@ namespace ScratchShell.WebApi.Controllers
                 }
 
                 var token = _jwtService.GenerateToken(user);
-                
+
                 // Get expiry from configuration to match JWT token expiry
                 var jwtSettings = _configuration.GetSection("JwtSettings");
                 var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");
@@ -173,7 +173,7 @@ namespace ScratchShell.WebApi.Controllers
 
                 // Generate token for immediate login
                 var token = _jwtService.GenerateToken(user);
-                
+
                 // Get expiry from configuration to match JWT token expiry
                 var jwtSettings = _configuration.GetSection("JwtSettings");
                 var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");
@@ -236,7 +236,7 @@ namespace ScratchShell.WebApi.Controllers
 
                 // Generate new token
                 var token = _jwtService.GenerateToken(user);
-                
+
                 // Get expiry from configuration
                 var jwtSettings = _configuration.GetSection("JwtSettings");
                 var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "5256000");

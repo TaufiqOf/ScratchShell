@@ -20,11 +20,13 @@ public static class SecureKeyStore
         Directory.CreateDirectory(AppFolder);
         InitializeWithLocalKeys();
     }
+
     public static void ResetKey()
     {
         File.Delete(KeyPath);
         File.Delete(IvPath);
     }
+
     /// <summary>
     /// Initializes encryption keys using local device-specific keys (for local data only)
     /// </summary>
@@ -41,11 +43,9 @@ public static class SecureKeyStore
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error initializing local encryption keys: {ex.Message}");
-
         }
         finally
         {
-
         }
     }
 
@@ -118,6 +118,4 @@ public static class SecureKeyStore
     {
         return ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
     }
-
-    
 }

@@ -15,14 +15,14 @@ namespace ScratchShell.Services
         {
             _httpClient = httpClient;
             _baseUrl = baseUrl;
-            
+
             // Try to load stored credentials on initialization
             LoadStoredCredentials();
-            
+
             // Set default headers for all requests if token exists
             if (!string.IsNullOrEmpty(Token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             }
         }
@@ -71,16 +71,15 @@ namespace ScratchShell.Services
                     if (!string.IsNullOrEmpty(token) && userInfo != null)
                     {
                         var displayName = !string.IsNullOrEmpty(userInfo.UserName) ? userInfo.UserName : userInfo.Email;
-                        
+
                         // Check if this is first time login
                         var isFirstTime = UserSettingsService.IsFirstTimeLogin();
 
                         // Initialize user-specific encryption keys for cloud sync
-                        
+
                         // Store credentials (always store for persistence)
                         UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
                         SecureKeyStore.InitializeForUser(UserSettingsService.GetStoredUsername());
-
 
                         return new LoginResult
                         {
@@ -163,11 +162,10 @@ namespace ScratchShell.Services
                         var displayName = !string.IsNullOrEmpty(userInfo.UserName) ? userInfo.UserName : userInfo.Email;
 
                         // Initialize user-specific encryption keys for cloud sync
-                        
+
                         // Registration is always first time login
                         UserSettingsService.StoreAuthenticationCredentials(token, displayName, true);
                         SecureKeyStore.InitializeForUser(UserSettingsService.GetStoredUsername());
-
 
                         return new RegisterResult
                         {
@@ -229,7 +227,7 @@ namespace ScratchShell.Services
                     };
                 }
 
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
 
                 var response = await _httpClient.PostAsync($"{_baseUrl}/api/auth/refresh", null);
@@ -243,7 +241,7 @@ namespace ScratchShell.Services
                     });
 
                     var newToken = refreshResponse?.Token ?? string.Empty;
-                    
+
                     // Update stored token
                     if (!string.IsNullOrEmpty(newToken))
                     {
@@ -251,8 +249,8 @@ namespace ScratchShell.Services
                         if (storedCredentials.HasValue)
                         {
                             UserSettingsService.StoreAuthenticationCredentials(
-                                newToken, 
-                                storedCredentials.Value.username ?? "", 
+                                newToken,
+                                storedCredentials.Value.username ?? "",
                                 storedCredentials.Value.rememberMe);
                         }
                     }

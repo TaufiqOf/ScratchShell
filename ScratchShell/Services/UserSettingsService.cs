@@ -16,7 +16,7 @@ namespace ScratchShell.Services
         public static void InitializeCloudSync(CloudSyncService cloudSyncService)
         {
             _cloudSyncService = cloudSyncService;
-            
+
             // Subscribe to settings changes for auto-sync
             if (Settings.Default.AutoSyncOnChange)
             {
@@ -44,7 +44,7 @@ namespace ScratchShell.Services
             {
                 // Encrypt the token before storing for security
                 var encryptedToken = ProtectData(token);
-                
+
                 Settings.Default.AuthToken = encryptedToken;
                 Settings.Default.Username = username;
                 Settings.Default.RememberMe = rememberMe;
@@ -86,7 +86,7 @@ namespace ScratchShell.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(Settings.Default.AuthToken) || 
+                if (string.IsNullOrEmpty(Settings.Default.AuthToken) ||
                     string.IsNullOrEmpty(Settings.Default.Username) ||
                     !Settings.Default.RememberMe)
                 {
@@ -95,7 +95,7 @@ namespace ScratchShell.Services
 
                 // Decrypt the stored token
                 var decryptedToken = UnprotectData(Settings.Default.AuthToken);
-                
+
                 if (string.IsNullOrEmpty(decryptedToken))
                 {
                     return null;
@@ -210,9 +210,9 @@ namespace ScratchShell.Services
         /// </summary>
         public static async Task TriggerCloudSyncIfEnabled()
         {
-            if (Settings.Default.EnableCloudSync && 
-                Settings.Default.AutoSyncOnChange && 
-                _cloudSyncService != null && 
+            if (Settings.Default.EnableCloudSync &&
+                Settings.Default.AutoSyncOnChange &&
+                _cloudSyncService != null &&
                 AuthenticationService.IsTokenValid())
             {
                 try
@@ -224,7 +224,7 @@ namespace ScratchShell.Services
                         // In this case, skip the sync - user would need to manually sync or re-login
                         return;
                     }
-                    
+
                     await _cloudSyncService.SyncToCloudAsync();
                 }
                 catch (Exception ex)
@@ -239,9 +239,9 @@ namespace ScratchShell.Services
         /// </summary>
         public static async Task PerformStartupSyncIfEnabled()
         {
-            if (Settings.Default.EnableCloudSync && 
-                Settings.Default.AutoSyncOnStartup && 
-                _cloudSyncService != null && 
+            if (Settings.Default.EnableCloudSync &&
+                Settings.Default.AutoSyncOnStartup &&
+                _cloudSyncService != null &&
                 AuthenticationService.IsTokenValid())
             {
                 try
@@ -250,7 +250,7 @@ namespace ScratchShell.Services
                     if (ServerManager.NeedsCloudRestore)
                     {
                         System.Diagnostics.Debug.WriteLine("Attempting to restore servers from cloud due to encryption key changes");
-                        
+
                         // Try to download from cloud first to restore data
                         var downloadResult = await _cloudSyncService.SyncFromCloudAsync();
                         if (downloadResult.IsSuccess)
@@ -299,7 +299,7 @@ namespace ScratchShell.Services
         public static DateTime? GetLastSyncTimestamp()
         {
             // First try to read from Settings
-            if (!string.IsNullOrEmpty(Settings.Default.LastSyncTimestamp) && 
+            if (!string.IsNullOrEmpty(Settings.Default.LastSyncTimestamp) &&
                 DateTime.TryParse(Settings.Default.LastSyncTimestamp, out var timestamp))
             {
                 return timestamp;

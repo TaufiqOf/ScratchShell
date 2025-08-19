@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Windows;
 using System.Windows.Data;
 
 namespace ScratchShell.Helpers
@@ -12,7 +11,7 @@ namespace ScratchShell.Helpers
             {
                 return string.IsNullOrEmpty(str) ? Visibility.Collapsed : Visibility.Visible;
             }
-            
+
             return value == null ? Visibility.Collapsed : Visibility.Visible;
         }
 

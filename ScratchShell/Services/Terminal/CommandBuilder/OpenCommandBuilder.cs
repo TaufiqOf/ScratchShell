@@ -1,11 +1,5 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using ScratchShell.Enums;
-using ScratchShell.Services.Terminal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScratchShell.Services.Terminal.CommandBuilder
 {

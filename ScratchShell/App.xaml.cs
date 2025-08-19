@@ -1,19 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ScratchShell.Services;
+using ScratchShell.Enums;
 using ScratchShell.Properties;
+using ScratchShell.Services;
 using ScratchShell.ViewModels.Pages;
 using ScratchShell.ViewModels.Windows;
 using ScratchShell.Views.Pages;
 using ScratchShell.Views.Windows;
 using System.IO;
-using System.Reflection;
 using System.Windows.Threading;
 using Wpf.Ui;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.DependencyInjection;
-using ScratchShell.Enums;
 
 namespace ScratchShell
 {
@@ -73,7 +72,7 @@ namespace ScratchShell
         {
             await _host.StartAsync();
             var theme = Settings.Default.CurrentTheme;
-            if(string.IsNullOrEmpty(theme))
+            if (string.IsNullOrEmpty(theme))
             {
                 ApplicationThemeManager.Apply(ApplicationTheme.Dark);
                 Settings.Default.CurrentTheme = ApplicationTheme.Dark.ToString();

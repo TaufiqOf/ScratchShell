@@ -11,7 +11,7 @@ namespace ScratchShell.Helpers
             {
                 return !boolValue;
             }
-            
+
             return true;
         }
 
@@ -21,7 +21,7 @@ namespace ScratchShell.Helpers
             {
                 return !boolValue;
             }
-            
+
             return false;
         }
     }

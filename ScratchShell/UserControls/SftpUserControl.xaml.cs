@@ -1,11 +1,11 @@
-﻿using Renci.SshNet;
+﻿using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using Renci.SshNet;
 using ScratchShell.UserControls.BrowserControl;
 using ScratchShell.ViewModels.Models;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
-using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace ScratchShell.UserControls
 {
@@ -18,6 +18,7 @@ namespace ScratchShell.UserControls
         private SftpClient? _sftpClient;
         private ShellStream _shellStream;
         private bool _isInitialized = false;
+
         public SftpUserControl(ServerViewModel server)
         {
             InitializeComponent();
@@ -33,8 +34,6 @@ namespace ScratchShell.UserControls
 
             this.TopToolbar.IsEnabled = false;
         }
-
-
 
         private async void BrowserEnterRequested(BrowserItem obj)
         {
@@ -125,8 +124,8 @@ namespace ScratchShell.UserControls
                 return;
             }
             ShowProgress(false);
-
         }
+
         private async IAsyncEnumerable<BrowserItem> FileDriveControlGetDirectory(
          string path,
          [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -163,7 +162,6 @@ namespace ScratchShell.UserControls
             }
         }
 
-
         private async void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             await GoToFolder(PathTextBox.Text);
@@ -190,6 +188,7 @@ namespace ScratchShell.UserControls
                 this._sftpClient.Dispose();
             }
         }
+
         private string? _clipboardPath = null;
         private bool _clipboardIsCut = false;
 
@@ -259,8 +258,6 @@ namespace ScratchShell.UserControls
         /// </summary>
         private void DownloadDirectory(string remotePath, string localPath)
         {
-
-
             var files = _sftpClient.ListDirectory(remotePath);
 
             foreach (var file in files)
@@ -284,9 +281,7 @@ namespace ScratchShell.UserControls
                     }
                 }
             }
-
         }
-
 
         private async void BrowserUploadRequested(BrowserItem item)
         {
@@ -379,9 +374,9 @@ namespace ScratchShell.UserControls
         {
             LogGrid.Visibility = Visibility.Visible;
         }
+
         private void LogToggleButtonUnChecked(object sender, RoutedEventArgs e)
         {
-
             LogGrid.Visibility = Visibility.Collapsed;
         }
     }

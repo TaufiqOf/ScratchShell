@@ -20,13 +20,13 @@ internal static class TerminalService
         };
     }
 
-    internal static void Launch(string builderName,dynamic parameter, ShellType shellType, bool asAdmin,string title = "")
+    internal static void Launch(string builderName, dynamic parameter, ShellType shellType, bool asAdmin, string title = "")
     {
         var launcher = _launchers[shellType];
 
         var builder = _commandFactory.GetBuilder(builderName);
         var command = builder.BuildCommand(parameter);
-       
-        launcher.Launch(command,title, asAdmin);
+
+        launcher.Launch(command, title, asAdmin);
     }
 }

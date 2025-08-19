@@ -1,6 +1,4 @@
-﻿using ScratchShell.UserControls.TerminalControl.Handler;
-
-namespace ScratchShell.UserControls.TerminalControl.Handler;
+﻿namespace ScratchShell.UserControls.TerminalControl.Handler;
 
 /// <summary>
 /// Handles OSC (Operating System Command) ANSI escape sequences.

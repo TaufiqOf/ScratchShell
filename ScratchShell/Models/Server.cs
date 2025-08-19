@@ -1,7 +1,7 @@
-﻿
-using ScratchShell.Enums;
+﻿using ScratchShell.Enums;
 
 namespace ScratchShell.Models;
+
 public class Server
 {
     public string Id { get; set; }
@@ -18,12 +18,12 @@ public class Server
     public string KeyFilePassword { get; set; }
 
     public bool IsDeleted { get; set; }
+
     public Server()
     {
-
     }
 
-    public Server(string name, string host, int port, ProtocolType protocolType, string username, string password, bool useKeyFile = false, string publicKeyFilePath = null,string privateKeyFilePath= null, string keyFilePassword = null)
+    public Server(string name, string host, int port, ProtocolType protocolType, string username, string password, bool useKeyFile = false, string publicKeyFilePath = null, string privateKeyFilePath = null, string keyFilePassword = null)
     {
         Id = Guid.NewGuid().ToString();
         Name = name;

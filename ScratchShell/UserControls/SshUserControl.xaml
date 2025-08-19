@@ -102,6 +102,5 @@
             Width="300"
             Margin="10"
             Visibility="Collapsed" />
-
     </Grid>
 </UserControl>

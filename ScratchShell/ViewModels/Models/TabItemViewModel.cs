@@ -1,8 +1,5 @@
 ﻿using ScratchShell.Enums;
 using ScratchShell.Services;
-using ScratchShell.ViewModels.Models;
-using ScratchShell.ViewModels.Pages;
-using System.Windows.Controls;
 
 namespace ScratchShell.ViewModels.Models;
 
@@ -14,14 +11,17 @@ public partial class TabItemViewModel : ObservableObject
     private ServerViewModel server;
 
     public Guid Id { get; set; } = Guid.NewGuid();
+
     [ObservableProperty]
     private IWorkspaceControl? _content;
+
     public string Icon { get; set; } = "XboxConsole24";
+
     public ServerViewModel Server
     {
-        get 
+        get
         {
-            return server; 
+            return server;
         }
 
         internal set
