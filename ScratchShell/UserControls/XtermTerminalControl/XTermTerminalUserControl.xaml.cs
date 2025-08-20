@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Spectre.Console;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -7,18 +8,21 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using XtermSharp;
 using Color = System.Windows.Media.Color;
+using Paragraph = System.Windows.Documents.Paragraph;
 
 namespace ScratchShell.UserControls.XtermTerminalControl
 {
     public partial class XTermTerminalUserControl : UserControl, ITerminal
     {
         private readonly Terminal _terminal;
-
+        private int _lastRenderedLine = 0;
         // Track where the current input starts
         private TextPointer? _promptStart;
         private Paragraph? _promptParagraph;
+        private Run _promptRun;
 
         public XTermTerminalUserControl()
         {
@@ -73,10 +77,19 @@ namespace ScratchShell.UserControls.XtermTerminalControl
 
         public void AddOutput(string v)
         {
-            _terminal.Feed(v);
-            RenderBuffer();
-            WritePrompt(); // prompt starts directly on a new line
-            ScrollToEnd();
+            try
+            {
+                v = Environment.NewLine + v;
+                _terminal.Feed(v);
+                RenderBufferIncremental();
+                WritePrompt(); // prompt starts directly on a new line
+                ScrollToEnd();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
 
@@ -84,20 +97,30 @@ namespace ScratchShell.UserControls.XtermTerminalControl
 
         #region Rendering
 
-        private void RenderBuffer()
+        private void RenderBufferIncremental()
         {
+
             var buffer = _terminal.Buffer;
 
             Dispatcher.Invoke(() =>
             {
-                TerminalBox.Document.Blocks.Clear();
-
                 for (int i = 0; i < buffer.Lines.Length; i++)
+                {
+                    var line = buffer.Lines[i];
+                    Debug.WriteLine(line.TranslateToString(false).ToString());
+                }
+                var bufferLinepdate = 0;
+                for (int i = _lastRenderedLine; i < buffer.Lines.Length; i++)
                 {
                     var line = buffer.Lines[i];
                     if (line == null) continue;
 
+                    var lineText = line.TranslateToString(false);
                     var p = new Paragraph { Margin = new Thickness(0) };
+
+                    var sb = new StringBuilder();
+                    Color? lastFg = null;
+                    Color? lastBg = null;
 
                     for (int j = 0; j < line.Length; j++)
                     {
@@ -110,17 +133,47 @@ namespace ScratchShell.UserControls.XtermTerminalControl
                         Color fgColor = fg == Renderer.DefaultColor ? Colors.LightGray : ColorForIndex(fg);
                         Color bgColor = bg == Renderer.DefaultColor ? Colors.Transparent : ColorForIndex(bg);
 
-                        var run = new Run(c.ToString())
+                        if (lastFg == null || lastBg == null || fgColor != lastFg || bgColor != lastBg)
                         {
-                            Foreground = new SolidColorBrush(fgColor),
-                            Background = new SolidColorBrush(bgColor)
-                        };
+                            // flush existing buffer into a Run
+                            if (sb.Length > 0)
+                            {
+                                p.Inlines.Add(new Run(sb.ToString())
+                                {
+                                    Foreground = new SolidColorBrush(lastFg.Value),
+                                    Background = new SolidColorBrush(lastBg.Value)
+                                });
+                                sb.Clear();
+                            }
 
-                        p.Inlines.Add(run);
+                            lastFg = fgColor;
+                            lastBg = bgColor;
+                        }
+
+                        sb.Append(c);
                     }
 
-                    TerminalBox.Document.Blocks.Add(p);
+                    // flush remaining
+                    if (sb.Length > 0)
+                    {
+                        p.Inlines.Add(new Run(sb.ToString())
+                        {
+                            Foreground = new SolidColorBrush(lastFg.Value),
+                            Background = new SolidColorBrush(lastBg.Value)
+                        });
+                    }
+
+                    // skip empty whitespace-only lines
+                    string text = new TextRange(p.ContentStart, p.ContentEnd).Text;
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        TerminalBox.Document.Blocks.Add(p);
+                        bufferLinepdate++;
+                    }
                 }
+
+                // update last rendered line
+                _lastRenderedLine += bufferLinepdate;
             });
         }
 
@@ -157,25 +210,33 @@ namespace ScratchShell.UserControls.XtermTerminalControl
 
         private void TerminalBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            try
             {
-                string input = GetCurrentInput();
-                CommandEntered?.Invoke(this, input);
-
-                e.Handled = true;
-            }
-            else if (e.Key != Key.Up || e.Key != Key.Left || e.Key != Key.Right || e.Key != Key.Down || e.Key != Key.Home)
-            {
-                if (_promptStart == null)
-                    return;
-                // Prevent deleting or moving before prompt
-                if ((!IsCaretAfterPrompt() && !((e.Key == Key.LeftShift || e.Key == Key.Right || e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl || e.Key == Key.Up || e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Down) || e.Key == Key.Home))
-                    || (e.Key == Key.Back && !IsBackAfterPrompt()))
+                if (e.Key == Key.Enter)
                 {
-                    TerminalBox.CaretPosition = _promptStart;
+                    string input = GetCurrentInput();
+                    CommandEntered?.Invoke(this, input);
+
                     e.Handled = true;
                 }
+                else if (e.Key != Key.Up || e.Key != Key.Left || e.Key != Key.Right || e.Key != Key.Down || e.Key != Key.Home)
+                {
+                    if (_promptStart == null)
+                        return;
+                    // Prevent deleting or moving before prompt
+                    if ((!IsCaretAfterPrompt() && !((e.Key == Key.LeftShift || e.Key == Key.Right || e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl || e.Key == Key.Up || e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Down) || e.Key == Key.Home))
+                        || (e.Key == Key.Back && !IsBackAfterPrompt()))
+                    {
+                        TerminalBox.CaretPosition = _promptStart;
+                        e.Handled = true;
+                    }
+                }
             }
+            catch (Exception)
+            {
+
+            }
+
         }
         private bool IsBackAfterPrompt()
         {
@@ -188,21 +249,27 @@ namespace ScratchShell.UserControls.XtermTerminalControl
                 return false;
 
             int offset = _promptStart.GetOffsetToPosition(caretPos);
-            return offset > 0;
+            return offset >= 2;
         }
         private bool IsCaretAfterPrompt()
         {
             if (_promptStart == null)
                 return false;
-
+            var terminalOffset = TerminalBox.CaretPosition.GetOffsetToPosition(TerminalBox.Document.ContentEnd);
+            if (terminalOffset == 2)
+            {
+                return true;
+            }
             var caretPos = TerminalBox.CaretPosition;
 
             if (caretPos.Paragraph != _promptStart.Paragraph)
                 return false;
 
             int offset = _promptStart.GetOffsetToPosition(caretPos);
-            return offset >= -1;
+
+            return offset >= 0;
         }
+
         private string GetCurrentInput()
         {
             if (_promptStart == null || _promptParagraph == null)
@@ -214,38 +281,46 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             return input;
         }
 
-
-
         private void WritePrompt()
         {
-            Paragraph? targetParagraph;
-
-            // If there is already some output, use the last paragraph instead of making a new one
-            if (TerminalBox.Document.Blocks.LastBlock is Paragraph lastParagraph)
+            try
             {
-                targetParagraph = lastParagraph;
+                if (TerminalBox.Document.Blocks.LastBlock is not Paragraph targetParagraph)
+                    return;
+
+                // Debug: dump all blocks
+                int i = 0;
+                foreach (var item in TerminalBox.Document.Blocks)
+                {
+                    if (item is Paragraph para)
+                    {
+                        var r = new TextRange(para.ContentStart, para.ContentEnd);
+                        Debug.WriteLine($"{i++}:{r.Text}");
+                    }
+                }
+
+                // Trim trailing newlines/spaces before prompt
+                var range = new TextRange(targetParagraph.ContentStart, targetParagraph.ContentEnd);
+                range.Text = range.Text.TrimEnd();
+                // --- static prompt text ---
+                _promptRun = new Run(InputLineSyntax) { Foreground = Brushes.LightGreen };
+                _promptRun.Text = " ";
+                targetParagraph.Inlines.Add(_promptRun);
+
+
+                // --- input area run ---
+       
+                _promptStart = targetParagraph.ElementEnd.GetInsertionPosition(LogicalDirection.Forward);
+                _promptParagraph = targetParagraph;
+                TerminalBox.CaretPosition = _promptStart;
+                TerminalBox.Focus();
+
+                ScrollToEnd();
             }
-            else
+            catch (Exception ex)
             {
-                targetParagraph = new Paragraph { Margin = new Thickness(0) };
-                TerminalBox.Document.Blocks.Add(targetParagraph);
+                Debug.WriteLine("WritePrompt error: " + ex);
             }
-
-            // static prompt text
-            var promptRun = new Run(InputLineSyntax) { Foreground = Brushes.LightGreen };
-            targetParagraph.Inlines.Add(promptRun);
-
-            // input area
-            var inputRun = new Run();
-            targetParagraph.Inlines.Add(inputRun);
-
-            _promptParagraph = targetParagraph;
-            _promptStart = inputRun.ContentStart;
-
-            // caret goes at the input area
-            TerminalBox.CaretPosition = _promptStart;
-            TerminalBox.Focus();
-            ScrollToEnd();
         }
 
 
