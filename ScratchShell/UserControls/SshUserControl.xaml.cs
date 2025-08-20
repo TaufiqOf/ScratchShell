@@ -116,6 +116,10 @@ namespace ScratchShell.UserControls
             try
             {
                 await _sshClient.ConnectAsync(CancellationToken.None);
+                var cols = (uint)Math.Max(1, Terminal.Width / 8);
+                var rows = (uint)Math.Max(1, Terminal.Height / 16);
+                var pixelWidth = (uint)Terminal.Width;
+                var pixelHeight = (uint)Terminal.Height;
                 _shellStream = _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096);
 
                 Terminal.AddOutput($"Connected to {server.Name} at {server.Host}:{server.Port}.");
@@ -154,8 +158,13 @@ namespace ScratchShell.UserControls
         {
             if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
             {
-                var cols = (uint)Math.Max(1, newSize.Width / 8);
-                var rows = (uint)Math.Max(1, newSize.Height / 16);
+                // Estimate character cell size (adjust as needed for your font)
+                double charWidth = 8.0;   // Typical width for Consolas 12pt
+                double charHeight = 16.0; // Typical height for Consolas 12pt
+
+                // Calculate columns and rows that fit in the new size
+                UInt32 cols = (UInt32)Math.Max(10, (int)(newSize.Width / charWidth));
+                UInt32 rows = (UInt32)Math.Max(2, (int)(newSize.Height / charHeight));
                 var pixelWidth = (uint)newSize.Width;
                 var pixelHeight = (uint)newSize.Height;
 
@@ -276,13 +285,7 @@ namespace ScratchShell.UserControls
             {
                 return;
             }
-            string text1 = Terminal.Text.TrimEnd();
-            System.Diagnostics.Debug.WriteLine($"Terminal.Text = '{text1}'");
-            System.Diagnostics.Debug.WriteLine($"snippet.Code = '{snippet.Code}'");
-
-            string text = $"{text1}test{snippet.Code}";
-            System.Diagnostics.Debug.WriteLine($"RESULT = '{text}'");
-            //Terminal.AddOutput(text);
+            Terminal.AddInput(snippet.Code);
             await Task.CompletedTask;
         }
     }

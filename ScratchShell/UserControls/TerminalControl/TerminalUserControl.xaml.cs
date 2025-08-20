@@ -42,6 +42,10 @@ public partial class TerminalUserControl : UserControl, ITerminal
     public string Text => new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd)
         .Text.TrimEnd('\r', '\n');
 
+    public int Width => this.Width;
+
+    public int Height => this.Height;
+
     public TerminalUserControl()
     {
         InitializeComponent();
@@ -377,5 +381,10 @@ public partial class TerminalUserControl : UserControl, ITerminal
         }
 
         e.Handled = true;
+    }
+
+    public void AddInput(string input)
+    {
+        throw new NotImplementedException();
     }
 }

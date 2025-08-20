@@ -11,7 +11,10 @@ namespace ScratchShell.UserControls
         string InputLineSyntax { get; set; }
         bool IsReadOnly { get; set; }
         string Text { get; }
+        double Width { get;  }
+        double Height { get; }
 
-        void AddOutput(string v);
+        void AddOutput(string output);
+        void AddInput(string input);
     }
 }
