@@ -178,7 +178,6 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
 
         OnPropertyChanged(nameof(Snippets));
         SearchSnippet(this);
-
     }
 
     private void SnippetsListBoxSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
