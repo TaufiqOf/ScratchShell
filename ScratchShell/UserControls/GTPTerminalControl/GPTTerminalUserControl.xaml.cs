@@ -21,6 +21,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private double _charHeight = 16;
     private Typeface _typeface = new Typeface("Consolas");
 
+    private const double TerminalFontSize = 16; // Fixed font size for terminal
+
     public GPTTerminalUserControl()
     {
         InitializeComponent();
@@ -62,16 +64,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void UpdateCharSize()
     {
         var formattedText = new FormattedText(
-            "W",
+            "W@gy",
             System.Globalization.CultureInfo.CurrentCulture,
             FlowDirection.LeftToRight,
             _typeface,
-            _charHeight,
+            TerminalFontSize,
             Brushes.Black,
             new NumberSubstitution(),
             1.0);
 
-        _charWidth = formattedText.WidthIncludingTrailingWhitespace;
+        _charWidth = formattedText.WidthIncludingTrailingWhitespace / formattedText.Text.Length;
         _charHeight = formattedText.Height;
     }
 
@@ -327,7 +329,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     {
                         Text = ch.ToString(),
                         FontFamily = new FontFamily("Consolas"),
-                        FontSize = _charHeight,
+                        FontSize = TerminalFontSize,
                         Foreground = bg,
                         Background = Brushes.Transparent,
                         FontWeight = weight,
@@ -343,7 +345,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     {
                         Text = ch.ToString(),
                         FontFamily = new FontFamily("Consolas"),
-                        FontSize = _charHeight,
+                        FontSize = TerminalFontSize,
                         Foreground = fg,
                         Background = bg,
                         FontWeight = weight,
