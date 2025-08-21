@@ -52,7 +52,26 @@
                 Icon="{ui:SymbolIcon Symbol=Delete24}"
                 ToolTip="Delete Snippet" />
         </Grid>
-        <ui:TextBox  Grid.Row="1" Icon="{ui:SymbolIcon Symbol=Search20}" TextChanged="SearchSnippetTextChanged"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ui:TextBox
+                x:Name="SearchSnippetTextBox"
+                Grid.Column="0"
+                Icon="{ui:SymbolIcon Symbol=Search20}"
+                TextChanged="SearchSnippetTextChanged" />
+            <ToggleButton
+                x:Name="SearchSnippetButton"
+                Grid.Column="1"
+                Click="ShowHideSystemSystemSnippetClick"
+                FontSize="20"
+                IsChecked="True"
+                ToolTip="Show/Hide System Snippet">
+                <ui:SymbolIcon Symbol="System20" />
+            </ToggleButton>
+        </Grid>
         <!--  ListBox  -->
         <!--  List of snippets  -->
         <ListBox

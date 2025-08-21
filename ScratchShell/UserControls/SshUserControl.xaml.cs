@@ -225,7 +225,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 if (contentDialogResult == ContentDialogResult.Primary)
                 {
                     await SnippetManager.Add(snippetViewModel.ToSnippet());
-                    SnippetControl.Snippets.Add(snippetViewModel);
+                    SnippetControl.AddSnippet(snippetViewModel);
                     snippetViewModel.ExecuteSnippet += SnippetExecuteSnippet;
                 }
             }
@@ -258,16 +258,16 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                     new SimpleContentDialogCreateOptions()
                     {
                         Title = "Delete this snippet?",
-                        Content = $"Are you sure you want to delete {Name}?",
+                        Content = $"Are you sure you want to delete {snippet?.Name}?",
                         PrimaryButtonText = "Delete",
                         CloseButtonText = "Cancel",
                     }
                 );
             if (result == ContentDialogResult.Primary)
             {
-                SnippetManager.Remove(snippet?.ToSnippet());
+                await SnippetManager.Remove(snippet?.ToSnippet());
                 snippet.ExecuteSnippet -= SnippetExecuteSnippet;
-                SnippetControl.Snippets.Remove(snippet);
+                SnippetControl.RemoveSnippet(snippet);
             }
         }
     }

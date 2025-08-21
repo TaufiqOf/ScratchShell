@@ -92,6 +92,7 @@ public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
         Id = snippet.Id ?? Guid.NewGuid().ToString();
         Name = snippet.Name ?? string.Empty;
         Code = snippet.Code ?? string.Empty;
+        IsSystemSnippet = snippet.IsSystemSnippet;
         ContentDialogService = contentDialogService;
     }
 
@@ -100,6 +101,7 @@ public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
         Id = snippet.Id;
         Name = snippet.Name;
         Code = snippet.Code;
+        IsSystemSnippet = snippet.IsSystemSnippet;
         ContentDialogService = contentDialogService;
     }
 
@@ -115,7 +117,8 @@ public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
         {
             Id = id,
             Name = Name,
-            Code = Code
+            Code = Code,
+            IsSystemSnippet = IsSystemSnippet
         };
         return snippet;
     }
