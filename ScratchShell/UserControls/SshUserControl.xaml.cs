@@ -284,6 +284,31 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
     private void FullScreenButton_Click(object sender, RoutedEventArgs e)
     {
+        StackPanel menuButton = GetMenu();
+
+        FullScreenButton.IsEnabled = false;
+        TerminalContentControl.Content = null;
+        _FullScreen = new FullScreenWindow(Terminal, _server.Name, menuButton);
+        _FullScreen.Show();
+        _FullScreen.Closed += (s, args) =>
+        {
+            // Reinitialize the terminal when exiting full screen
+            _FullScreen.RootContentDialog.Content = null;
+
+            TerminalContentControl.Content = Terminal;
+            _FullScreen = null;
+            FullScreenButton.IsEnabled = true;
+        };
+    }
+
+    private StackPanel GetMenu()
+    {
+        var menuPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,
+            VerticalAlignment = System.Windows.VerticalAlignment.Stretch,
+        };
         var menuButton = new DropDownButton
         {
             Icon = new SymbolIcon
@@ -307,19 +332,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         ctx.PlacementTarget = menuButton;
         menuButton.Flyout = ctx;
-
-        FullScreenButton.IsEnabled = false;
-        TerminalContentControl.Content = null;
-        _FullScreen = new FullScreenWindow(Terminal, _server.Name, menuButton);
-        _FullScreen.Show();
-        _FullScreen.Closed += (s, args) =>
-        {
-            // Reinitialize the terminal when exiting full screen
-            _FullScreen.RootContentDialog.Content = null;
-
-            TerminalContentControl.Content = Terminal;
-            _FullScreen = null;
-            FullScreenButton.IsEnabled = true;
-        };
+        menuPanel.Children.Add(menuButton);
+        return menuPanel;
     }
 }

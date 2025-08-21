@@ -67,4 +67,9 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     {
         OnDeleteSnippet?.Invoke(this, _selectedSnippet);
     }
+
+    private void SearchSnippetTextChanged(object sender, TextChangedEventArgs e)
+    {
+
+    }
 }

@@ -19,6 +19,9 @@ public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
     [ObservableProperty]
     private string _code = string.Empty;
 
+    [ObservableProperty]
+    private bool _isSystemSnippet = false;
+
     public IContentDialogService ContentDialogService { get; }
 
     // Validation properties
