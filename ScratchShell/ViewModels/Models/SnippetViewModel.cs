@@ -1,4 +1,4 @@
-using ScratchShell.Models;
+﻿using ScratchShell.Models;
 using System.ComponentModel;
 using Wpf.Ui;
 
@@ -135,22 +135,22 @@ public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
 
         return firstWord switch
         {
-            "ls" or "ll" or "dir" => "File Listing",
-            "cd" or "pwd" => "Navigation",
-            "cp" or "mv" or "rm" or "mkdir" or "rmdir" => "File Operations",
-            "cat" or "less" or "more" or "head" or "tail" or "grep" => "File Content",
-            "ps" or "top" or "kill" or "killall" or "jobs" or "nohup" => "Process Management",
-            "df" or "du" or "free" or "uname" or "uptime" or "who" or "whoami" => "System Info",
-            "git" => "Git",
-            "docker" => "Docker",
-            "ssh" or "scp" or "ping" or "wget" or "curl" => "Network",
-            "tar" or "zip" or "unzip" or "gzip" => "Archives",
-            "chmod" or "chown" or "chgrp" => "Permissions",
-            "systemctl" or "service" => "Services",
-            "journalctl" or "dmesg" => "Logs",
-            "sudo" or "su" => "Admin",
-            "find" or "locate" or "which" or "type" => "Search",
-            _ => "Other"
+            "ls" or "ll" or "dir" => "📂 File Listing",
+            "cd" or "pwd" => "📁 Navigation",
+            "cp" or "mv" or "rm" or "mkdir" or "rmdir" => "✂️ File Operations",
+            "cat" or "less" or "more" or "head" or "tail" or "grep" => "📜 File Content",
+            "ps" or "top" or "kill" or "killall" or "jobs" or "nohup" => "⚙️ Process Management",
+            "df" or "du" or "free" or "uname" or "uptime" or "who" or "whoami" => "💻 System Info",
+            "git" => "🌱 Git",
+            "docker" => "🐳 Docker",
+            "ssh" or "scp" or "ping" or "wget" or "curl" => "🌐 Network",
+            "tar" or "zip" or "unzip" or "gzip" => "🗜️ Archives",
+            "chmod" or "chown" or "chgrp" => "🔑 Permissions",
+            "systemctl" or "service" => "🚀 Services",
+            "journalctl" or "dmesg" => "📖 Logs",
+            "sudo" or "su" => "👑 Admin",
+            "find" or "locate" or "which" or "type" => "🔍 Search",
+            _ => "❓ Other"
         };
     }
 

@@ -89,7 +89,6 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     public SnippetUserControl()
     {
         InitializeComponent();
-        SearchSnippet(this);
     }
 
     private void NewButton_Click(object sender, RoutedEventArgs e)
@@ -121,12 +120,22 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
         var showSystemSnippets = SearchSnippetButton.IsChecked;
 
         // Filter snippets based on search text (search in both name and code)
-        var filteredSnippets = _allSnippets.Where(snippet =>
-            snippet.IsSystemSnippet == showSystemSnippets &&
-            (snippet.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-            snippet.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-        ).ToList();
-
+        List<SnippetViewModel> filteredSnippets = new();
+        if (showSystemSnippets.HasValue && showSystemSnippets.Value)
+        {
+            filteredSnippets = _allSnippets.Where(snippet =>
+                (snippet.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                snippet.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+        else
+        {
+            filteredSnippets = _allSnippets.Where(snippet =>
+                snippet.IsSystemSnippet == showSystemSnippets &&
+                 (snippet.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                 snippet.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+             ).ToList();
+        }
         // Clear selection if current selection is not in filtered results
         if (_selectedSnippet != null && !filteredSnippets.Contains(_selectedSnippet))
         {
