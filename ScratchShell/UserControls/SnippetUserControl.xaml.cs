@@ -14,6 +14,21 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     private ObservableCollection<SnippetViewModel> _snippets = new();
     private ObservableCollection<SnippetViewModel> _allSnippets = new(); // Keep track of all snippets for filtering
     private SnippetViewModel _selectedSnippet;
+    private ObservableCollection<SnippetGroup> groupedSnippets;
+
+    public ObservableCollection<SnippetGroup> GroupedSnippets
+    {
+        get
+        {
+            return groupedSnippets;
+        }
+
+        set
+        {
+            groupedSnippets = value;
+            OnPropertyChanged(nameof(GroupedSnippets));
+        }
+    }
 
     public delegate Task SnippetHandler(SnippetUserControl obj, SnippetViewModel? snippet);
 
@@ -36,15 +51,16 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
         set
         {
             _snippets = value;
-            
+
             // Update the complete list when the snippets are set
             _allSnippets.Clear();
             foreach (var snippet in value)
             {
                 _allSnippets.Add(snippet);
             }
-            
+
             OnPropertyChanged(nameof(Snippets));
+            SearchSnippet(this);
         }
     }
 
@@ -54,13 +70,26 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
         set
         {
             _selectedSnippet = value;
+            if (_selectedSnippet is null || _selectedSnippet.IsSystemSnippet)
+            {
+                EditButton.IsEnabled = false;
+                DeleteButton.IsEnabled = false;
+            }
+            else if (_selectedSnippet is not null && !_selectedSnippet.IsSystemSnippet)
+            {
+                EditButton.IsEnabled = true;
+                DeleteButton.IsEnabled = true;
+            }
+
             OnPropertyChanged(nameof(SelectedSnippet));
+
         }
     }
 
     public SnippetUserControl()
     {
         InitializeComponent();
+        SearchSnippet(this);
     }
 
     private void NewButton_Click(object sender, RoutedEventArgs e)
@@ -83,7 +112,7 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     }
     private void SearchSnippetTextChanged(object sender, TextChangedEventArgs e)
     {
-       SearchSnippet(sender);
+        SearchSnippet(sender);
     }
 
     private bool SearchSnippet(object sender)
@@ -92,37 +121,27 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
         var showSystemSnippets = SearchSnippetButton.IsChecked;
 
         // Filter snippets based on search text (search in both name and code)
-        var filteredSnippets = _allSnippets.Where(snippet => 
+        var filteredSnippets = _allSnippets.Where(snippet =>
             snippet.IsSystemSnippet == showSystemSnippets &&
             (snippet.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
             snippet.Code.Contains(searchText, StringComparison.OrdinalIgnoreCase))
         ).ToList();
-
-        // Update the displayed snippets
-        _snippets.Clear();
-        foreach (var snippet in filteredSnippets)
-        {
-            _snippets.Add(snippet);
-        }
 
         // Clear selection if current selection is not in filtered results
         if (_selectedSnippet != null && !filteredSnippets.Contains(_selectedSnippet))
         {
             SelectedSnippet = null;
         }
-
+        GroupedSnippets = new ObservableCollection<SnippetGroup>(
+            filteredSnippets.GroupBy(s => s.GetCommandCategory())
+                    .Select(g => new SnippetGroup
+                    {
+                        Category = g.Key,
+                        Snippets = new ObservableCollection<SnippetViewModel>(g)
+                    }));
         OnPropertyChanged(nameof(Snippets));
+        OnPropertyChanged(nameof(GroupedSnippets));
         return true;
-    }
-
-    private void RestoreAllSnippets()
-    {
-        _snippets.Clear();
-        foreach (var snippet in _allSnippets)
-        {
-            _snippets.Add(snippet);
-        }
-        OnPropertyChanged(nameof(Snippets));
     }
 
     /// <summary>
@@ -132,7 +151,7 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     {
         _allSnippets.Add(snippet);
         _snippets.Add(snippet);
-        OnPropertyChanged(nameof(Snippets));
+        SearchSnippet(this);
     }
 
     /// <summary>
@@ -142,14 +161,23 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     {
         _allSnippets.Remove(snippet);
         _snippets.Remove(snippet);
-        
+
         if (_selectedSnippet == snippet)
         {
             SelectedSnippet = null;
         }
-        
+
         OnPropertyChanged(nameof(Snippets));
     }
 
+    private void SnippetsListBoxSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        SelectedSnippet = e.NewValue as SnippetViewModel;
+    }
+}
 
+public class SnippetGroup
+{
+    public string Category { get; set; }
+    public ObservableCollection<SnippetViewModel> Snippets { get; set; }
 }
