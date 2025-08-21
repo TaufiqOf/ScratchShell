@@ -1,13 +1,12 @@
-namespace ScratchShell.Enums
+namespace ScratchShell.Enums;
+
+public enum SyncStatus
 {
-    public enum SyncStatus
-    {
-        Idle,
-        Uploading,
-        UploadCompleted,
-        Downloading,
-        DownloadCompleted,
-        Error,
-        ConflictDetected
-    }
+    Idle,
+    Uploading,
+    UploadCompleted,
+    Downloading,
+    DownloadCompleted,
+    Error,
+    ConflictDetected
 }

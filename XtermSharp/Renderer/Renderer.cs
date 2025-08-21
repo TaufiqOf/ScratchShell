@@ -1,12 +1,11 @@
-﻿namespace XtermSharp
-{
-    public class Renderer
-    {
-        public const int DefaultColor = 256;
-        public const int InvertedDefaultColor = 257;
+namespace XtermSharp;
 
-        public Renderer()
-        {
-        }
+public class Renderer
+{
+    public const int DefaultColor = 256;
+    public const int InvertedDefaultColor = 257;
+
+    public Renderer()
+    {
     }
 }

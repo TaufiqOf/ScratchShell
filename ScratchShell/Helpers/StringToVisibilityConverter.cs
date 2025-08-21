@@ -1,23 +1,22 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace ScratchShell.Helpers
+namespace ScratchShell.Helpers;
+
+internal class StringToVisibilityConverter : IValueConverter
 {
-    internal class StringToVisibilityConverter : IValueConverter
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        if (value is string str)
         {
-            if (value is string str)
-            {
-                return string.IsNullOrEmpty(str) ? Visibility.Collapsed : Visibility.Visible;
-            }
-
-            return value == null ? Visibility.Collapsed : Visibility.Visible;
+            return string.IsNullOrEmpty(str) ? Visibility.Collapsed : Visibility.Visible;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
+        return value == null ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -1,45 +1,44 @@
-﻿using ScratchShell.Services;
+using ScratchShell.Services;
 using ScratchShell.ViewModels.Models;
 using System.Collections.ObjectModel;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ScratchShell.ViewModels.Pages
+namespace ScratchShell.ViewModels.Pages;
+
+public partial class SessionViewModel : ObservableObject, INavigationAware
 {
-    public partial class SessionViewModel : ObservableObject, INavigationAware
+    private bool _isInitialized = false;
+
+    [ObservableProperty]
+    private ObservableCollection<TabItemViewModel> _tabs;
+
+    [ObservableProperty]
+    private TabItemViewModel _selectedTab;
+
+    public SessionViewModel()
     {
-        private bool _isInitialized = false;
+        Tabs = SessionService.Sessions;
+        SessionService.SessionSelected += SessionServiceSessionSelected;
+    }
 
-        [ObservableProperty]
-        private ObservableCollection<TabItemViewModel> _tabs;
+    private Task SessionServiceSessionSelected(TabItemViewModel tabViewModel)
+    {
+        SelectedTab = Tabs.FirstOrDefault(t => t.Id == tabViewModel.Id) ?? Tabs.First();
+        return Task.CompletedTask;
+    }
 
-        [ObservableProperty]
-        private TabItemViewModel _selectedTab;
+    public Task OnNavigatedToAsync()
+    {
+        if (!_isInitialized)
+            InitializeViewModel();
 
-        public SessionViewModel()
-        {
-            Tabs = SessionService.Sessions;
-            SessionService.SessionSelected += SessionServiceSessionSelected;
-        }
+        return Task.CompletedTask;
+    }
 
-        private Task SessionServiceSessionSelected(TabItemViewModel tabViewModel)
-        {
-            SelectedTab = Tabs.FirstOrDefault(t => t.Id == tabViewModel.Id) ?? Tabs.First();
-            return Task.CompletedTask;
-        }
+    public Task OnNavigatedFromAsync() => Task.CompletedTask;
 
-        public Task OnNavigatedToAsync()
-        {
-            if (!_isInitialized)
-                InitializeViewModel();
-
-            return Task.CompletedTask;
-        }
-
-        public Task OnNavigatedFromAsync() => Task.CompletedTask;
-
-        private void InitializeViewModel()
-        {
-            _isInitialized = true;
-        }
+    private void InitializeViewModel()
+    {
+        _isInitialized = true;
     }
 }

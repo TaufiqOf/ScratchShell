@@ -1,28 +1,28 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace XtermSharp
+namespace XtermSharp;
+
+public class CharSets
 {
-    public class CharSets
+    public static Dictionary<byte, Dictionary<byte, string>> All;
+
+    // This is the "B" charset, null
+    public static Dictionary<byte, string> Default = null;
+
+    static CharSets()
     {
-        public static Dictionary<byte, Dictionary<byte, string>> All;
-
-        // This is the "B" charset, null
-        public static Dictionary<byte, string> Default = null;
-
-        static CharSets()
-        {
-            All = new Dictionary<byte, Dictionary<byte, string>>();
-            //
-            // DEC Special Character and Line Drawing Set.
-            // Reference: http://vt100.net/docs/vt102-ug/table5-13.html
-            // A lot of curses apps use this if they see TERM=xterm.
-            // testing: echo -e '\e(0a\e(B'
-            // The xterm output sometimes seems to conflict with the
-            // reference above. xterm seems in line with the reference
-            // when running vttest however.
-            // The table below now uses xterm's output from vttest.
-            //
-            All[(byte)'0'] = new Dictionary<byte, string>()  {
+        All = new Dictionary<byte, Dictionary<byte, string>>();
+        //
+        // DEC Special Character and Line Drawing Set.
+        // Reference: http://vt100.net/docs/vt102-ug/table5-13.html
+        // A lot of curses apps use this if they see TERM=xterm.
+        // testing: echo -e '\e(0a\e(B'
+        // The xterm output sometimes seems to conflict with the
+        // reference above. xterm seems in line with the reference
+        // when running vttest however.
+        // The table below now uses xterm's output from vttest.
+        //
+        All[(byte)'0'] = new Dictionary<byte, string>()  {
                 { (byte) '`', "\u25c6"}, // '◆'
 				{ (byte) 'a', "\u2592"}, // '▒'
 				{ (byte) 'b', "\u2409"}, // [ht]
@@ -56,30 +56,30 @@ namespace XtermSharp
 				{ (byte) '~', "\u00b7"}  // '·'
 			};
 
-            // (DEC Alternate character ROM special graphics)
-            All[(byte)'2'] = All[(byte)'0'];
+        // (DEC Alternate character ROM special graphics)
+        All[(byte)'2'] = All[(byte)'0'];
 
-            /**
-			 * British character set
-			 * ESC (A
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-5.html
-			 */
-            All[(byte)'A'] = new Dictionary<byte, string> {
+        /**
+         * British character set
+         * ESC (A
+         * Reference: http://vt100.net/docs/vt220-rm/table2-5.html
+         */
+        All[(byte)'A'] = new Dictionary<byte, string> {
                 {(byte) '#', "£"}
             };
 
-            /**
-			 * United States character set
-			 * ESC (B
-			 */
-            All[(byte)'B'] = null;
+        /**
+         * United States character set
+         * ESC (B
+         */
+        All[(byte)'B'] = null;
 
-            /**
-			 * Dutch character set
-			 * ESC (4
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-6.html
-			 */
-            All[(byte)'4'] = new Dictionary<byte, string> {
+        /**
+         * Dutch character set
+         * ESC (4
+         * Reference: http://vt100.net/docs/vt220-rm/table2-6.html
+         */
+        All[(byte)'4'] = new Dictionary<byte, string> {
                 { (byte) '#', "£"},
                 { (byte) '@', "¾"},
                 { (byte) '[', "ij"},
@@ -91,13 +91,13 @@ namespace XtermSharp
                 { (byte) '~', "´"}
             };
 
-            /**
-			 * Finnish character set
-			 * ESC (C or ESC (5
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-7.html
-			 */
-            All[(byte)'C'] =
-            All[(byte)'5'] = new Dictionary<byte, string> {
+        /**
+         * Finnish character set
+         * ESC (C or ESC (5
+         * Reference: http://vt100.net/docs/vt220-rm/table2-7.html
+         */
+        All[(byte)'C'] =
+        All[(byte)'5'] = new Dictionary<byte, string> {
                 { (byte) '[', "Ä"},
                 { (byte) '\\', "Ö"},
                 { (byte) ']', "Å"},
@@ -107,14 +107,14 @@ namespace XtermSharp
                 { (byte) '|', "ö"},
                 { (byte) '}', "å"},
                 { (byte) '~', "ü"}
-            };
+        };
 
-            /**
-			 * French character set
-			 * ESC (R
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-8.html
-			 */
-            All[(byte)'R'] = new Dictionary<byte, string> {
+        /**
+         * French character set
+         * ESC (R
+         * Reference: http://vt100.net/docs/vt220-rm/table2-8.html
+         */
+        All[(byte)'R'] = new Dictionary<byte, string> {
                 { (byte) '#', "£"},
                 { (byte) '@', "à"},
                 { (byte) '[', "°"},
@@ -126,12 +126,12 @@ namespace XtermSharp
                 { (byte) '~', "¨"}
             };
 
-            /**
-			 * French Canadian character set
-			 * ESC (Q
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-9.html
-			 */
-            All[(byte)'Q'] = new Dictionary<byte, string> {
+        /**
+         * French Canadian character set
+         * ESC (Q
+         * Reference: http://vt100.net/docs/vt220-rm/table2-9.html
+         */
+        All[(byte)'Q'] = new Dictionary<byte, string> {
                 { (byte) '@', "à"},
                 { (byte) '[', "â"},
                 { (byte) '\\', "ç"},
@@ -144,12 +144,12 @@ namespace XtermSharp
                 { (byte) '~', "û"}
             };
 
-            /**
-			 * German character set
-			 * ESC (K
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-10.html
-			 */
-            All[(byte)'K'] = new Dictionary<byte, string> {
+        /**
+         * German character set
+         * ESC (K
+         * Reference: http://vt100.net/docs/vt220-rm/table2-10.html
+         */
+        All[(byte)'K'] = new Dictionary<byte, string> {
                 { (byte) '@', "§"},
                 { (byte) '[', "Ä"},
                 { (byte) '\\', "Ö"},
@@ -160,12 +160,12 @@ namespace XtermSharp
                 { (byte) '~', "ß"}
             };
 
-            /**
-			 * Italian character set
-			 * ESC (Y
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-11.html
-			 */
-            All[(byte)'Y'] = new Dictionary<byte, string> {
+        /**
+         * Italian character set
+         * ESC (Y
+         * Reference: http://vt100.net/docs/vt220-rm/table2-11.html
+         */
+        All[(byte)'Y'] = new Dictionary<byte, string> {
                 { (byte) '#', "£"},
                 { (byte) '@', "§"},
                 { (byte) '[', "°"},
@@ -178,13 +178,13 @@ namespace XtermSharp
                 { (byte) '~', "ì"}
             };
 
-            /**
-			 * Norwegian/Danish character set
-			 * ESC (E or ESC (6
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-12.html
-			 */
-            All[(byte)'E'] =
-            All[(byte)'6'] = new Dictionary<byte, string> {
+        /**
+         * Norwegian/Danish character set
+         * ESC (E or ESC (6
+         * Reference: http://vt100.net/docs/vt220-rm/table2-12.html
+         */
+        All[(byte)'E'] =
+        All[(byte)'6'] = new Dictionary<byte, string> {
                 { (byte) '@', "Ä"},
                 { (byte) '[', "Æ"},
                 { (byte) '\\', "Ø"},
@@ -195,15 +195,15 @@ namespace XtermSharp
                 { (byte) '|', "ø"},
                 { (byte) '}', "å"},
                 { (byte) '~', "ü"}
-            };
+        };
 
-            /**
-			 * Spanish character set
-			 * ESC (Z
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-13.html
-			 */
+        /**
+         * Spanish character set
+         * ESC (Z
+         * Reference: http://vt100.net/docs/vt220-rm/table2-13.html
+         */
 
-            All[(byte)'Z'] = new Dictionary<byte, string> {
+        All[(byte)'Z'] = new Dictionary<byte, string> {
                 { (byte) '#', "£"},
                 { (byte) '@', "§"},
                 { (byte) '[', "¡"},
@@ -214,13 +214,13 @@ namespace XtermSharp
                 { (byte) '}', "ç"}
             };
 
-            /**
-			 * Swedish character set
-			 * ESC (H or ESC (7
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-14.html
-			 */
-            All[(byte)'H'] =
-            All[(byte)'7'] = new Dictionary<byte, string> {
+        /**
+         * Swedish character set
+         * ESC (H or ESC (7
+         * Reference: http://vt100.net/docs/vt220-rm/table2-14.html
+         */
+        All[(byte)'H'] =
+        All[(byte)'7'] = new Dictionary<byte, string> {
                 { (byte) '@', "É"},
                 { (byte) '[', "Ä"},
                 { (byte) '\\', "Ö"},
@@ -231,14 +231,14 @@ namespace XtermSharp
                 { (byte) '|', "ö"},
                 { (byte) '}', "å"},
                 { (byte) '~', "ü"}
-            };
+        };
 
-            /**
-			 * Swiss character set
-			 * ESC (=
-			 * Reference: http://vt100.net/docs/vt220-rm/table2-15.html
-			 */
-            All[(byte)'='] = new Dictionary<byte, string> {
+        /**
+         * Swiss character set
+         * ESC (=
+         * Reference: http://vt100.net/docs/vt220-rm/table2-15.html
+         */
+        All[(byte)'='] = new Dictionary<byte, string> {
                 { (byte) '#', "ù"},
                 { (byte) '@', "à"},
                 { (byte) '[', "é"},
@@ -252,10 +252,9 @@ namespace XtermSharp
                 { (byte) '}', "ü"},
                 { (byte) '~', "û" }
             };
-        }
     }
+}
 
-    public class CharSet
-    {
-    }
+public class CharSet
+{
 }

@@ -1,6 +1,5 @@
-namespace ScratchShell.Resources
+namespace ScratchShell.Resources;
+
+public partial class Translations
 {
-    public partial class Translations
-    {
-    }
 }

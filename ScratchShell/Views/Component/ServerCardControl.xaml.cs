@@ -1,15 +1,14 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 
-namespace ScratchShell.Views.Component
+namespace ScratchShell.Views.Component;
+
+/// <summary>
+/// Interaction logic for ServerCardControl.xaml
+/// </summary>
+public partial class ServerCardControl : UserControl
 {
-    /// <summary>
-    /// Interaction logic for ServerCardControl.xaml
-    /// </summary>
-    public partial class ServerCardControl : UserControl
+    public ServerCardControl()
     {
-        public ServerCardControl()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

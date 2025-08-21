@@ -1,48 +1,47 @@
-﻿using ScratchShell.ViewModels.Models;
+using ScratchShell.ViewModels.Models;
 using System.Collections.ObjectModel;
 
-namespace ScratchShell.Services
+namespace ScratchShell.Services;
+
+internal static class SessionService
 {
-    internal static class SessionService
+    internal delegate Task SessionDelegate(TabItemViewModel tabViewModel);
+
+    internal static event SessionDelegate SessionSelected;
+
+    internal static ObservableCollection<TabItemViewModel> Sessions;
+    private static TabItemViewModel selectedSession;
+
+    internal static TabItemViewModel SelectedSession
     {
-        internal delegate Task SessionDelegate(TabItemViewModel tabViewModel);
-
-        internal static event SessionDelegate SessionSelected;
-
-        internal static ObservableCollection<TabItemViewModel> Sessions;
-        private static TabItemViewModel selectedSession;
-
-        internal static TabItemViewModel SelectedSession
+        get
         {
-            get
-            {
-                return selectedSession;
-            }
-            set
-            {
-                selectedSession = value;
-                SessionSelected?.Invoke(value);
-            }
+            return selectedSession;
         }
-
-        static SessionService()
+        set
         {
-            Sessions = new ObservableCollection<TabItemViewModel>();
-            // Load existing sessions from storage or initialize as needed
-            // For example, you might load from a file or database here.
+            selectedSession = value;
+            SessionSelected?.Invoke(value);
         }
+    }
 
-        internal static void AddSession(ServerViewModel serverViewModel)
-        {
-            TabItemViewModel item = serverViewModel.ToTabItemViewModel();
-            Sessions.Add(item);
-            SelectedSession = item;
-        }
+    static SessionService()
+    {
+        Sessions = new ObservableCollection<TabItemViewModel>();
+        // Load existing sessions from storage or initialize as needed
+        // For example, you might load from a file or database here.
+    }
 
-        internal static void RemoveSession(TabItemViewModel tabViewModel)
-        {
-            Sessions.Remove(tabViewModel);
-            tabViewModel.Dispose();
-        }
+    internal static void AddSession(ServerViewModel serverViewModel)
+    {
+        TabItemViewModel item = serverViewModel.ToTabItemViewModel();
+        Sessions.Add(item);
+        SelectedSession = item;
+    }
+
+    internal static void RemoveSession(TabItemViewModel tabViewModel)
+    {
+        Sessions.Remove(tabViewModel);
+        tabViewModel.Dispose();
     }
 }

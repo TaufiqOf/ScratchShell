@@ -1,14 +1,13 @@
-﻿namespace ScratchShell.Models
-{
-    public class Snippet
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Code { get; set; }
+namespace ScratchShell.Models;
 
-        public Snippet()
-        {
-            Id = Guid.NewGuid().ToString();
-        }
+public class Snippet
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public string Code { get; set; }
+
+    public Snippet()
+    {
+        Id = Guid.NewGuid().ToString();
     }
 }

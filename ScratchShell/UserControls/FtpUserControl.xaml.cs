@@ -1,36 +1,35 @@
-﻿using ScratchShell.ViewModels.Models;
+using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 
-namespace ScratchShell.UserControls
+namespace ScratchShell.UserControls;
+
+/// <summary>
+/// Interaction logic for FtpUserControl.xaml
+/// </summary>
+public partial class FtpUserControl : UserControl, IWorkspaceControl
 {
-    /// <summary>
-    /// Interaction logic for FtpUserControl.xaml
-    /// </summary>
-    public partial class FtpUserControl : UserControl, IWorkspaceControl
+    private ServerViewModel server;
+
+    public FtpUserControl()
     {
-        private ServerViewModel server;
+        InitializeComponent();
+    }
 
-        public FtpUserControl()
-        {
-            InitializeComponent();
-        }
+    public FtpUserControl(ServerViewModel server)
+    {
+        InitializeComponent();
+        this.server = server;
+        Terminal.InputLineSyntax = ">";
+        Terminal.CommandEntered += TerminalSentMessage;
+    }
 
-        public FtpUserControl(ServerViewModel server)
-        {
-            InitializeComponent();
-            this.server = server;
-            Terminal.InputLineSyntax = ">";
-            Terminal.CommandEntered += TerminalSentMessage;
-        }
+    private void TerminalSentMessage(ITerminal obj, string command)
+    {
+        var output = $"{Terminal.Output}\nYou Said to the FTP=>{command}";
+        Terminal.AddOutput(output);
+    }
 
-        private void TerminalSentMessage(ITerminal obj, string command)
-        {
-            var output = $"{Terminal.Output}\nYou Said to the FTP=>{command}";
-            Terminal.AddOutput(output);
-        }
-
-        public void Dispose()
-        {
-        }
+    public void Dispose()
+    {
     }
 }

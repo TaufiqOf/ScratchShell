@@ -1,9 +1,8 @@
-namespace ScratchShell.Enums
+namespace ScratchShell.Enums;
+
+public enum ConflictResolution
 {
-    public enum ConflictResolution
-    {
-        UseLocal,
-        UseServer,
-        UseCustom
-    }
+    UseLocal,
+    UseServer,
+    UseCustom
 }

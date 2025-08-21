@@ -1,18 +1,17 @@
-﻿using ScratchShell.ViewModels.Pages;
+using ScratchShell.ViewModels.Pages;
 using Wpf.Ui.Abstractions.Controls;
 
-namespace ScratchShell.Views.Pages
+namespace ScratchShell.Views.Pages;
+
+public partial class SessionPage : INavigableView<SessionViewModel>
 {
-    public partial class SessionPage : INavigableView<SessionViewModel>
+    public SessionViewModel ViewModel { get; }
+
+    public SessionPage(SessionViewModel viewModel)
     {
-        public SessionViewModel ViewModel { get; }
+        ViewModel = viewModel;
+        DataContext = this;
 
-        public SessionPage(SessionViewModel viewModel)
-        {
-            ViewModel = viewModel;
-            DataContext = this;
-
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
