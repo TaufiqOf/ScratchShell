@@ -21,8 +21,8 @@ public partial class LoginDialog : ContentDialog
         InitializeComponent();
         _loginService = new AuthenticationService(new HttpClient());
 #if DEBUG
-            UsernameTextBox.Text = "dfsdf@asd.com";
-            PasswordBox.Password = "123456Ta";
+        UsernameTextBox.Text = "dfsdf@asd.com";
+        PasswordBox.Password = "123456Ta";
 #endif
         // Pre-fill username if stored
         var storedUsername = UserSettingsService.GetStoredUsername();

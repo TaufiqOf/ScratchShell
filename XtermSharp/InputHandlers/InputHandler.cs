@@ -445,7 +445,7 @@ internal class InputHandler
     // ESC n
     // ESC o
     // ESC |
-    // ESC 
+    // ESC
     // ESC ~
     //   DEC mnemonic: LS (https://vt100.net/docs/vt510-rm/LS.html)
     //   When you use a locking shift, the character set remains in GL or GR until

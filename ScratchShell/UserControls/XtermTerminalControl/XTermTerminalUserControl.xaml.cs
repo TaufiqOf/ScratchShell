@@ -14,8 +14,10 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
 {
     private readonly Terminal _terminal;
     private int _lastRenderedLine = 0;
+
     // Track where the current input starts
     private TextPointer? _promptStart;
+
     private Paragraph? _promptParagraph;
     private Run _promptRun;
     private string _currentInput;
@@ -51,9 +53,11 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
     #region ITerminal Implementation
 
     public event ITerminal.TerminalCommandHandler? CommandEntered;
+
     public event ITerminal.TerminalSizeHandler? TerminalSizeChanged;
 
     public string InputLineSyntax { get; set; } = "$ ";
+
     public bool IsReadOnly
     {
         get => TerminalBox.IsReadOnly;
@@ -116,6 +120,7 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
             throw;
         }
     }
+
     private static string StripAnsiCodes(string input)
     {
         return System.Text.RegularExpressions.Regex.Replace(
@@ -287,6 +292,7 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
         {
         }
     }
+
     private bool IsBackAfterPrompt()
     {
         if (_promptStart == null)
@@ -300,6 +306,7 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
         int offset = _promptStart.GetOffsetToPosition(caretPos);
         return offset >= 2;
     }
+
     private bool IsCaretAfterPrompt()
     {
         if (_promptStart == null)

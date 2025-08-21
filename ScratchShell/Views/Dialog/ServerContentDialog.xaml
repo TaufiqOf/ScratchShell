@@ -17,7 +17,7 @@
     <ui:ContentDialog.Resources>
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:ServerContentDialog}" />
 
-        <!-- Style for validation error display -->
+        <!--  Style for validation error display  -->
         <Style x:Key="ValidationErrorTextBlock" TargetType="TextBlock">
             <Setter Property="Foreground" Value="Red" />
             <Setter Property="FontSize" Value="11" />
@@ -25,7 +25,7 @@
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
-        <!-- Style for required field labels -->
+        <!--  Style for required field labels  -->
         <Style x:Key="RequiredFieldLabel" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,10,0,0" />
@@ -42,72 +42,82 @@
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
                 <Run Text="Server Name" />
-                <Run Text="*" Foreground="Red" />
+                <Run Foreground="Red" Text="*" />
             </TextBlock>
             <TextBox x:Name="NameTextBox" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
-            <TextBlock x:Name="NameErrorText"
-                       Style="{StaticResource ValidationErrorTextBlock}"
-                       Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=NameTextBox}"
-                       Visibility="{Binding (Validation.HasError), ElementName=NameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <TextBlock
+                x:Name="NameErrorText"
+                Style="{StaticResource ValidationErrorTextBlock}"
+                Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=NameTextBox}"
+                Visibility="{Binding (Validation.HasError), ElementName=NameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
                 <Run Text="Host" />
-                <Run Text="*" Foreground="Red" />
+                <Run Foreground="Red" Text="*" />
             </TextBlock>
-            <TextBox x:Name="HostTextBox"
-                     Text="{Binding Host, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                     ToolTip="Enter IP address (e.g., 192.168.1.100) or hostname (e.g., server.example.com)" />
-            <TextBlock x:Name="HostErrorText"
-                       Style="{StaticResource ValidationErrorTextBlock}"
-                       Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=HostTextBox}"
-                       Visibility="{Binding (Validation.HasError), ElementName=HostTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <TextBox
+                x:Name="HostTextBox"
+                Text="{Binding Host, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                ToolTip="Enter IP address (e.g., 192.168.1.100) or hostname (e.g., server.example.com)" />
+            <TextBlock
+                x:Name="HostErrorText"
+                Style="{StaticResource ValidationErrorTextBlock}"
+                Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=HostTextBox}"
+                Visibility="{Binding (Validation.HasError), ElementName=HostTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
                 <Run Text="Port" />
-                <Run Text="*" Foreground="Red" />
+                <Run Foreground="Red" Text="*" />
             </TextBlock>
-            <TextBox x:Name="PortTextBox"
-                     Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                     ToolTip="Enter port number (1-65535). Common ports: SSH=22, FTP=21, SFTP=22" />
-            <TextBlock x:Name="PortErrorText"
-                       Style="{StaticResource ValidationErrorTextBlock}"
-                       Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=PortTextBox}"
-                       Visibility="{Binding (Validation.HasError), ElementName=PortTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <TextBox
+                x:Name="PortTextBox"
+                Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                ToolTip="Enter port number (1-65535). Common ports: SSH=22, FTP=21, SFTP=22" />
+            <TextBlock
+                x:Name="PortErrorText"
+                Style="{StaticResource ValidationErrorTextBlock}"
+                Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=PortTextBox}"
+                Visibility="{Binding (Validation.HasError), ElementName=PortTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
                 <Run Text="Protocol" />
-                <Run Text="*" Foreground="Red" />
+                <Run Foreground="Red" Text="*" />
             </TextBlock>
-            <ComboBox x:Name="ProtocolComboBox"
-                      Margin="0,5,0,0"
-                      ItemsSource="{Binding ProtocolTypes}"
-                      SelectedItem="{Binding ProtocolType, Mode=TwoWay}"
-                      ToolTip="Select the connection protocol" />
-            <TextBlock Text="SSH: Secure Shell for terminal access&#x0a;FTP: File Transfer Protocol&#x0a;SFTP: SSH File Transfer Protocol"
-                       FontSize="10"
-                       Foreground="Gray"
-                       Margin="0,2,0,0"
-                       TextWrapping="Wrap" />
+            <ComboBox
+                x:Name="ProtocolComboBox"
+                Margin="0,5,0,0"
+                ItemsSource="{Binding ProtocolTypes}"
+                SelectedItem="{Binding ProtocolType, Mode=TwoWay}"
+                ToolTip="Select the connection protocol" />
+            <TextBlock
+                Margin="0,2,0,0"
+                FontSize="10"
+                Foreground="Gray"
+                Text="SSH: Secure Shell for terminal access&#x0a;FTP: File Transfer Protocol&#x0a;SFTP: SSH File Transfer Protocol"
+                TextWrapping="Wrap" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
                 <Run Text="Username" />
-                <Run Text="*" Foreground="Red" />
+                <Run Foreground="Red" Text="*" />
             </TextBlock>
-            <TextBox x:Name="UsernameTextBox"
-                     Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                     ToolTip="Enter your username for the server" />
-            <TextBlock x:Name="UsernameErrorText"
-                       Style="{StaticResource ValidationErrorTextBlock}"
-                       Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=UsernameTextBox}"
-                       Visibility="{Binding (Validation.HasError), ElementName=UsernameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
+            <TextBox
+                x:Name="UsernameTextBox"
+                Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                ToolTip="Enter your username for the server" />
+            <TextBlock
+                x:Name="UsernameErrorText"
+                Style="{StaticResource ValidationErrorTextBlock}"
+                Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=UsernameTextBox}"
+                Visibility="{Binding (Validation.HasError), ElementName=UsernameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock
                 Margin="0,10,0,0"
                 FontWeight="SemiBold"
                 Text="Password" />
-            <PasswordBox x:Name="PasswordInput"
-                         PasswordChanged="PasswordBox_PasswordChanged"
-                         ToolTip="Enter your password (leave empty if using key file authentication)" />
+            <PasswordBox
+                x:Name="PasswordInput"
+                PasswordChanged="PasswordBox_PasswordChanged"
+                ToolTip="Enter your password (leave empty if using key file authentication)" />
 
             <StackPanel
                 Margin="8"
@@ -177,18 +187,25 @@
                 PasswordChanged="KeyFilePasswordBox_PasswordChanged"
                 ToolTip="Enter password for encrypted key file (leave empty if key is not encrypted)" />
 
-            <!-- Validation summary -->
-            <Border x:Name="ValidationSummary"
-                    Background="#FFFFE6E6"
-                    BorderBrush="Red"
-                    BorderThickness="1"
-                    Margin="0,10,0,0"
-                    Padding="10"
-                    CornerRadius="3"
-                    Visibility="Collapsed">
+            <!--  Validation summary  -->
+            <Border
+                x:Name="ValidationSummary"
+                Margin="0,10,0,0"
+                Padding="10"
+                Background="#FFFFE6E6"
+                BorderBrush="Red"
+                BorderThickness="1"
+                CornerRadius="3"
+                Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="Please fix the following errors:" FontWeight="Bold" Foreground="Red" />
-                    <TextBlock x:Name="ValidationSummaryText" Foreground="Red" TextWrapping="Wrap" />
+                    <TextBlock
+                        FontWeight="Bold"
+                        Foreground="Red"
+                        Text="Please fix the following errors:" />
+                    <TextBlock
+                        x:Name="ValidationSummaryText"
+                        Foreground="Red"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
         </StackPanel>

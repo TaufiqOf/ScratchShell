@@ -1,7 +1,6 @@
 using ScratchShell.ViewModels.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Controls;
 
 namespace ScratchShell.UserControls;
@@ -82,7 +81,6 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
             }
 
             OnPropertyChanged(nameof(SelectedSnippet));
-
         }
     }
 
@@ -105,10 +103,12 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     {
         OnDeleteSnippet?.Invoke(this, _selectedSnippet);
     }
+
     private void ShowHideSystemSystemSnippetClick(object sender, RoutedEventArgs e)
     {
         SearchSnippet(sender);
     }
+
     private void SearchSnippetTextChanged(object sender, TextChangedEventArgs e)
     {
         SearchSnippet(sender);

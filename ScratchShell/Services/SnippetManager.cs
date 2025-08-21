@@ -25,10 +25,12 @@ internal static class SnippetManager
     internal static IReadOnlyList<Snippet> Snippets => _snippets.AsReadOnly();
     internal static Server? SelectedSnippet { get; private set; }
     internal static bool NeedsCloudRestore { get; set; }
+
     static SnippetManager()
     {
         LoadSystemSnippet();
     }
+
     internal static void InitializeSnippets(List<Snippet> servers)
     {
         _snippets.Clear();
@@ -685,7 +687,7 @@ internal static class SnippetManager
     {
         try
         {
-            var json = JsonConvert.SerializeObject(_snippets.Where(q=>!q.IsSystemSnippet).ToList());
+            var json = JsonConvert.SerializeObject(_snippets.Where(q => !q.IsSystemSnippet).ToList());
             var encrypted = EncryptionHelper.Encrypt(json);
             Settings.Default.Snippets = encrypted;
             Settings.Default.Save();

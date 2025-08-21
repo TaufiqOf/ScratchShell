@@ -1,6 +1,7 @@
 using System;
 
 namespace XtermSharp.CommandExtensions;
+
 /// <summary>
 /// Commands that report status back about the terminal
 /// </summary>

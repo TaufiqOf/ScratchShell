@@ -1,7 +1,5 @@
-﻿using EasyWindowsTerminalControl;
-using Renci.SshNet;
+﻿using Renci.SshNet;
 using ScratchShell.Services;
-using ScratchShell.UserControls.EasyTerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
@@ -320,27 +318,27 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 Height = 20
             },
         };
-        
+
         var ctx = new ContextMenu();
-        
+
         // Set maximum height for the context menu to enable scrolling
         ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6; // 60% of screen height
-        
+
         // Get the available snippets
         var snippets = SnippetControl.Snippets.ToList();
-        
+
         // If there are many snippets, organize them intelligently
         if (snippets.Count > 15)
         {
             // Group snippets by categories for better organization
             var systemSnippets = snippets.Where(s => s.IsSystemSnippet).ToList();
             var userSnippets = snippets.Where(s => !s.IsSystemSnippet).ToList();
-            
+
             // Add system snippets submenu if any exist
             if (systemSnippets.Any())
             {
                 var systemSubmenu = new MenuItem { Header = $"System Snippets ({systemSnippets.Count})" };
-                
+
                 // If too many system snippets, create sub-categories
                 if (systemSnippets.Count > 25)
                 {
@@ -348,7 +346,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                     var groupedSnippets = systemSnippets
                         .GroupBy(s => s.GetCommandCategory())
                         .OrderBy(g => g.Key);
-                        
+
                     foreach (var group in groupedSnippets)
                     {
                         var categorySubmenu = new MenuItem { Header = $"{group.Key} ({group.Count()})" };
@@ -379,8 +377,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 }
                 ctx.Items.Add(systemSubmenu);
             }
-            
-            // Add user snippets submenu if any exist  
+
+            // Add user snippets submenu if any exist
             if (userSnippets.Any())
             {
                 var userSubmenu = new MenuItem { Header = $"User Snippets ({userSnippets.Count})" };
@@ -395,18 +393,18 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 }
                 ctx.Items.Add(userSubmenu);
             }
-            
+
             // Add separator and quick access to most recent/common snippets
             if (systemSnippets.Any() || userSnippets.Any())
             {
                 ctx.Items.Add(new Separator());
-                
+
                 // Add a few quick access items (first 5 snippets)
                 var quickAccess = snippets.Take(5);
                 foreach (var snippet in quickAccess)
                 {
-                    var menu = new MenuItem 
-                    { 
+                    var menu = new MenuItem
+                    {
                         Header = $"⚡ {snippet.Name}",
                         FontWeight = FontWeights.SemiBold
                     };
@@ -438,6 +436,4 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         menuPanel.Children.Add(menuButton);
         return menuPanel;
     }
-    
-    
 }

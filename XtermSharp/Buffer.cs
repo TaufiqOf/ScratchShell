@@ -4,6 +4,7 @@ using System.Collections;
 using System.Diagnostics;
 
 namespace XtermSharp;
+
 /// <summary>
 /// This class represents a terminal buffer (an internal state of the terminal), where text contents, cursor and scroll position are stored.
 /// </summary>

@@ -4,30 +4,30 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Sync Conflict Detected"
-    PrimaryButtonText="Use Local"
-    SecondaryButtonText="Use Server"
     CloseButtonText="Cancel"
-    DefaultButton="Primary">
+    DefaultButton="Primary"
+    PrimaryButtonText="Use Local"
+    SecondaryButtonText="Use Server">
 
     <StackPanel Width="500" Margin="20">
         <ui:SymbolIcon
-            Symbol="Warning24"
+            Margin="0,0,0,16"
+            HorizontalAlignment="Center"
             FontSize="32"
             Foreground="{DynamicResource SystemFillColorCautionBrush}"
-            HorizontalAlignment="Center"
-            Margin="0,0,0,16" />
+            Symbol="Warning24" />
 
         <TextBlock
-            Text="Settings Sync Conflict"
+            Margin="0,0,0,12"
+            HorizontalAlignment="Center"
             FontSize="18"
             FontWeight="SemiBold"
-            HorizontalAlignment="Center"
-            Margin="0,0,0,12" />
+            Text="Settings Sync Conflict" />
 
         <TextBlock
-            TextWrapping="Wrap"
             Margin="0,0,0,20"
-            Opacity="0.8">
+            Opacity="0.8"
+            TextWrapping="Wrap">
             Your local settings and cloud settings have conflicting changes. Please choose which version to keep:
         </TextBlock>
 
@@ -38,63 +38,87 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Local Settings -->
+            <!--  Local Settings  -->
             <Border
                 Grid.Column="0"
+                Padding="12"
                 Background="{DynamicResource ControlFillColorDefaultBrush}"
-                CornerRadius="6"
-                Padding="12">
+                CornerRadius="6">
                 <StackPanel>
                     <TextBlock
-                        Text="Local Settings"
+                        Margin="0,0,0,8"
                         FontWeight="SemiBold"
-                        Margin="0,0,0,8" />
+                        Text="Local Settings" />
 
-                    <TextBlock Text="Theme:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding LocalSettings.CurrentTheme}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Theme:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding LocalSettings.CurrentTheme}" />
 
-                    <TextBlock Text="Shell Type:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding LocalSettings.DefaultShellType}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Shell Type:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding LocalSettings.DefaultShellType}" />
 
-                    <TextBlock Text="Last Modified:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding ClientLastSynced, StringFormat='{}{0:g}'}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Last Modified:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding ClientLastSynced, StringFormat='{}{0:g}'}" />
 
-                    <TextBlock Text="Device:" FontSize="12" Opacity="0.7" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Device:" />
                     <TextBlock Text="{Binding LocalSettings.DeviceName}" />
                 </StackPanel>
             </Border>
 
-            <!-- VS Icon -->
+            <!--  VS Icon  -->
             <ui:SymbolIcon
                 Grid.Column="1"
-                Symbol="ArrowSync24"
-                FontSize="20"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Opacity="0.6" />
+                FontSize="20"
+                Opacity="0.6"
+                Symbol="ArrowSync24" />
 
-            <!-- Server Settings -->
+            <!--  Server Settings  -->
             <Border
                 Grid.Column="2"
+                Padding="12"
                 Background="{DynamicResource ControlFillColorDefaultBrush}"
-                CornerRadius="6"
-                Padding="12">
+                CornerRadius="6">
                 <StackPanel>
                     <TextBlock
-                        Text="Cloud Settings"
+                        Margin="0,0,0,8"
                         FontWeight="SemiBold"
-                        Margin="0,0,0,8" />
+                        Text="Cloud Settings" />
 
-                    <TextBlock Text="Theme:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding ServerSettings.CurrentTheme}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Theme:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding ServerSettings.CurrentTheme}" />
 
-                    <TextBlock Text="Shell Type:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding ServerSettings.DefaultShellType}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Shell Type:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding ServerSettings.DefaultShellType}" />
 
-                    <TextBlock Text="Last Modified:" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{Binding ServerLastSynced, StringFormat='{}{0:g}'}" Margin="0,0,0,4" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Last Modified:" />
+                    <TextBlock Margin="0,0,0,4" Text="{Binding ServerLastSynced, StringFormat='{}{0:g}'}" />
 
-                    <TextBlock Text="Device:" FontSize="12" Opacity="0.7" />
+                    <TextBlock
+                        FontSize="12"
+                        Opacity="0.7"
+                        Text="Device:" />
                     <TextBlock Text="{Binding ServerSettings.DeviceName}" />
                 </StackPanel>
             </Border>
@@ -102,9 +126,9 @@
 
         <ui:InfoBar
             Title="Important"
-            Message="Choosing one option will overwrite the other. Make sure you select the version with the settings you want to keep."
-            Severity="Warning"
+            IsClosable="False"
             IsOpen="True"
-            IsClosable="False" />
+            Message="Choosing one option will overwrite the other. Make sure you select the version with the settings you want to keep."
+            Severity="Warning" />
     </StackPanel>
 </ui:ContentDialog>

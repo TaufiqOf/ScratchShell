@@ -136,7 +136,7 @@ internal static class TerminalCommandExtensions
     ///           restores the video-attributes which were saved using XTPUSHSGR
     ///           to their previous state.
     ///
-    /// CSI Pm ' 
+    /// CSI Pm '
     ///           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
     /// </summary>
     public static void csiDECIC(this Terminal terminal, int[] pars)
