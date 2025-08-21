@@ -102,7 +102,7 @@
                             CommandParameter="{Binding}"
                             FontSize="16"
                             Icon="{ui:SymbolIcon Symbol=ArrowRight24}"
-                            ToolTip="Open Snippet" />
+                            ToolTip="Send Snippet" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

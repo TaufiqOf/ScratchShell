@@ -90,12 +90,6 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     {
         var searchText = SearchSnippetTextBox.Text?.Trim() ?? string.Empty;
         var showSystemSnippets = SearchSnippetButton.IsChecked;
-        // If search is empty, show all snippets
-        if (string.IsNullOrEmpty(searchText))
-        {
-            RestoreAllSnippets();
-            return false;
-        }
 
         // Filter snippets based on search text (search in both name and code)
         var filteredSnippets = _allSnippets.Where(snippet => 
