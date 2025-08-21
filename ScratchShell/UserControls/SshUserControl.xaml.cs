@@ -1,5 +1,6 @@
 ﻿using Renci.SshNet;
 using ScratchShell.Services;
+using ScratchShell.UserControls.EasyTerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
@@ -30,7 +31,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
     {
         InitializeComponent();
-        Terminal = new XTermTerminalUserControl();
+        Terminal = new EasyTerminalUserControl();
         TerminalContentControl.Content = Terminal;
         _server = server;
         _contentDialogService = contentDialogService;

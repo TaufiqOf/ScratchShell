@@ -50,11 +50,11 @@ public partial class EasyTerminalUserControl : UserControl, ITerminal
 
     public void AddInput(string input)
     {
-        Terminal.ConPTYTerm.WriteToUITerminal(input);
+        Terminal.ConPTYTerm.WriteToTerm(input);
     }
 
     public void AddOutput(string output)
     {
-        Terminal.ConPTYTerm.WriteToUITerminal(output);
+        Terminal.ConPTYTerm.WriteToTerm(output);
     }
 }
