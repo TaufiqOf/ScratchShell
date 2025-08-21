@@ -1,6 +1,7 @@
 ﻿using Renci.SshNet;
 using ScratchShell.Services;
 using ScratchShell.UserControls.EasyTerminalControl;
+using ScratchShell.UserControls.GTPTerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
@@ -31,7 +32,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
     {
         InitializeComponent();
-        Terminal = new EasyTerminalUserControl();
+        Terminal = new GPTTerminalUserControl();
         TerminalContentControl.Content = Terminal;
         _server = server;
         _contentDialogService = contentDialogService;
@@ -86,7 +87,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             Terminal.AddOutput("Server is not initialized.");
             return;
         }
-        Terminal.AddOutput($"Connecting to {_server.Name} at {_server.Host}:{_server.Port} using {_server.ProtocolType} protocol.");
         // Here you would typically initiate the SSH connection using the server details.
         // For example, you might call a method to connect to the server.
         await ConnectToServer(_server);
@@ -119,7 +119,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var pixelHeight = (uint)Terminal.Height;
             _shellStream = _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096);
 
-            Terminal.AddOutput($"Connected to {server.Name} at {server.Host}:{server.Port}.");
             StartReadLoop();
         }
         catch (Exception ex)
