@@ -1,4 +1,4 @@
-using Renci.SshNet;
+﻿using Renci.SshNet;
 using ScratchShell.Services;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
@@ -318,16 +318,117 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 Height = 20
             },
         };
+        
         var ctx = new ContextMenu();
-        foreach (var item in SnippetControl.Snippets)
+        
+        // Set maximum height for the context menu to enable scrolling
+        ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6; // 60% of screen height
+        
+        // Get the available snippets
+        var snippets = SnippetControl.Snippets.ToList();
+        
+        // If there are many snippets, organize them intelligently
+        if (snippets.Count > 15)
         {
-            var menu = new MenuItem { Header = item.Name };
-            menu.Click += (s, args) =>
+            // Group snippets by categories for better organization
+            var systemSnippets = snippets.Where(s => s.IsSystemSnippet).ToList();
+            var userSnippets = snippets.Where(s => !s.IsSystemSnippet).ToList();
+            
+            // Add system snippets submenu if any exist
+            if (systemSnippets.Any())
             {
-                // Execute the snippet code
-                Terminal.AddInput(item.Code);
-            };
-            ctx.Items.Add(menu);
+                var systemSubmenu = new MenuItem { Header = $"System Snippets ({systemSnippets.Count})" };
+                
+                // If too many system snippets, create sub-categories
+                if (systemSnippets.Count > 25)
+                {
+                    // Group by command type (based on first word of the command)
+                    var groupedSnippets = systemSnippets
+                        .GroupBy(s => s.GetCommandCategory())
+                        .OrderBy(g => g.Key);
+                        
+                    foreach (var group in groupedSnippets)
+                    {
+                        var categorySubmenu = new MenuItem { Header = $"{group.Key} ({group.Count()})" };
+                        foreach (var snippet in group.Take(20)) // Limit per category
+                        {
+                            var menu = new MenuItem { Header = snippet.Name };
+                            menu.Click += (s, args) =>
+                            {
+                                Terminal.AddInput(snippet.Code);
+                            };
+                            categorySubmenu.Items.Add(menu);
+                        }
+                        systemSubmenu.Items.Add(categorySubmenu);
+                    }
+                }
+                else
+                {
+                    // Add directly if not too many
+                    foreach (var snippet in systemSnippets)
+                    {
+                        var menu = new MenuItem { Header = snippet.Name };
+                        menu.Click += (s, args) =>
+                        {
+                            Terminal.AddInput(snippet.Code);
+                        };
+                        systemSubmenu.Items.Add(menu);
+                    }
+                }
+                ctx.Items.Add(systemSubmenu);
+            }
+            
+            // Add user snippets submenu if any exist  
+            if (userSnippets.Any())
+            {
+                var userSubmenu = new MenuItem { Header = $"User Snippets ({userSnippets.Count})" };
+                foreach (var snippet in userSnippets)
+                {
+                    var menu = new MenuItem { Header = snippet.Name };
+                    menu.Click += (s, args) =>
+                    {
+                        Terminal.AddInput(snippet.Code);
+                    };
+                    userSubmenu.Items.Add(menu);
+                }
+                ctx.Items.Add(userSubmenu);
+            }
+            
+            // Add separator and quick access to most recent/common snippets
+            if (systemSnippets.Any() || userSnippets.Any())
+            {
+                ctx.Items.Add(new Separator());
+                
+                // Add a few quick access items (first 5 snippets)
+                var quickAccess = snippets.Take(5);
+                foreach (var snippet in quickAccess)
+                {
+                    var menu = new MenuItem 
+                    { 
+                        Header = $"⚡ {snippet.Name}",
+                        FontWeight = FontWeights.SemiBold
+                    };
+                    menu.Click += (s, args) =>
+                    {
+                        Terminal.AddInput(snippet.Code);
+                    };
+                    ctx.Items.Add(menu);
+                }
+            }
+        }
+        else
+        {
+            // For smaller lists, add items directly
+            foreach (var item in snippets)
+            {
+                var menu = new MenuItem { Header = item.Name };
+                menu.Click += (s, args) =>
+                {
+                    // Execute the snippet code
+                    Terminal.AddInput(item.Code);
+                };
+                ctx.Items.Add(menu);
+            }
         }
 
         ctx.PlacementTarget = menuButton;
@@ -335,4 +436,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         menuPanel.Children.Add(menuButton);
         return menuPanel;
     }
+    
+    
 }
