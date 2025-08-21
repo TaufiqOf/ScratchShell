@@ -10,6 +10,8 @@ namespace ScratchShell.ViewModels.Windows
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        [ObservableProperty]
+        private string _appVersion = String.Empty;
         private readonly IContentDialogService _contentDialogService;
         private CloudSyncService? _cloudSyncService;
 
@@ -17,8 +19,14 @@ namespace ScratchShell.ViewModels.Windows
         {
             this._contentDialogService = contentDialogService;
             InitializeCloudSync();
-        }
+            AppVersion = $"v. {GetAssemblyVersion()}";
 
+        }
+        private string GetAssemblyVersion()
+        {
+            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+                ?? String.Empty;
+        }
         private void InitializeCloudSync()
         {
             try
@@ -88,9 +96,11 @@ namespace ScratchShell.ViewModels.Windows
 
         internal async void Loaded()
         {
+
             // Check if user has stored credentials for auto-login
             if (TryAutoLogin())
             {
+
                 // User is already authenticated, perform startup sync
                 await PerformStartupSync();
                 return;

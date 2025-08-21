@@ -5,14 +5,18 @@ using ScratchShell.UserControls.TerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
+using ScratchShell.Views.Windows;
+using Spectre.Console.Cli;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
+using MenuItem = Wpf.Ui.Controls.MenuItem;
 
 namespace ScratchShell.UserControls
 {
@@ -26,7 +30,9 @@ namespace ScratchShell.UserControls
         private SshClient? _sshClient;
         private ShellStream _shellStream;
         private bool _isInitialized = false;
-        public ITerminal Terminal { get; private set; } 
+        private FullScreenWindow _FullScreen;
+
+        public ITerminal Terminal { get; private set; }
         public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
         {
             InitializeComponent();
@@ -92,7 +98,7 @@ namespace ScratchShell.UserControls
             // Here you would typically initiate the SSH connection using the server details.
             // For example, you might call a method to connect to the server.
             await ConnectToServer(_server);
-        
+
         }
 
         private async Task ConnectToServer(ServerViewModel server)
@@ -153,7 +159,7 @@ namespace ScratchShell.UserControls
             });
         }
 
-    
+
         private void TerminalSizeChanged(ITerminal obj, Size newSize)
         {
             if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
@@ -281,12 +287,55 @@ namespace ScratchShell.UserControls
 
         private async Task SnippetExecuteSnippet(SnippetViewModel? snippet)
         {
-            if(snippet?.Code is null)
+            if (snippet?.Code is null)
             {
                 return;
             }
             Terminal.AddInput(snippet.Code);
             await Task.CompletedTask;
+        }
+
+        private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+        {
+            var menuButton = new DropDownButton
+            {
+                Icon = new SymbolIcon
+                {
+                    Symbol = SymbolRegular.Code20,
+                    Width = 20,
+                    Height = 20
+                },
+
+            };
+            var ctx = new ContextMenu();
+            foreach (var item in SnippetControl.Snippets)
+            {
+                var menu = new MenuItem { Header = item.Name };
+                menu.Click += (s, args) =>
+                {
+                    // Execute the snippet code
+                    Terminal.AddInput(item.Code);
+                };
+                ctx.Items.Add(menu);
+            }
+          
+            ctx.PlacementTarget = menuButton;
+            ctx.IsOpen = true;
+            menuButton.Flyout = ctx;
+
+            FullScreenButton.IsEnabled = false;
+            TerminalContentControl.Content = null;
+            _FullScreen = new FullScreenWindow(Terminal, _server.Name, menuButton);
+            _FullScreen.Show();
+            _FullScreen.Closed += (s, args) =>
+            {
+                // Reinitialize the terminal when exiting full screen
+                _FullScreen.RootContentDialog.Content = null;
+
+                TerminalContentControl.Content = Terminal;
+                _FullScreen = null;
+                FullScreenButton.IsEnabled = true;
+            };
         }
     }
 }

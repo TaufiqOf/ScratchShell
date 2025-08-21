@@ -3,6 +3,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using Renci.SshNet;
 using ScratchShell.UserControls.BrowserControl;
 using ScratchShell.ViewModels.Models;
+using ScratchShell.Views.Windows;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
@@ -24,6 +25,9 @@ namespace ScratchShell.UserControls
             InitializeComponent();
             this._server = server;
             this.Loaded += ControlLoaded;
+
+            this.Browser = new BrowserUserControl();
+            this.BrowserContentControl.Content = this.Browser;
             this.Browser.EnterRequested += BrowserEnterRequested;
 
             this.Browser.CutRequested += BrowserCutRequested;
@@ -191,6 +195,9 @@ namespace ScratchShell.UserControls
 
         private string? _clipboardPath = null;
         private bool _clipboardIsCut = false;
+        private FullScreenWindow _FullScreen;
+
+        public BrowserUserControl Browser { get; }
 
         private async void BrowserDownloadRequested(BrowserItem item)
         {
@@ -378,6 +385,23 @@ namespace ScratchShell.UserControls
         private void LogToggleButtonUnChecked(object sender, RoutedEventArgs e)
         {
             LogGrid.Visibility = Visibility.Collapsed;
+        }
+
+        private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+        {
+            FullScreenButton.IsEnabled = false;
+            BrowserContentControl.Content = null;
+            _FullScreen = new FullScreenWindow(this.Browser, _server.Name);
+            _FullScreen.Show();
+            _FullScreen.Closed += (s, args) =>
+            {
+                // Reinitialize the terminal when exiting full screen
+                _FullScreen.RootContentDialog.Content = null;
+
+                BrowserContentControl.Content = this.Browser;
+                _FullScreen = null;
+                FullScreenButton.IsEnabled = true;
+            };
         }
     }
 }

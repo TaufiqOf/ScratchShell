@@ -109,7 +109,7 @@ namespace ScratchShell.UserControls.XtermTerminalControl
                 if (v.Contains("\0\0\0\0\0\0\0\0\0\0\0\0\r"))
                     return;
                 // Ignore duplicate input
-                if (!string.IsNullOrEmpty(_currentInput) && clean == _currentInput)
+                if (!string.IsNullOrEmpty(_currentInput) && clean == _currentInput.Trim())
                     return;
 
                 v = Environment.NewLine + v;

@@ -81,9 +81,11 @@
                 </ToggleButton>
                 <!--  Full Screen  -->
                 <ui:Button
+                    x:Name="FullScreenButton"
                     Grid.Column="4"
                     Margin="2"
                     VerticalAlignment="Stretch"
+                    Click="FullScreenButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
                     ToolTip="Full Screen" />
