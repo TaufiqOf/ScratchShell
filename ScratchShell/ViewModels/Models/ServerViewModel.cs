@@ -196,7 +196,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
         ContentDialogService = contentDialogService;
     }
 
-    private partial void OnProtocolTypeChanged(ProtocolType value)
+    partial void OnProtocolTypeChanged(ProtocolType value)
     {
         SetDefaultPortForProtocol();
     }
