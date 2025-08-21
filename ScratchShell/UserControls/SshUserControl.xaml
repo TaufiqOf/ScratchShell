@@ -98,6 +98,7 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch" />
         </Grid>
+
         <local1:SnippetUserControl
             x:Name="SnippetControl"
             Grid.Column="1"

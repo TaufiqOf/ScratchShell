@@ -13,7 +13,9 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="2*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
 
@@ -74,38 +76,18 @@
                 <ui:SymbolIcon Symbol="System20" />
             </ToggleButton>
         </Grid>
-        <!--  ListBox  -->
-        <!--  List of snippets  -->
-        <!--<ListBox
-            x:Name="SnippetsListBox"
-            Grid.Row="2"
-            ItemsSource="{Binding GroupedSnippets, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Expander Header="{Binding Category}" IsExpanded="False">
-                        <ItemsControl ItemsSource="{Binding Snippets}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
-                                        <ui:Button
-                                            Margin="5,0,0,0"
-                                            Command="{Binding RunCommand}"
-                                            CommandParameter="{Binding}"
-                                            Icon="{ui:SymbolIcon Symbol=ArrowRight24}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Expander>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>-->
+        <Separator Grid.Row="2" Margin="5" />
+
         <TreeView
             x:Name="SnippetsListBox"
-            Grid.Row="2"
+            Grid.Row="3"
             ItemsSource="{Binding GroupedSnippets, RelativeSource={RelativeSource AncestorType=UserControl}}"
             SelectedItemChanged="SnippetsListBoxSelectedItemChanged">
+            <TreeView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="TreeViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Snippets}">
                     <!--  Category  -->
@@ -114,23 +96,30 @@
                     <!--  Snippets inside  -->
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
                                 <ui:Button
+                                    Grid.Column="1"
                                     Margin="5,0,0,0"
+                                    HorizontalAlignment="Right"
                                     Command="{Binding RunCommand}"
                                     CommandParameter="{Binding}"
                                     Icon="{ui:SymbolIcon Symbol=ArrowRight24}" />
-                            </StackPanel>
+                            </Grid>
                         </DataTemplate>
                     </HierarchicalDataTemplate.ItemTemplate>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
+        <Separator Grid.Row="4" Margin="5" />
         <!--  Code editor  -->
         <ui:TextBox
             x:Name="SnippetContentTextBox"
-            Grid.Row="3"
+            Grid.Row="5"
             AcceptsReturn="True"
             ClearButtonEnabled="False"
             HorizontalScrollBarVisibility="Auto"
