@@ -263,6 +263,7 @@ namespace ScratchShell.ViewModels.Pages
             await OnSyncFromCloud();
             await OnSyncToCloud();
         }
+
         private async Task OnSyncToCloud()
         {
             if (_cloudSyncService == null || !AuthenticationService.IsTokenValid())

@@ -1,5 +1,4 @@
-﻿using ScratchShell.Models;
-using ScratchShell.ViewModels.Models;
+﻿using ScratchShell.ViewModels.Models;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Controls;
@@ -13,11 +12,17 @@ namespace ScratchShell.UserControls
     {
         private ObservableCollection<SnippetViewModel> _snippets = new();
         private SnippetViewModel _selectedSnippet;
+
         public delegate Task SnippetHandler(SnippetUserControl obj, SnippetViewModel? snippet);
+
         public delegate Task SnippetVoidHandler(SnippetUserControl obj);
+
         public event SnippetVoidHandler OnNewSnippet;
+
         public event SnippetHandler OnEditSnippet;
+
         public event SnippetHandler OnDeleteSnippet;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName) =>
@@ -42,7 +47,6 @@ namespace ScratchShell.UserControls
                 OnPropertyChanged(nameof(SelectedSnippet));
             }
         }
-
 
         public SnippetUserControl()
         {

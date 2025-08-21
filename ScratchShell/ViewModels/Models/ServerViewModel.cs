@@ -3,13 +3,9 @@ using ScratchShell.Enums;
 using ScratchShell.Models;
 using ScratchShell.Properties;
 using ScratchShell.Services;
-using ScratchShell.UserControls;
 using ScratchShell.View.Dialog;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Net;
-using System.Threading.Tasks;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -18,8 +14,6 @@ namespace ScratchShell.ViewModels.Models
 {
     public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
     {
-
-
         [ObservableProperty]
         private IEnumerable<ProtocolType> _protocolTypes;
 

@@ -44,24 +44,24 @@
 
         <StackPanel Grid.Row="0" VerticalAlignment="Top">
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Snippet Name"/>
-                <Run Text="*" Foreground="Red"/>
+                <Run Text="Snippet Name" />
+                <Run Text="*" Foreground="Red" />
             </TextBlock>
-            <ui:TextBox x:Name="NameTextBox" 
-                       Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" 
+            <ui:TextBox x:Name="NameTextBox"
+                       Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
                        PlaceholderText="Enter snippet name" />
-            <TextBlock x:Name="NameErrorText" 
+            <TextBlock x:Name="NameErrorText"
                        Style="{StaticResource ValidationErrorTextBlock}"
                        Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=NameTextBox}"
                        Visibility="{Binding (Validation.HasError), ElementName=NameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Code"/>
-                <Run Text="*" Foreground="Red"/>
+                <Run Text="Code" />
+                <Run Text="*" Foreground="Red" />
             </TextBlock>
         </StackPanel>
 
-        <ui:TextBox x:Name="CodeTextBox" 
+        <ui:TextBox x:Name="CodeTextBox"
                    Grid.Row="1"
                    Margin="0,5,0,0"
                    Text="{Binding Code, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"

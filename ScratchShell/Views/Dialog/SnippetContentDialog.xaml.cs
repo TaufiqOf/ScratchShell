@@ -1,9 +1,6 @@
-﻿using ScratchShell.Models;
-using ScratchShell.ViewModels.Models;
+﻿using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
-using System.Windows;
-using System.Windows.Media;
 using TextBox = Wpf.Ui.Controls.TextBox;
 
 namespace ScratchShell.View.Dialog

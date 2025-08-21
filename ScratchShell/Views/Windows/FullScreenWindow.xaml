@@ -41,7 +41,7 @@
             FontSize="15"
             Opacity=".8">
             <ui:TitleBar.TrailingContent>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Margin="10" Orientation="Horizontal">
                     <!--  Your custom button  -->
                     <ContentControl x:Name="MenuControl" />
                 </StackPanel>

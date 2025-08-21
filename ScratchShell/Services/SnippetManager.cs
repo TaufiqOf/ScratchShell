@@ -1,13 +1,7 @@
 ﻿using Newtonsoft.Json;
 using ScratchShell.Models;
 using ScratchShell.Properties;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScratchShell.Services
 {
@@ -43,6 +37,7 @@ namespace ScratchShell.Services
             OnSnippetInitialized?.Invoke();
             System.Diagnostics.Debug.WriteLine($"Initialized {servers.Count} servers from cloud sync");
         }
+
         internal static async Task Add(Snippet snippet)
         {
             if (snippet == null)
@@ -52,6 +47,7 @@ namespace ScratchShell.Services
             OnSnippetAdded?.Invoke(snippet);
             await Task.CompletedTask;
         }
+
         internal static async Task Remove(Snippet snippet)
         {
             if (snippet == null)
@@ -94,6 +90,7 @@ namespace ScratchShell.Services
                 System.Diagnostics.Debug.WriteLine($"Error saving servers: {ex.Message}");
             }
         }
+
         internal static void ClearServers()
         {
             _snippets.Clear();

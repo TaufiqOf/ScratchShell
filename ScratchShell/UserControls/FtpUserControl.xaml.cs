@@ -1,5 +1,4 @@
-﻿using ScratchShell.UserControls.TerminalControl;
-using ScratchShell.ViewModels.Models;
+﻿using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 
 namespace ScratchShell.UserControls
@@ -33,7 +32,5 @@ namespace ScratchShell.UserControls
         public void Dispose()
         {
         }
-
-
     }
 }

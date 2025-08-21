@@ -1,16 +1,9 @@
-﻿using Humanizer;
-using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 using XtermSharp;
 using Color = System.Windows.Media.Color;
 using Paragraph = System.Windows.Documents.Paragraph;
@@ -32,13 +25,11 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             InitializeComponent();
             _terminal = new Terminal();
 
-
             // Calculate columns and rows that fit in the new size
 
             Loaded += (s, e) =>
             {
                 WritePrompt();
-
             };
 
             TerminalBox.PreviewKeyDown += TerminalBox_PreviewKeyDown;
@@ -56,8 +47,6 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             _terminal.Resize(cols, rows);
             TerminalSizeChanged?.Invoke(this, new System.Windows.Size(Width, Height));
         }
-
-
 
         #region ITerminal Implementation
 
@@ -124,7 +113,6 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -136,13 +124,12 @@ namespace ScratchShell.UserControls.XtermTerminalControl
                 "");
         }
 
-        #endregion
+        #endregion ITerminal Implementation
 
         #region Rendering
 
         private void RenderBufferIncremental()
         {
-
             var buffer = _terminal.Buffer;
 
             Dispatcher.Invoke(() =>
@@ -247,7 +234,7 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             TerminalBox.ScrollToEnd();
         }
 
-        #endregion
+        #endregion Rendering
 
         #region Input Handling
 
@@ -276,9 +263,7 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             }
             catch (Exception)
             {
-
             }
-
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -300,10 +285,7 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             }
             catch (Exception)
             {
-
             }
- 
-
         }
         private bool IsBackAfterPrompt()
         {
@@ -374,7 +356,6 @@ namespace ScratchShell.UserControls.XtermTerminalControl
                 _promptRun.Text = " ";
                 targetParagraph.Inlines.Add(_promptRun);
 
-
                 // --- input area run ---
 
                 _promptStart = targetParagraph.ElementEnd.GetInsertionPosition(LogicalDirection.Forward);
@@ -396,8 +377,6 @@ namespace ScratchShell.UserControls.XtermTerminalControl
             TerminalBox.Focus();
         }
 
-
-
-        #endregion
+        #endregion Input Handling
     }
 }

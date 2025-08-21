@@ -1,16 +1,13 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using ScratchShell.Models;
-using ScratchShell.UserControls;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using Wpf.Ui;
-using Wpf.Ui.Controls;
 
 namespace ScratchShell.ViewModels.Models
 {
     public partial class SnippetViewModel : ObservableValidator, IDataErrorInfo
     {
         public delegate Task SnippetHandler(SnippetViewModel? snippet);
+
         public event SnippetHandler ExecuteSnippet;
 
         [ObservableProperty]
@@ -110,7 +107,7 @@ namespace ScratchShell.ViewModels.Models
             {
                 id = Guid.NewGuid().ToString();
             }
-            
+
             var snippet = new Snippet
             {
                 Id = id,
@@ -119,6 +116,7 @@ namespace ScratchShell.ViewModels.Models
             };
             return snippet;
         }
+
         [RelayCommand]
         private Task OnRun()
         {

@@ -22,7 +22,6 @@ public partial class TerminalUserControl : UserControl, ITerminal
 
     public TerminalState TerminalState { get; set; }
 
-
     public bool IsReadOnly
     {
         get { return (bool)GetValue(IsReadOnlyProperty); }
@@ -37,6 +36,7 @@ public partial class TerminalUserControl : UserControl, ITerminal
         DependencyProperty.Register("IsReadOnly", typeof(bool), typeof(TerminalUserControl), new PropertyMetadata(true));
 
     public event ITerminal.TerminalCommandHandler CommandEntered;
+
     public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
 
     public string Text => new TextRange(TerminalBox.Document.ContentStart, TerminalBox.Document.ContentEnd)
@@ -60,8 +60,6 @@ public partial class TerminalUserControl : UserControl, ITerminal
         TerminalBox.CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
         AddOutput("");
     }
-
- 
 
     private void TerminalBoxSizeChanged(object sender, SizeChangedEventArgs e)
     {

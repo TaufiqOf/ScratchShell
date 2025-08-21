@@ -532,7 +532,6 @@ namespace ScratchShell.Services
                 }
             }
 
-
             // Update sync timestamp
             UpdateLocalSyncTimestamp(cloudSettings.LastSyncedAt);
 

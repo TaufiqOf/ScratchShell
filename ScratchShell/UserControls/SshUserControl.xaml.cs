@@ -1,18 +1,12 @@
 ﻿using Renci.SshNet;
-using ScratchShell.Models;
 using ScratchShell.Services;
-using ScratchShell.UserControls.TerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
 using ScratchShell.Views.Windows;
-using Spectre.Console.Cli;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 using System.Windows.Controls;
-using System.Windows.Data;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -50,8 +44,6 @@ namespace ScratchShell.UserControls
             SnippetManager.OnSnippetInitialized += SnippetManagerOnSnippetInitialized;
         }
 
-
-
         private async Task SnippetManagerOnSnippetInitialized()
         {
             if (!_isInitialized)
@@ -73,7 +65,6 @@ namespace ScratchShell.UserControls
 
         private async void ControlLoaded(object sender, RoutedEventArgs e)
         {
-
             if (_isInitialized)
             {
                 return;
@@ -98,7 +89,6 @@ namespace ScratchShell.UserControls
             // Here you would typically initiate the SSH connection using the server details.
             // For example, you might call a method to connect to the server.
             await ConnectToServer(_server);
-
         }
 
         private async Task ConnectToServer(ServerViewModel server)
@@ -144,7 +134,6 @@ namespace ScratchShell.UserControls
         {
             await Task.Run(() =>
             {
-
                 while (_sshClient is not null && _sshClient.IsConnected)
                 {
                     string output = _shellStream.Read();
@@ -158,7 +147,6 @@ namespace ScratchShell.UserControls
                 }
             });
         }
-
 
         private void TerminalSizeChanged(ITerminal obj, Size newSize)
         {
@@ -239,7 +227,6 @@ namespace ScratchShell.UserControls
                         await SnippetManager.Add(snippetViewModel.ToSnippet());
                         SnippetControl.Snippets.Add(snippetViewModel);
                         snippetViewModel.ExecuteSnippet += SnippetExecuteSnippet;
-
                     }
                 }
             }
@@ -305,7 +292,6 @@ namespace ScratchShell.UserControls
                     Width = 20,
                     Height = 20
                 },
-
             };
             var ctx = new ContextMenu();
             foreach (var item in SnippetControl.Snippets)
@@ -318,9 +304,8 @@ namespace ScratchShell.UserControls
                 };
                 ctx.Items.Add(menu);
             }
-          
+
             ctx.PlacementTarget = menuButton;
-            ctx.IsOpen = true;
             menuButton.Flyout = ctx;
 
             FullScreenButton.IsEnabled = false;
