@@ -1,5 +1,7 @@
-﻿using Renci.SshNet;
+﻿using EasyWindowsTerminalControl;
+using Renci.SshNet;
 using ScratchShell.Services;
+using ScratchShell.UserControls.EasyTerminalControl;
 using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
