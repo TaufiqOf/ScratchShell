@@ -44,7 +44,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Orientation="Horizontal">
-                    <ui:Button Command="{Binding ViewModel.AddServerCommand, Mode=OneWay}" ToolTip="Add New">
+                    <ui:Button Command="{Binding ViewModel.AddServerCommand, Mode=OneWay}" ToolTip="Add a new server to your list">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -57,24 +57,27 @@
                         Margin="10,0,0,0"
                         FontSize="25"
                         FontWeight="Bold"
-                        Icon="{ui:SymbolIcon WindowConsole20}">
+                        Icon="{ui:SymbolIcon WindowConsole20}"
+                        ToolTip="Open a new terminal session (choose mode)">
                         <ui:DropDownButton.Flyout>
                             <ContextMenu>
                                 <MenuItem
                                     Command="{Binding ViewModel.OpenTerminalCommand}"
                                     CommandParameter="Elevated"
-                                    Header="Elevated" />
+                                    Header="Elevated"
+                                    ToolTip="Open terminal with administrator privileges" />
                                 <MenuItem
                                     Command="{Binding ViewModel.OpenTerminalCommand}"
                                     CommandParameter="Normal"
-                                    Header="Normal" />
+                                    Header="Normal"
+                                    ToolTip="Open terminal with normal privileges" />
                             </ContextMenu>
                         </ui:DropDownButton.Flyout>
                     </ui:DropDownButton>
                     <ui:Button
                         Margin="10,0,0,0"
                         Command="{Binding ViewModel.ExportCommand, Mode=OneWay}"
-                        ToolTip="Export">
+                        ToolTip="Export your server list to a file for backup or sharing">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -83,7 +86,7 @@
                     <ui:Button
                         Margin="5,0,0,0"
                         Command="{Binding ViewModel.ImportCommand, Mode=OneWay}"
-                        ToolTip="Import">
+                        ToolTip="Import servers from a file into your list">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -96,7 +99,8 @@
                         ClearButtonEnabled="True"
                         Icon="{ui:SymbolIcon Symbol=Search24}"
                         PlaceholderText="Search..."
-                        Text="{Binding ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        Text="{Binding ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        ToolTip="Search servers by name, host, or protocol" />
                 </StackPanel>
             </Grid>
             <Separator Grid.Row="1" Margin="0,5" />

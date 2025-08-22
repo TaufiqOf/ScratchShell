@@ -43,7 +43,7 @@
                     Click="BackButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=ArrowStepBack16}"
-                    ToolTip="Back" />
+                    ToolTip="Go to previous folder" />
                 <ui:Button
                     Grid.Column="1"
                     Margin="2"
@@ -51,7 +51,7 @@
                     Click="RefreshButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=ArrowRotateClockwise24}"
-                    ToolTip="Refresh" />
+                    ToolTip="Refresh file list" />
                 <ui:AutoSuggestBox
                     x:Name="PathTextBox"
                     Grid.Column="2"
@@ -59,7 +59,8 @@
                     HorizontalAlignment="Stretch"
                     Icon="{ui:FontIcon FontFamily='Segoe Fluent Icons',
                                        Glyph='&#xF08F;'}"
-                    KeyDown="PathTextBox_KeyDown" />
+                    KeyDown="PathTextBox_KeyDown"
+                    ToolTip="Enter or browse to a folder path" />
                 <ToggleButton
                     x:Name="LogToggleButton"
                     Grid.Column="3"
@@ -67,7 +68,7 @@
                     VerticalAlignment="Stretch"
                     Checked="LogToggleButtonChecked"
                     FontSize="20"
-                    ToolTip="Log"
+                    ToolTip="Show/hide log panel"
                     Unchecked="LogToggleButtonUnChecked">
                     <ui:SymbolIcon Symbol="Notebook20" />
                 </ToggleButton>
@@ -80,7 +81,7 @@
                     Click="FullScreenButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
-                    ToolTip="Full Screen" />
+                    ToolTip="Toggle full screen mode for file browser" />
             </Grid>
 
             <!--  Browser control  -->

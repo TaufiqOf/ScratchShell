@@ -49,7 +49,7 @@
                     Command="Copy"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=Copy20}"
-                    ToolTip="Copy" />
+                    ToolTip="Copy selected text from terminal" />
 
                 <!--  Paste  -->
                 <ui:Button
@@ -59,7 +59,7 @@
                     Command="Paste"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
-                    ToolTip="Paste" />
+                    ToolTip="Paste text into terminal" />
                 <!--  Separator  -->
                 <Border
                     Grid.Column="2"
@@ -75,7 +75,7 @@
                     VerticalAlignment="Stretch"
                     Checked="SnippetToggleButtonChecked"
                     FontSize="20"
-                    ToolTip="Command Snippet"
+                    ToolTip="Show/hide command snippets panel"
                     Unchecked="SnippetToggleButtonUnchecked">
                     <ui:SymbolIcon Symbol="Code20" />
                 </ToggleButton>
@@ -88,7 +88,7 @@
                     Click="FullScreenButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
-                    ToolTip="Full Screen" />
+                    ToolTip="Toggle full screen mode for terminal" />
             </Grid>
             <ContentControl
                 x:Name="TerminalContentControl"

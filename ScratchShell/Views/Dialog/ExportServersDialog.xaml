@@ -108,7 +108,8 @@
                         Grid.Column="1"
                         Click="ExportFilePathBrowseButtonClick"
                         FontSize="20"
-                        Icon="{ui:SymbolIcon Symbol=Open24}" />
+                        Icon="{ui:SymbolIcon Symbol=Open24}"
+                        ToolTip="Browse for export file location" />
                 </Grid>
             </StackPanel>
         </StackPanel>
