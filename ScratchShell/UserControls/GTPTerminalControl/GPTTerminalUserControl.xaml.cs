@@ -57,7 +57,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         this.Focus();
         this.Focusable = true;
         this.IsTabStop = true;
-        InitializeTerminalEmulator();
+        if (_terminal == null)
+        {
+            InitializeTerminalEmulator();
+        }
 
         UpdateCharSize();
 
