@@ -3,11 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:gtp="clr-namespace:ScratchShell.UserControls.GTPTerminalControl"
     xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
     xmlns:local1="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:gtp="clr-namespace:ScratchShell.UserControls.GTPTerminalControl"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
@@ -39,7 +39,8 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" /> <!-- Theme Toggle Button -->
+                    <ColumnDefinition Width="Auto" />
+                    <!--  Theme Toggle Button  -->
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -88,9 +89,9 @@
                     Margin="2"
                     VerticalAlignment="Stretch"
                     Checked="ThemeToggleButtonChecked"
-                    Unchecked="ThemeToggleButtonUnchecked"
                     FontSize="20"
-                    ToolTip="Show/hide theming panel">
+                    ToolTip="Show/hide theming panel"
+                    Unchecked="ThemeToggleButtonUnchecked">
                     <ui:SymbolIcon Symbol="ColorBackground20" />
                 </ToggleButton>
                 <!--  Full Screen  -->
@@ -118,14 +119,18 @@
             Grid.Column="1"
             Width="300"
             Margin="10"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
             Visibility="Collapsed" />
-        <!-- Theming panel -->
+        <!--  Theming panel  -->
         <gtp:ThemeUserControl
             x:Name="ThemeControl"
             Grid.Column="1"
             Width="300"
             Margin="10"
-            Visibility="Collapsed"
-            Terminal="{Binding ElementName=TerminalContentControl, Path=Content}" />
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Terminal="{Binding ElementName=TerminalContentControl, Path=Content}"
+            Visibility="Collapsed" />
     </Grid>
 </UserControl>
