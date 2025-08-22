@@ -78,11 +78,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _resizeRedrawTimer.Stop();
             if (_terminal != null)
             {
-                int cols = Math.Max(10, (int)(_pendingResizeSize.Width / _charWidth));
-                int rows = Math.Max(2, (int)(_pendingResizeSize.Height / _charHeight));
-                _terminal.Resize(cols, rows);
-                TerminalSizeChanged?.Invoke(this, _pendingResizeSize);
-                RedrawTerminal(); // Full redraw on resize
+                UpdateTerminalLayoutAndSize(_pendingResizeSize);
             }
         };
     }
@@ -96,15 +92,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             InitializeTerminalEmulator();
         }
-
-        UpdateCharSize();
-
-        int cols = Math.Max(10, (int)(ActualWidth / _charWidth));
-        int rows = Math.Max(2, (int)(ActualHeight / _charHeight));
-        _terminal?.Resize(cols, rows);
-        TerminalSizeChanged?.Invoke(this, new Size(ActualWidth, ActualHeight));
-
-        RedrawTerminal(); // Full redraw on load
+        UpdateTerminalLayoutAndSize();
     }
 
     protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -112,15 +100,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         base.OnRenderSizeChanged(sizeInfo);
         if (_terminal != null)
         {
-            UpdateCharSize();
             _pendingResizeSize = sizeInfo.NewSize;
-
-            // Update canvas size immediately for smooth scrolling/layout
-            int cols = Math.Max(10, (int)(_pendingResizeSize.Width / _charWidth));
-            int rows = Math.Max(2, (int)(_pendingResizeSize.Height / _charHeight));
-            TerminalCanvas.Width = cols * _charWidth;
-            TerminalCanvas.Height = rows * _charHeight;
-
             _resizeRedrawTimer.Stop();
             _resizeRedrawTimer.Start();
         }
@@ -470,7 +450,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         var (row2, col2) = _selectionEnd.Value;
         int startRow = Math.Min(row1, row2);
         int endRow = Math.Max(row1, row2);
-        int startCol = Math.Min(col1, col2);
+        int startCol = Math.Min(col1, col1);
         int endCol = Math.Max(col1, col2);
         for (int row = startRow; row <= endRow; row++)
         {
@@ -599,16 +579,40 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public void ApplyThemeProperties()
     {
         _typeface = new Typeface(Theme.FontFamily.Source);
-        _charHeight = Theme.FontSize;
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
-        // Redraw everything
-        RedrawTerminal();
-        // Only draw selection if there is an active selection
-        if (_selectionStart.HasValue && _selectionEnd.HasValue)
-            DrawSelection();
-        // Set background
         if (TerminalCanvas != null)
             TerminalCanvas.Background = Theme.Background;
+        // Use the same logic as resize to update everything
+        UpdateTerminalLayoutAndSize();
+        // Clear old selection highlights and selection state
+        ClearSelectionHighlightRects();
+        _selectionStart = null;
+        _selectionEnd = null;
+        // Do not draw selection after theme change
+    }
+
+    // Helper to clear selection highlight rectangles from RootGrid
+    private void ClearSelectionHighlightRects()
+    {
+        foreach (var rect in _selectionHighlightRects)
+        {
+            RootGrid.Children.Remove(rect);
+        }
+        _selectionHighlightRects.Clear();
+    }
+
+    // Helper to update char size, canvas size, and terminal size (used for both resize and theme change)
+    private void UpdateTerminalLayoutAndSize(Size? newSize = null)
+    {
+        UpdateCharSize();
+        Size size = newSize ?? new Size(ActualWidth, ActualHeight);
+        int cols = Math.Max(10, (int)(size.Width / _charWidth));
+        int rows = Math.Max(2, (int)(size.Height / _charHeight));
+        TerminalCanvas.Width = cols * _charWidth;
+        TerminalCanvas.Height = rows * _charHeight;
+        _terminal?.Resize(cols, rows);
+        TerminalSizeChanged?.Invoke(this, size);
+        RedrawTerminal();
     }
 
     private static Brush[] AnsiForeground = new Brush[] {
