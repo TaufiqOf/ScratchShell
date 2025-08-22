@@ -4,14 +4,34 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <UserControl.Resources>
+        <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
+    </UserControl.Resources>
     <Grid>
         <ui:ListView Name="BrowserList" MouseRightButtonUp="BrowserList_MouseRightButtonUp">
             <ui:ListView.View>
                 <ui:GridView>
+                    <ui:GridViewColumn Width="350" Header="Name">
+                        <ui:GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="5,2">
+                                    <ui:SymbolIcon 
+                                        Symbol="{Binding Icon}" 
+                                        FontSize="16" 
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"/>
+                                    <TextBlock 
+                                        Text="{Binding Name}" 
+                                        VerticalAlignment="Center"
+                                        FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ui:GridViewColumn.CellTemplate>
+                    </ui:GridViewColumn>
                     <ui:GridViewColumn
-                        Width="300"
-                        DisplayMemberBinding="{Binding Name}"
-                        Header="Name" />
+                        Width="120"
+                        DisplayMemberBinding="{Binding LastUpdated, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
+                        Header="Date Modified" />
                     <ui:GridViewColumn
                         Width="100"
                         DisplayMemberBinding="{Binding DisplayType}"

@@ -97,6 +97,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private async Task ConnectToServer(ServerViewModel server)
     {
         ShowProgress(true);
+        UpdateConnectionStatus("Connecting...", false);
 
         if (server.UseKeyFile)
         {
@@ -116,16 +117,27 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             await _sftpClient.ConnectAsync(CancellationToken.None);
 
-            Log($"Connected to {server.Name} at {server.Host}:{server.Port}.");
+            UpdateConnectionStatus($"Connected to {server.Name} ({server.Host}:{server.Port})", true);
+            Log($"✓ Connected to {server.Name} at {server.Host}:{server.Port}");
             await GoToFolder("~");
             this.TopToolbar.IsEnabled = true;
         }
         catch (Exception ex)
         {
-            Log($"Failed to connect to {server.Name}: {ex.Message}");
+            UpdateConnectionStatus("Connection failed", false);
+            Log($"✗ Failed to connect to {server.Name}: {ex.Message}");
             return;
         }
         ShowProgress(false);
+    }
+
+    private void UpdateConnectionStatus(string status, bool connected)
+    {
+        if (ConnectionStatusText != null)
+        {
+            ConnectionStatusText.Text = status;
+            // You could also change the icon color based on connection status
+        }
     }
 
     private async IAsyncEnumerable<BrowserItem> FileDriveControlGetDirectory(
@@ -377,7 +389,14 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private void Log(string message)
     {
-        Terminal.Text = Terminal.Text + message + "\n";
+        var timestamp = DateTime.Now.ToString("HH:mm:ss");
+        Terminal.Text += $"[{timestamp}] {message}\n";
+
+        // Auto-scroll to bottom
+        if (Terminal.Parent is ScrollViewer scrollViewer)
+        {
+            scrollViewer.ScrollToEnd();
+        }
     }
 
     private void LogToggleButtonChecked(object sender, RoutedEventArgs e)
