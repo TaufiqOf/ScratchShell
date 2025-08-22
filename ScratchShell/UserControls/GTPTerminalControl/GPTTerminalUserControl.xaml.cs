@@ -330,7 +330,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             // Clear previous selection rectangles
             foreach (var rect in _selectionHighlightRects)
-                RootGrid.Children.Remove(rect);
+                TerminalCanvas.Children.Remove(rect);
             _selectionHighlightRects.Clear();
             // Start new selection
             _isSelecting = true;
@@ -441,26 +441,31 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void UpdateSelectionHighlightRect()
     {
-        // Remove old rectangles
         foreach (var rect in _selectionHighlightRects)
         {
-            RootGrid.Children.Remove(rect);
+            TerminalCanvas.Children.Remove(rect);
         }
         _selectionHighlightRects.Clear();
 
-        if (!_selectionStart.HasValue || !_selectionEnd.HasValue)
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null)
             return;
         var (row1, col1) = _selectionStart.Value;
         var (row2, col2) = _selectionEnd.Value;
         int startRow = Math.Min(row1, row2);
         int endRow = Math.Max(row1, row2);
-        int startCol = Math.Min(col1, col1);
+        int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
+
+        int maxCol = _terminal.Cols - 1;
+
         for (int row = startRow; row <= endRow; row++)
         {
             int colStart = (row == startRow) ? startCol : 0;
-            int colEnd = (row == endRow) ? endCol : _cols - 1;
-            // Rectangle should be positioned relative to the TerminalCanvas inside the ScrollViewer
+            int colEnd = (row == endRow) ? endCol : maxCol;
+            colStart = Math.Max(0, Math.Min(colStart, maxCol));
+            colEnd = Math.Max(0, Math.Min(colEnd, maxCol));
+            if (colEnd < colStart) continue;
+
             var rect = new Rectangle
             {
                 Width = (colEnd - colStart + 1) * _charWidth,
@@ -469,20 +474,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 Opacity = 0.5,
                 IsHitTestVisible = false
             };
-            rect.HorizontalAlignment = HorizontalAlignment.Left;
-            rect.VerticalAlignment = VerticalAlignment.Top;
-            // Offset by TerminalCanvas position in RootGrid
-            var canvasOffset = TerminalCanvas.TransformToAncestor(RootGrid).Transform(new Point(0, 0));
-            rect.Margin = new Thickness(canvasOffset.X + colStart * _charWidth, canvasOffset.Y + row * _charHeight, 0, 0);
-            Panel.SetZIndex(rect, 1000);
-            RootGrid.Children.Add(rect);
+            TerminalCanvas.Children.Add(rect);
+            Canvas.SetLeft(rect, colStart * _charWidth);
+            Canvas.SetTop(rect, row * _charHeight);
             _selectionHighlightRects.Add(rect);
         }
     }
 
     private void DrawSelection()
     {
-        if (!_selectionStart.HasValue || !_selectionEnd.HasValue) return;
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null) return;
         // If the canvas was just cleared (after RedrawTerminal), skip removal
         bool hasSelectionRects = false;
         for (int i = 0; i < TerminalCanvas.Children.Count; i++)
@@ -506,10 +507,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int endRow = Math.Max(row1, row2);
         int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
+        int maxCol = _terminal.Cols - 1;
         for (int row = startRow; row <= endRow; row++)
         {
             int colStart = (row == startRow) ? startCol : 0;
-            int colEnd = (row == endRow) ? endCol : _cols - 1;
+            int colEnd = (row == endRow) ? endCol : maxCol;
+            colStart = Math.Max(0, Math.Min(colStart, maxCol));
+            colEnd = Math.Max(0, Math.Min(colEnd, maxCol));
+            if (colEnd < colStart) continue;
             var rect = new Rectangle
             {
                 Width = (colEnd - colStart + 1) * _charWidth,
@@ -601,7 +606,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         foreach (var rect in _selectionHighlightRects)
         {
-            RootGrid.Children.Remove(rect);
+            TerminalCanvas.Children.Remove(rect);
         }
         _selectionHighlightRects.Clear();
     }
@@ -630,6 +635,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
         TerminalSizeChanged?.Invoke(this, size);
         RedrawTerminal();
+        UpdateSelectionHighlightRect(); // Ensure selection area updates with resize
     }
 
     private static Brush[] AnsiForeground = new Brush[] {
