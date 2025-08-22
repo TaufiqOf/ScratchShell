@@ -22,11 +22,34 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private Typeface _typeface = new Typeface("Consolas");
 
     private const double TerminalFontSize = 16; // Fixed font size for terminal
+    private const double ExtraScrollPadding = 48; // Extra space in pixels for scrolling past last line
+
+    private System.Windows.Threading.DispatcherTimer _resizeRedrawTimer;
+    private Size _pendingResizeSize;
+
+    // Add a field to store the last rendered buffer snapshot
+    private string[]? _lastRenderedBufferLines;
 
     public GPTTerminalUserControl()
     {
         InitializeComponent();
         Loaded += GPTTerminalUserControl_Loaded;
+        _resizeRedrawTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(100)
+        };
+        _resizeRedrawTimer.Tick += (s, e) =>
+        {
+            _resizeRedrawTimer.Stop();
+            if (_terminal != null)
+            {
+                int cols = Math.Max(10, (int)(_pendingResizeSize.Width / _charWidth));
+                int rows = Math.Max(2, (int)(_pendingResizeSize.Height / _charHeight));
+                _terminal.Resize(cols, rows);
+                TerminalSizeChanged?.Invoke(this, _pendingResizeSize);
+                RedrawTerminal(); // Full redraw on resize
+            }
+        };
     }
 
     private void GPTTerminalUserControl_Loaded(object sender, RoutedEventArgs e)
@@ -43,7 +66,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _terminal?.Resize(cols, rows);
         TerminalSizeChanged?.Invoke(this, new Size(ActualWidth, ActualHeight));
 
-        RedrawTerminal();
+        RedrawTerminal(); // Full redraw on load
     }
 
     protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -52,12 +75,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (_terminal != null)
         {
             UpdateCharSize();
+            _pendingResizeSize = sizeInfo.NewSize;
 
-            int cols = Math.Max(10, (int)(sizeInfo.NewSize.Width / _charWidth));
-            int rows = Math.Max(2, (int)(sizeInfo.NewSize.Height / _charHeight));
-            _terminal.Resize(cols, rows);
-            TerminalSizeChanged?.Invoke(this, sizeInfo.NewSize);
-            RedrawTerminal();
+            // Update canvas size immediately for smooth scrolling/layout
+            int cols = Math.Max(10, (int)(_pendingResizeSize.Width / _charWidth));
+            int rows = Math.Max(2, (int)(_pendingResizeSize.Height / _charHeight));
+            TerminalCanvas.Width = cols * _charWidth;
+            TerminalCanvas.Height = rows * _charHeight;
+
+            _resizeRedrawTimer.Stop();
+            _resizeRedrawTimer.Start();
         }
     }
 
@@ -96,8 +123,21 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             var bytes = Encoding.Unicode.GetBytes(output);
             output = Encoding.UTF8.GetString(bytes);
         }
+        var buffer = _terminal.Buffer;
+        int prevLineCount = buffer.Lines.Length;
+        string[]? prevSnapshot = _lastRenderedBufferLines;
         _terminal.Feed(output);
-        RedrawTerminal();
+        int newLineCount = buffer.Lines.Length;
+        // Compare current buffer lines to previous snapshot and redraw only changed lines
+        for (int row = 0; row < buffer.Lines.Length; row++)
+        {
+            string current = BufferLineToString(buffer.Lines[row], _terminal.Cols);
+            string? prev = (prevSnapshot != null && row < prevSnapshot.Length) ? prevSnapshot[row] : null;
+            if (prev == null || !current.Equals(prev))
+            {
+                RedrawTerminal(onlyRow: row);
+            }
+        }
         ScrollToBottom();
     }
 
@@ -105,7 +145,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (IsReadOnly || _terminal == null) return;
         _terminal.Feed(input);
-        RedrawTerminal();
+        // Redraw only the last line
+        var buffer = _terminal.Buffer;
+        int lastRow = buffer.Y + buffer.YBase;
+        RedrawTerminal(onlyRow: lastRow);
         ScrollToBottom();
     }
 
@@ -152,7 +195,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     cell.Code = 0; // or ' '
                     line[cursorCol - 1] = cell;
                 }
-                RedrawTerminal();
+                // Redraw only the last line
+                int lastRow = buffer.Y + buffer.YBase;
+                RedrawTerminal(onlyRow: lastRow);
             }
             e.Handled = true;
             return;
@@ -209,7 +254,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (!string.IsNullOrEmpty(keyToSend))
         {
             _terminal.Feed(keyToSend);
-            RedrawTerminal();
+            // Redraw only the last line
+            int lastRow = buffer.Y + buffer.YBase;
+            RedrawTerminal(onlyRow: lastRow);
         }
         e.Handled = true;
     }
@@ -289,14 +336,121 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private static bool IsUnderline(int attr) => ((attr >> 18) & 4) != 0;
     private static bool IsInverse(int attr) => ((attr >> 18) & 0x40) != 0;
 
-    private void RedrawTerminal()
+    // Helper to get a string representation of a buffer line
+    private static string BufferLineToString(dynamic line, int cols)
+    {
+        var sb = new StringBuilder(cols);
+        for (int i = 0; i < cols; i++)
+        {
+            char ch = ' ';
+            if (i < line.Length)
+            {
+                var cell = line[i];
+                ch = cell.Code != 0 ? (char)cell.Code : ' ';
+            }
+            sb.Append(ch);
+        }
+        return sb.ToString();
+    }
+
+    // Redraws the terminal. If onlyRow is provided, only redraw that row.
+    private void RedrawTerminal(int? onlyRow = null)
     {
         if (_terminal == null) return;
-        TerminalCanvas.Children.Clear();
         var buffer = _terminal.Buffer;
-        for (int row = 0; row < _terminal.Rows; row++)
+        TerminalCanvas.Width = _terminal.Cols * _charWidth;
+        double contentHeight = buffer.Lines.Length * _charHeight;
+        double visibleHeight = _terminal.Rows * _charHeight;
+        double canvasHeight = Math.Max(contentHeight, visibleHeight);
+        TerminalCanvas.Height = canvasHeight;
+
+        if (onlyRow.HasValue)
         {
-            var line = buffer.Lines[row + buffer.YBase];
+            // Remove all children for that row (both text and cursor rects)
+            double y = onlyRow.Value * _charHeight;
+            for (int i = TerminalCanvas.Children.Count - 1; i >= 0; i--)
+            {
+                var child = TerminalCanvas.Children[i] as FrameworkElement;
+                if (child != null && Math.Abs(Canvas.GetTop(child) - y) < 0.1)
+                    TerminalCanvas.Children.RemoveAt(i);
+            }
+            // Redraw only that row
+            int row = onlyRow.Value;
+            if (row >= 0 && row < buffer.Lines.Length)
+            {
+                var line = buffer.Lines[row];
+                for (int col = 0; col < _terminal.Cols; col++)
+                {
+                    char ch = ' ';
+                    int attr = XtermSharp.CharData.DefaultAttr;
+                    if (col < line.Length)
+                    {
+                        var cell = line[col];
+                        ch = cell.Code != 0 ? (char)cell.Code : ' ';
+                        attr = cell.Attribute;
+                    }
+                    bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
+                    bool inverse = IsInverse(attr) ^ isCursor;
+                    Brush fg = GetAnsiForeground(attr, inverse);
+                    Brush bg = GetAnsiBackground(attr, inverse);
+                    FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
+                    TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
+                    if (isCursor)
+                    {
+                        var rect = new Rectangle
+                        {
+                            Width = _charWidth,
+                            Height = _charHeight,
+                            Fill = fg,
+                            Opacity = 0.8
+                        };
+                        Canvas.SetLeft(rect, col * _charWidth);
+                        Canvas.SetTop(rect, row * _charHeight);
+                        TerminalCanvas.Children.Add(rect);
+                        var tb = new TextBlock
+                        {
+                            Text = ch.ToString(),
+                            FontFamily = new FontFamily("Consolas"),
+                            FontSize = TerminalFontSize,
+                            Foreground = bg,
+                            Background = Brushes.Transparent,
+                            FontWeight = weight,
+                            TextDecorations = deco
+                        };
+                        Canvas.SetLeft(tb, col * _charWidth);
+                        Canvas.SetTop(tb, row * _charHeight);
+                        TerminalCanvas.Children.Add(tb);
+                    }
+                    else
+                    {
+                        var tb = new TextBlock
+                        {
+                            Text = ch.ToString(),
+                            FontFamily = new FontFamily("Consolas"),
+                            FontSize = TerminalFontSize,
+                            Foreground = fg,
+                            Background = bg,
+                            FontWeight = weight,
+                            TextDecorations = deco
+                        };
+                        Canvas.SetLeft(tb, col * _charWidth);
+                        Canvas.SetTop(tb, row * _charHeight);
+                        TerminalCanvas.Children.Add(tb);
+                    }
+                }
+                // Update snapshot for this row
+                if (_lastRenderedBufferLines != null && row < _lastRenderedBufferLines.Length)
+                {
+                    _lastRenderedBufferLines[row] = BufferLineToString(line, _terminal.Cols);
+                }
+            }
+            return;
+        }
+
+        // Full redraw (existing logic)
+        TerminalCanvas.Children.Clear();
+        for (int row = 0; row < buffer.Lines.Length; row++) {
+            var line = buffer.Lines[row];
             for (int col = 0; col < _terminal.Cols; col++)
             {
                 char ch = ' ';
@@ -307,7 +461,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     ch = cell.Code != 0 ? (char)cell.Code : ' ';
                     attr = cell.Attribute;
                 }
-                bool isCursor = (row == buffer.Y && col == buffer.X);
+                bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
                 bool inverse = IsInverse(attr) ^ isCursor;
                 Brush fg = GetAnsiForeground(attr, inverse);
                 Brush bg = GetAnsiBackground(attr, inverse);
@@ -357,13 +511,31 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 }
             }
         }
-        // Hide the default cursor if present
+        if (contentHeight < visibleHeight)
+        {
+            var spacer = new Rectangle
+            {
+                Width = TerminalCanvas.Width,
+                Height = ExtraScrollPadding,
+                Fill = Brushes.Transparent
+            };
+            Canvas.SetLeft(spacer, 0);
+            Canvas.SetTop(spacer, contentHeight);
+            TerminalCanvas.Children.Add(spacer);
+        }
         if (Cursor != null)
             Cursor.Visibility = Visibility.Collapsed;
+        // Update the buffer snapshot after a full redraw
+        _lastRenderedBufferLines = new string[buffer.Lines.Length];
+        for (int row = 0; row < buffer.Lines.Length; row++)
+        {
+            _lastRenderedBufferLines[row] = BufferLineToString(buffer.Lines[row], _terminal.Cols);
+        }
     }
 
     private static char? KeyToChar(Key key, ModifierKeys modifiers)
     {
+        // Letters
         if (key >= Key.A && key <= Key.Z)
         {
             char c = (char)('a' + (key - Key.A));
@@ -371,12 +543,40 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 c = char.ToUpper(c);
             return c;
         }
+        // Digits
         if (key >= Key.D0 && key <= Key.D9)
         {
             char c = (char)('0' + (key - Key.D0));
+            // Handle shifted digits for symbols
+            if ((modifiers & ModifierKeys.Shift) != 0)
+            {
+                string shifted = ")!@#$%^&*(";
+                c = shifted[key - Key.D0];
+            }
             return c;
         }
+        // Space
         if (key == Key.Space) return ' ';
+        // Oem keys for punctuation and symbols
+        if (key >= Key.Oem1 && key <= Key.OemBackslash)
+        {
+            bool shift = (modifiers & ModifierKeys.Shift) != 0;
+            switch (key)
+            {
+                case Key.Oem1: return shift ? ':' : ';';
+                case Key.OemPlus: return shift ? '+' : '=';
+                case Key.OemComma: return shift ? '<' : ',';
+                case Key.OemMinus: return shift ? '_' : '-';
+                case Key.OemPeriod: return shift ? '>' : '.';
+                case Key.Oem2: return shift ? '?' : '/';
+                case Key.Oem3: return shift ? '~' : '`';
+                case Key.Oem4: return shift ? '{' : '[';
+                case Key.Oem5: return shift ? '|' : '\\';
+                case Key.Oem6: return shift ? '}' : ']';
+                case Key.Oem7: return shift ? '"' : '\'';
+                // Add more Oem keys if needed
+            }
+        }
         return null;
     }
 
