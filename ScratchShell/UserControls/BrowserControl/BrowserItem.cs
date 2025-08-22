@@ -1,11 +1,57 @@
 ﻿using Humanizer;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Wpf.Ui.Controls;
 
 namespace ScratchShell.UserControls.BrowserControl;
 
-public class BrowserItem
+public class BrowserItem : INotifyPropertyChanged
 {
-    public string Name { get; set; }
+    private string _name;
+    private string _originalName;
+    private bool _isInEditMode;
+    private bool _isNewItem;
+
+    public string Name 
+    { 
+        get => _name;
+        set 
+        {
+            _name = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string OriginalName 
+    { 
+        get => _originalName;
+        set 
+        {
+            _originalName = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsInEditMode 
+    { 
+        get => _isInEditMode;
+        set 
+        {
+            _isInEditMode = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsNewItem 
+    { 
+        get => _isNewItem;
+        set 
+        {
+            _isNewItem = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string FullPath { get; set; }
     public bool IsFolder { get; set; }
     public long Size { get; set; }
@@ -42,5 +88,34 @@ public class BrowserItem
             ".sql" => SymbolRegular.Database24,
             _ => SymbolRegular.Document24
         };
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public void StartEdit()
+    {
+        OriginalName = Name;
+        IsInEditMode = true;
+    }
+
+    public void CancelEdit()
+    {
+        Name = OriginalName;
+        IsInEditMode = false;
+        if (IsNewItem)
+        {
+            // This will be handled by the parent to remove the item
+        }
+    }
+
+    public void CommitEdit()
+    {
+        IsInEditMode = false;
+        IsNewItem = false;
     }
 }

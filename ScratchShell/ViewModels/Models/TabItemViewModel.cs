@@ -35,7 +35,7 @@ public partial class TabItemViewModel : ObservableObject
                 {
                     ProtocolType.FTP => new UserControls.FtpUserControl(server),
                     ProtocolType.SSH => new UserControls.SshUserControl(server, ContentDialogService),
-                    ProtocolType.SFTP => new UserControls.SftpUserControl(server),
+                    ProtocolType.SFTP => new UserControls.SftpUserControl(server, ContentDialogService),
                     _ => null
                 };
             }

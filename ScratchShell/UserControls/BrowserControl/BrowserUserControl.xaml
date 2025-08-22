@@ -6,9 +6,22 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <UserControl.Resources>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
+        <!-- Style for the editable TextBox -->
+        <Style x:Key="EditTextBoxStyle" TargetType="TextBox">
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="Blue"/>
+        </Style>
     </UserControl.Resources>
     <Grid>
-        <ui:ListView Name="BrowserList" MouseRightButtonUp="BrowserList_MouseRightButtonUp">
+        <ui:ListView Name="BrowserList" MouseRightButtonUp="BrowserList_MouseRightButtonUp" 
+                     PreviewKeyDown="BrowserList_PreviewKeyDown"
+                     SelectionMode="Extended">
             <ui:ListView.View>
                 <ui:GridView>
                     <ui:GridViewColumn Width="350" Header="Name">
@@ -20,10 +33,34 @@
                                         FontSize="16" 
                                         Margin="0,0,8,0"
                                         VerticalAlignment="Center"/>
+                                    
+                                    <!-- Normal display mode -->
                                     <TextBlock 
+                                        x:Name="DisplayTextBlock"
                                         Text="{Binding Name}" 
                                         VerticalAlignment="Center"
-                                        FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"/>
+                                        FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
+                                        MouseLeftButtonDown="DisplayTextBlock_MouseLeftButtonDown">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsInEditMode}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    
+                                    <!-- Edit mode -->
+                                    <TextBox 
+                                        x:Name="EditTextBox"
+                                        Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                                        Style="{StaticResource EditTextBoxStyle}"
+                                        Visibility="{Binding IsInEditMode, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                        LostFocus="EditTextBox_LostFocus"
+                                        KeyDown="EditTextBox_KeyDown"
+                                        Loaded="EditTextBox_Loaded"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ui:GridViewColumn.CellTemplate>
