@@ -112,4 +112,9 @@ public partial class ThemeUserControl : UserControl
             Terminal?.RefreshTheme();
         }
     }
+
+    private void ApplyButton_Click(object sender, RoutedEventArgs e)
+    {
+        Terminal?.RefreshTheme();
+    }
 }
