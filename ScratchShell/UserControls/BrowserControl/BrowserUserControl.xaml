@@ -65,18 +65,21 @@
                             </DataTemplate>
                         </ui:GridViewColumn.CellTemplate>
                     </ui:GridViewColumn>
-                    <ui:GridViewColumn
-                        Width="120"
-                        DisplayMemberBinding="{Binding LastUpdated, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"
-                        Header="Date Modified" />
-                    <ui:GridViewColumn
-                        Width="100"
-                        DisplayMemberBinding="{Binding DisplayType}"
-                        Header="Type" />
-                    <ui:GridViewColumn
-                        Width="100"
-                        DisplayMemberBinding="{Binding SizeFormatted}"
-                        Header="Size" />
+                    <ui:GridViewColumn Width="120" Header="Date Modified">
+                        <ui:GridViewColumn.DisplayMemberBinding>
+                            <Binding Path="LastUpdated" StringFormat="{}{0:yyyy-MM-dd HH:mm}"/>
+                        </ui:GridViewColumn.DisplayMemberBinding>
+                    </ui:GridViewColumn>
+                    <ui:GridViewColumn Width="100" Header="Type">
+                        <ui:GridViewColumn.DisplayMemberBinding>
+                            <Binding Path="DisplayType"/>
+                        </ui:GridViewColumn.DisplayMemberBinding>
+                    </ui:GridViewColumn>
+                    <ui:GridViewColumn Width="100" Header="Size">
+                        <ui:GridViewColumn.DisplayMemberBinding>
+                            <Binding Path="SizeFormatted"/>
+                        </ui:GridViewColumn.DisplayMemberBinding>
+                    </ui:GridViewColumn>
                 </ui:GridView>
             </ui:ListView.View>
         </ui:ListView>

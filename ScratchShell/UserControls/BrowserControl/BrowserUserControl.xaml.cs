@@ -1,5 +1,9 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Wpf.Ui.Controls;
@@ -56,6 +60,9 @@ public partial class BrowserUserControl : UserControl
         set => _isIsBrowserEnabled = value;
     }
 
+    private string? _lastSortProperty;
+    private ListSortDirection _lastSortDirection = ListSortDirection.Ascending;
+
     public BrowserUserControl()
     {
         InitializeComponent();
@@ -63,6 +70,7 @@ public partial class BrowserUserControl : UserControl
         BrowserList.MouseDoubleClick += BrowserListMouseDoubleClick;
         BrowserList.PreviewMouseDown += BrowserListPreviewMouseDown;
         BrowserList.SelectionChanged += BrowserList_SelectionChanged;
+        BrowserList.PreviewMouseLeftButtonDown += BrowserList_PreviewMouseLeftButtonDown;
         SetupContextMenu();
         SetupEmptySpaceContextMenu();
     }
@@ -593,5 +601,107 @@ public partial class BrowserUserControl : UserControl
     {
         var selectedCount = GetSelectedItemCount();
         SelectionChanged?.Invoke(selectedCount);
+    }
+
+    // Replace the old GridViewColumnHeader_Click with this version
+    private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+    {
+        // WPF ListView/GridViewColumnHeader event: sender is the ListView, e.OriginalSource is the header
+        if (e.OriginalSource is GridViewColumnHeader header && header.Column != null)
+        {
+            string? propertyName = null;
+            var headerText = header.Content as string;
+            switch (headerText)
+            {
+                case "Name": propertyName = "Name"; break;
+                case "Date Modified": propertyName = "LastUpdated"; break;
+                case "Type": propertyName = "DisplayType"; break;
+                case "Size": propertyName = "Size"; break;
+            }
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ApplySort(propertyName);
+            }
+        }
+    }
+
+    private void ApplySort(string propertyName)
+    {
+        // Toggle sort direction if same property, otherwise ascending
+        if (_lastSortProperty == propertyName)
+        {
+            _lastSortDirection = _lastSortDirection == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+        }
+        else
+        {
+            _lastSortDirection = ListSortDirection.Ascending;
+        }
+        _lastSortProperty = propertyName;
+
+        IOrderedEnumerable<BrowserItem> sorted;
+        switch (propertyName)
+        {
+            case "Name":
+                sorted = _lastSortDirection == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+                    : Items.OrderByDescending(i => i.Name, StringComparer.CurrentCultureIgnoreCase);
+                break;
+            case "LastUpdated":
+                sorted = _lastSortDirection == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.LastUpdated)
+                    : Items.OrderByDescending(i => i.LastUpdated);
+                break;
+            case "DisplayType":
+                sorted = _lastSortDirection == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.DisplayType)
+                    : Items.OrderByDescending(i => i.DisplayType);
+                break;
+            case "Size":
+                sorted = _lastSortDirection == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.Size)
+                    : Items.OrderByDescending(i => i.Size);
+                break;
+            default:
+                return;
+        }
+        // Keep parent directory (..) always on top if present
+        var parent = Items.FirstOrDefault(i => i.Name == ".." );
+        var sortedList = sorted.ToList();
+        if (parent != null)
+        {
+            sortedList.Remove(parent);
+            sortedList.Insert(0, parent);
+        }
+        Items.Clear();
+        foreach (var item in sortedList)
+            Items.Add(item);
+    }
+
+    // Add this event handler for header click sorting
+    private void BrowserList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Find the header that was clicked
+        var depObj = (DependencyObject)e.OriginalSource;
+        while (depObj != null && depObj is not GridViewColumnHeader)
+        {
+            depObj = VisualTreeHelper.GetParent(depObj);
+        }
+        if (depObj is GridViewColumnHeader header && header.Column != null)
+        {
+            string? propertyName = null;
+            var headerText = header.Content as string;
+            switch (headerText)
+            {
+                case "Name": propertyName = "Name"; break;
+                case "Date Modified": propertyName = "LastUpdated"; break;
+                case "Type": propertyName = "DisplayType"; break;
+                case "Size": propertyName = "Size"; break;
+            }
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ApplySort(propertyName);
+                e.Handled = true;
+            }
+        }
     }
 }
