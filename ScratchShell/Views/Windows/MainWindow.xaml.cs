@@ -1,3 +1,4 @@
+using ScratchShell.Properties;
 using ScratchShell.ViewModels.Windows;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions;
@@ -23,6 +24,7 @@ public partial class MainWindow : INavigationWindow
         SystemThemeWatcher.Watch(this);
 
         this.Loaded += MainWindowLoaded;
+        this.Closing += MainWindow_Closing;
 
         InitializeComponent();
         SetPageService(navigationViewPageProvider);
@@ -33,7 +35,41 @@ public partial class MainWindow : INavigationWindow
 
     private void MainWindowLoaded(object sender, RoutedEventArgs e)
     {
+        // Restore window size and position from settings
+        if (Settings.Default.MainWindowWidth > 0)
+            this.Width = Settings.Default.MainWindowWidth;
+        if (Settings.Default.MainWindowHeight > 0)
+            this.Height = Settings.Default.MainWindowHeight;
+        if (Settings.Default.MainWindowTop >= 0)
+            this.Top = Settings.Default.MainWindowTop;
+        if (Settings.Default.MainWindowLeft >= 0)
+            this.Left = Settings.Default.MainWindowLeft;
+        if (Settings.Default.MainWindowMaximized)
+            this.WindowState = WindowState.Maximized;
+
         ViewModel.Loaded();
+    }
+
+    private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // Save window size and position to settings
+        Settings.Default.MainWindowMaximized = this.WindowState == WindowState.Maximized;
+        if (this.WindowState == WindowState.Normal)
+        {
+            Settings.Default.MainWindowWidth = this.Width;
+            Settings.Default.MainWindowHeight = this.Height;
+            Settings.Default.MainWindowTop = this.Top;
+            Settings.Default.MainWindowLeft = this.Left;
+        }
+        else
+        {
+            // Save RestoreBounds if maximized
+            Settings.Default.MainWindowWidth = this.RestoreBounds.Width;
+            Settings.Default.MainWindowHeight = this.RestoreBounds.Height;
+            Settings.Default.MainWindowTop = this.RestoreBounds.Top;
+            Settings.Default.MainWindowLeft = this.RestoreBounds.Left;
+        }
+        Settings.Default.Save();
     }
 
     #region INavigationWindow methods
