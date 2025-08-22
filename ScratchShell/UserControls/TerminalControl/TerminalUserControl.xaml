@@ -9,6 +9,12 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style TargetType="RichTextBox">
+            <Setter Property="SelectionBrush" Value="#FF00BFFF" /> <!-- DeepSkyBlue -->
+            <Setter Property="SelectionOpacity" Value="0.6" />
+        </Style>
+    </UserControl.Resources>
     <Border BorderBrush="Black" BorderThickness="1">
         <RichTextBox
             Name="TerminalBox"

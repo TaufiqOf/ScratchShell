@@ -7,8 +7,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using XtermSharp;
+using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -21,7 +24,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private double _charHeight = 16;
     private Typeface _typeface = new Typeface("Consolas");
 
-    private const double TerminalFontSize = 16; // Fixed font size for terminal
     private const double ExtraScrollPadding = 48; // Extra space in pixels for scrolling past last line
 
     private System.Windows.Threading.DispatcherTimer _resizeRedrawTimer;
@@ -29,6 +31,38 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Add a field to store the last rendered buffer snapshot
     private string[]? _lastRenderedBufferLines;
+
+    // Selection state for copy/paste
+    private bool _isSelecting = false;
+    private (int row, int col)? _selectionStart = null;
+    private (int row, int col)? _selectionEnd = null;
+    private bool _isCopyHighlight = false;
+    private SolidColorBrush _selectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 0, 120, 255));
+    private readonly System.Windows.Media.Color _defaultSelectionColor = System.Windows.Media.Color.FromArgb(80, 0, 120, 255);
+    private readonly System.Windows.Media.Color _copySelectionColor = System.Windows.Media.Color.FromArgb(180, 144, 238, 144); // LightGreen
+    private System.Windows.Threading.DispatcherTimer? _copyHighlightTimer;
+
+    public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
+        nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
+        new PropertyMetadata(new TerminalTheme(), OnThemeChanged));
+    public TerminalTheme Theme
+    {
+        get => (TerminalTheme)GetValue(ThemeProperty);
+        set => SetValue(ThemeProperty, value);
+    }
+
+    public void RefreshTheme()
+    {
+        ApplyThemeProperties();
+    }
+
+    private static void OnThemeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is GPTTerminalUserControl ctrl)
+        {
+            ctrl.ApplyThemeProperties();
+        }
+    }
 
     public GPTTerminalUserControl()
     {
@@ -97,8 +131,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             "W@gy",
             System.Globalization.CultureInfo.CurrentCulture,
             FlowDirection.LeftToRight,
-            _typeface,
-            TerminalFontSize,
+            new Typeface(Theme.FontFamily.Source),
+            Theme.FontSize,
             Brushes.Black,
             new NumberSubstitution(),
             1.0);
@@ -303,11 +337,277 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e)
     {
         TerminalCanvas.Focus();
+        var pos = e.GetPosition(TerminalCanvas);
+        int col = (int)(pos.X / _charWidth);
+        int row = (int)(pos.Y / _charHeight);
+
+        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            // Clear previous selection rectangles
+            foreach (var rect in _selectionHighlightRects)
+                RootGrid.Children.Remove(rect);
+            _selectionHighlightRects.Clear();
+            // Start new selection
+            _isSelecting = true;
+            _selectionStart = (row, col);
+            _selectionEnd = (row, col);
+            UpdateSelectionHighlightRect();
+            TerminalCanvas.CaptureMouse();
+        }
+        else if (e.ChangedButton == MouseButton.Right && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            // Ctrl+Right Click: Copy selection
+            if (_selectionStart.HasValue && _selectionEnd.HasValue)
+            {
+                string selectedText = GetSelectedText();
+                if (!string.IsNullOrEmpty(selectedText))
+                {
+                    Clipboard.SetText(selectedText);
+                    StartCopyHighlightTransition();
+                }
+            }
+            e.Handled = true;
+        }
+        else if (e.ChangedButton == MouseButton.Right && Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            // Alt+Right Click: Paste clipboard at input area
+            if (Clipboard.ContainsText())
+            {
+                string pasteText = Clipboard.GetText();
+                PasteAtInputArea(pasteText);
+            }
+            e.Handled = true;
+        }
     }
 
-    private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+    private void StartCopyHighlightTransition()
     {
-        // Cleanup if needed
+        _isCopyHighlight = true;
+        var animToGreen = new ColorAnimation
+        {
+            From = _defaultSelectionColor,
+            To = _copySelectionColor,
+            Duration = TimeSpan.FromMilliseconds(400), // Smooth transition to green
+            AutoReverse = false
+        };
+        animToGreen.Completed += (s, e) =>
+        {
+            // Hold green for 1.2s, then fade back
+            _copyHighlightTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
+            _copyHighlightTimer.Tick += (s2, e2) =>
+            {
+                _copyHighlightTimer.Stop();
+                var animBack = new ColorAnimation
+                {
+                    From = _copySelectionColor,
+                    To = _defaultSelectionColor,
+                    Duration = TimeSpan.FromMilliseconds(600),
+                    AutoReverse = false
+                };
+                animBack.Completed += (s3, e3) =>
+                {
+                    _isCopyHighlight = false;
+                    // Restore color to default
+                    foreach (var rect in _selectionHighlightRects)
+                    {
+                        if (rect.Fill is SolidColorBrush brush)
+                            brush.Color = _defaultSelectionColor;
+                    }
+                };
+                foreach (var rect in _selectionHighlightRects)
+                {
+                    if (rect.Fill is SolidColorBrush brush)
+                        brush.BeginAnimation(SolidColorBrush.ColorProperty, animBack);
+                }
+            };
+            _copyHighlightTimer.Start();
+        };
+        foreach (var rect in _selectionHighlightRects)
+        {
+            if (rect.Fill is SolidColorBrush brush)
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, animToGreen);
+        }
+    }
+
+    private void TerminalCanvas_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (_isSelecting && e.LeftButton == MouseButtonState.Pressed)
+        {
+            var pos = e.GetPosition(TerminalCanvas);
+            int col = (int)(pos.X / _charWidth);
+            int row = (int)(pos.Y / _charHeight);
+            _selectionEnd = (row, col);
+            UpdateSelectionHighlightRect();
+        }
+    }
+
+    private void TerminalCanvas_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_isSelecting && e.ChangedButton == MouseButton.Left)
+        {
+            _isSelecting = false;
+            TerminalCanvas.ReleaseMouseCapture();
+            // Finalize selection highlight
+            UpdateSelectionHighlightRect();
+        }
+    }
+
+    private readonly List<Rectangle> _selectionHighlightRects = new();
+
+    private void UpdateSelectionHighlightRect()
+    {
+        // Remove old rectangles
+        foreach (var rect in _selectionHighlightRects)
+        {
+            RootGrid.Children.Remove(rect);
+        }
+        _selectionHighlightRects.Clear();
+
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue)
+            return;
+        var (row1, col1) = _selectionStart.Value;
+        var (row2, col2) = _selectionEnd.Value;
+        int startRow = Math.Min(row1, row2);
+        int endRow = Math.Max(row1, row2);
+        int startCol = Math.Min(col1, col2);
+        int endCol = Math.Max(col1, col2);
+        for (int row = startRow; row <= endRow; row++)
+        {
+            int colStart = (row == startRow) ? startCol : 0;
+            int colEnd = (row == endRow) ? endCol : _cols - 1;
+            // Rectangle should be positioned relative to the TerminalCanvas inside the ScrollViewer
+            var rect = new Rectangle
+            {
+                Width = (colEnd - colStart + 1) * _charWidth,
+                Height = _charHeight,
+                Fill = _selectionBrush,
+                Opacity = 0.5,
+                IsHitTestVisible = false
+            };
+            rect.HorizontalAlignment = HorizontalAlignment.Left;
+            rect.VerticalAlignment = VerticalAlignment.Top;
+            // Offset by TerminalCanvas position in RootGrid
+            var canvasOffset = TerminalCanvas.TransformToAncestor(RootGrid).Transform(new Point(0, 0));
+            rect.Margin = new Thickness(canvasOffset.X + colStart * _charWidth, canvasOffset.Y + row * _charHeight, 0, 0);
+            Panel.SetZIndex(rect, 1000);
+            RootGrid.Children.Add(rect);
+            _selectionHighlightRects.Add(rect);
+        }
+    }
+
+    private void DrawSelection()
+    {
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue) return;
+        // If the canvas was just cleared (after RedrawTerminal), skip removal
+        bool hasSelectionRects = false;
+        for (int i = 0; i < TerminalCanvas.Children.Count; i++)
+        {
+            if (TerminalCanvas.Children[i] is Rectangle rect && rect.Tag as string == "SelectionRect")
+            {
+                hasSelectionRects = true;
+                break;
+            }
+        }
+        if (hasSelectionRects) {
+            for (int i = TerminalCanvas.Children.Count - 1; i >= 0; i--)
+            {
+                if (TerminalCanvas.Children[i] is Rectangle rect && rect.Tag as string == "SelectionRect")
+                    TerminalCanvas.Children.RemoveAt(i);
+            }
+        }
+        var (row1, col1) = _selectionStart.Value;
+        var (row2, col2) = _selectionEnd.Value;
+        int startRow = Math.Min(row1, row2);
+        int endRow = Math.Max(row1, row2);
+        int startCol = Math.Min(col1, col2);
+        int endCol = Math.Max(col1, col2);
+        for (int row = startRow; row <= endRow; row++)
+        {
+            int colStart = (row == startRow) ? startCol : 0;
+            int colEnd = (row == endRow) ? endCol : _cols - 1;
+            var rect = new Rectangle
+            {
+                Width = (colEnd - colStart + 1) * _charWidth,
+                Height = _charHeight,
+                Fill = _selectionBrush,
+                IsHitTestVisible = false,
+                Tag = "SelectionRect"
+            };
+            Canvas.SetLeft(rect, colStart * _charWidth);
+            Canvas.SetTop(rect, row * _charHeight);
+            TerminalCanvas.Children.Add(rect);
+        }
+    }
+
+    private string GetSelectedText()
+    {
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null) return string.Empty;
+        var (row1, col1) = _selectionStart.Value;
+        var (row2, col2) = _selectionEnd.Value;
+        int startRow = Math.Min(row1, row2);
+        int endRow = Math.Max(row1, row2);
+        int startCol = Math.Min(col1, col2);
+        int endCol = Math.Max(col1, col2);
+        var buffer = _terminal.Buffer;
+        var sb = new StringBuilder();
+        for (int row = startRow; row <= endRow; row++)
+        {
+            int colStart = (row == startRow) ? startCol : 0;
+            int colEnd = (row == endRow) ? endCol : _cols - 1;
+            if (row >= 0 && row < buffer.Lines.Length)
+            {
+                var line = buffer.Lines[row];
+                var lineSb = new StringBuilder();
+                for (int col = colStart; col <= colEnd && col < line.Length; col++)
+                {
+                    var cell = line[col];
+                    char c = cell.Code != 0 ? (char)cell.Code : ' ';
+                    lineSb.Append(c);
+                }
+                sb.Append(lineSb.ToString().TrimEnd());
+            }
+            if (row < endRow) sb.AppendLine();
+        }
+        return sb.ToString();
+    }
+
+    private void PasteAtInputArea(string text)
+    {
+        if (_terminal == null || IsReadOnly) return;
+        // Insert at current cursor position in input area (last line)
+        var buffer = _terminal.Buffer;
+        int row = buffer.Y + buffer.YBase;
+        int col = buffer.X;
+        var line = buffer.Lines[row];
+        // Insert text at cursor
+        foreach (char c in text)
+        {
+            if (col < line.Length)
+            {
+                var cell = line[col];
+                cell.Code = c;
+                line[col] = cell;
+            }
+            col++;
+        }
+        buffer.X = col;
+        RedrawTerminal(onlyRow: row);
+    }
+
+    // Change ApplyThemeProperties to public so ThemeUserControl can call it
+    public void ApplyThemeProperties()
+    {
+        _typeface = new Typeface(Theme.FontFamily.Source);
+        _charHeight = Theme.FontSize;
+        _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
+        // Redraw everything
+        RedrawTerminal();
+        // Only draw selection if there is an active selection
+        if (_selectionStart.HasValue && _selectionEnd.HasValue)
+            DrawSelection();
+        // Set background
+        if (TerminalCanvas != null)
+            TerminalCanvas.Background = Theme.Background;
     }
 
     private static Brush[] AnsiForeground = new Brush[] {
@@ -394,8 +694,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     }
                     bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
                     bool inverse = IsInverse(attr) ^ isCursor;
-                    Brush fg = GetAnsiForeground(attr, inverse);
-                    Brush bg = GetAnsiBackground(attr, inverse);
+                    // Determine foreground and background brushes
+                    Brush fg;
+                    Brush bg;
+                    if (attr == XtermSharp.CharData.DefaultAttr) {
+                        fg = Theme.Foreground;
+                        bg = Theme.Background;
+                    } else {
+                        fg = GetAnsiForeground(attr, inverse);
+                        bg = GetAnsiBackground(attr, inverse);
+                    }
                     FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
                     TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
                     if (isCursor)
@@ -413,10 +721,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                         var tb = new TextBlock
                         {
                             Text = ch.ToString(),
-                            FontFamily = new FontFamily("Consolas"),
-                            FontSize = TerminalFontSize,
+                            FontFamily = Theme.FontFamily,
+                            FontSize = Theme.FontSize,
                             Foreground = bg,
-                            Background = Brushes.Transparent,
+                            Background = Theme.Background, // Use theme background for character background
                             FontWeight = weight,
                             TextDecorations = deco
                         };
@@ -429,10 +737,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                         var tb = new TextBlock
                         {
                             Text = ch.ToString(),
-                            FontFamily = new FontFamily("Consolas"),
-                            FontSize = TerminalFontSize,
+                            FontFamily = Theme.FontFamily,
+                            FontSize = Theme.FontSize,
                             Foreground = fg,
-                            Background = bg,
+                            Background = Theme.Background, // Use theme background for character background
                             FontWeight = weight,
                             TextDecorations = deco
                         };
@@ -466,8 +774,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 }
                 bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
                 bool inverse = IsInverse(attr) ^ isCursor;
-                Brush fg = GetAnsiForeground(attr, inverse);
-                Brush bg = GetAnsiBackground(attr, inverse);
+                // Determine foreground and background brushes
+                Brush fg;
+                Brush bg;
+                if (attr == XtermSharp.CharData.DefaultAttr) {
+                    fg = Theme.Foreground;
+                    bg = Theme.Background;
+                } else {
+                    fg = GetAnsiForeground(attr, inverse);
+                    bg = GetAnsiBackground(attr, inverse);
+                }
                 FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
                 TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
                 if (isCursor)
@@ -485,10 +801,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     var tb = new TextBlock
                     {
                         Text = ch.ToString(),
-                        FontFamily = new FontFamily("Consolas"),
-                        FontSize = TerminalFontSize,
+                        FontFamily = Theme.FontFamily,
+                        FontSize = Theme.FontSize,
                         Foreground = bg,
-                        Background = Brushes.Transparent,
+                        Background = Theme.Background, // Use theme background for character background
                         FontWeight = weight,
                         TextDecorations = deco
                     };
@@ -501,10 +817,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     var tb = new TextBlock
                     {
                         Text = ch.ToString(),
-                        FontFamily = new FontFamily("Consolas"),
-                        FontSize = TerminalFontSize,
+                        FontFamily = Theme.FontFamily,
+                        FontSize = Theme.FontSize,
                         Foreground = fg,
-                        Background = bg,
+                        Background = Theme.Background, // Use theme background for character background
                         FontWeight = weight,
                         TextDecorations = deco
                     };

@@ -57,4 +57,7 @@ public partial class EasyTerminalUserControl : UserControl, ITerminal
     {
         Terminal.ConPTYTerm.WriteToTerm(output);
     }
+
+    public TerminalTheme Theme { get; set; } = new TerminalTheme();
+    public void RefreshTheme() { /* No-op or implement if needed */ }
 }

@@ -1,3 +1,5 @@
+using System.Windows;
+
 namespace ScratchShell.UserControls;
 
 public interface ITerminal
@@ -19,4 +21,8 @@ public interface ITerminal
     void AddOutput(string output);
 
     void AddInput(string input);
+
+    TerminalTheme Theme { get; set; }
+
+    void RefreshTheme();
 }

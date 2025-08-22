@@ -7,6 +7,7 @@
     xmlns:local1="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:gtp="clr-namespace:ScratchShell.UserControls.GTPTerminalControl"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
@@ -38,6 +39,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" /> <!-- Theme Toggle Button -->
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
@@ -79,10 +81,22 @@
                     Unchecked="SnippetToggleButtonUnchecked">
                     <ui:SymbolIcon Symbol="Code20" />
                 </ToggleButton>
+                <!--  Theme Toggle Button  -->
+                <ToggleButton
+                    x:Name="ThemeToggleButton"
+                    Grid.Column="5"
+                    Margin="2"
+                    VerticalAlignment="Stretch"
+                    Checked="ThemeToggleButtonChecked"
+                    Unchecked="ThemeToggleButtonUnchecked"
+                    FontSize="20"
+                    ToolTip="Show/hide theming panel">
+                    <ui:SymbolIcon Symbol="ColorBackground20" />
+                </ToggleButton>
                 <!--  Full Screen  -->
                 <ui:Button
                     x:Name="FullScreenButton"
-                    Grid.Column="4"
+                    Grid.Column="6"
                     Margin="2"
                     VerticalAlignment="Stretch"
                     Click="FullScreenButton_Click"
@@ -105,5 +119,13 @@
             Width="300"
             Margin="10"
             Visibility="Collapsed" />
+        <!-- Theming panel -->
+        <gtp:ThemeUserControl
+            x:Name="ThemeControl"
+            Grid.Column="1"
+            Width="300"
+            Margin="10"
+            Visibility="Collapsed"
+            Terminal="{Binding ElementName=TerminalContentControl, Path=Content}" />
     </Grid>
 </UserControl>

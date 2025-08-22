@@ -206,12 +206,29 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private void SnippetToggleButtonChecked(object sender, RoutedEventArgs e)
     {
         SnippetControl.Visibility = Visibility.Visible;
+        ThemeControl.Visibility = Visibility.Collapsed;
+        if (ThemeToggleButton.IsChecked == true)
+            ThemeToggleButton.IsChecked = false;
     }
 
     private void SnippetToggleButtonUnchecked(object sender, RoutedEventArgs e)
     {
         SnippetControl.Visibility = Visibility.Collapsed;
     }
+
+    private void ThemeToggleButtonChecked(object sender, RoutedEventArgs e)
+    {
+        ThemeControl.Visibility = Visibility.Visible;
+        SnippetControl.Visibility = Visibility.Collapsed;
+        if (SnippetToggleButton.IsChecked == true)
+            SnippetToggleButton.IsChecked = false;
+    }
+
+    private void ThemeToggleButtonUnchecked(object sender, RoutedEventArgs e)
+    {
+        ThemeControl.Visibility = Visibility.Collapsed;
+    }
+
     private async Task SnippetControlOnNewSnippet(SnippetUserControl obj)
     {
         if (_contentDialogService is not null)

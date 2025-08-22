@@ -46,6 +46,10 @@ public partial class TerminalUserControl : UserControl, ITerminal
 
     public int Height => this.Height;
 
+    public TerminalTheme Theme { get; set; } = new TerminalTheme();
+
+    public void RefreshTheme() { /* No-op or implement if needed */ }
+
     public TerminalUserControl()
     {
         InitializeComponent();
@@ -53,12 +57,67 @@ public partial class TerminalUserControl : UserControl, ITerminal
 
         TerminalBox.PreviewKeyDown += TerminalBox_PreviewKeyDown;
         TerminalBox.SizeChanged += TerminalBoxSizeChanged;
+        TerminalBox.PreviewMouseRightButtonDown += TerminalBox_PreviewMouseRightButtonDown;
+        TerminalBox.PreviewMouseRightButtonUp += TerminalBox_PreviewMouseRightButtonUp;
         TerminalState = new TerminalState();
         TerminalState.PropertyChanged += TerminalState_PropertyChanged;
         // Bind copy/paste commands
         TerminalBox.CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
         TerminalBox.CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
         AddOutput("");
+    }
+
+    private bool _ctrlRightClickCopy = false;
+    private bool _altRightClickPaste = false;
+
+    private void TerminalBox_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && TerminalBox.Selection != null && !TerminalBox.Selection.IsEmpty)
+        {
+            _ctrlRightClickCopy = true;
+            // Only handle if we will copy on MouseUp
+            // Do not set e.Handled here so selection works
+        }
+        else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && !IsReadOnly && promptStart != null)
+        {
+            _altRightClickPaste = true;
+            // Only handle if we will paste on MouseUp
+            // Do not set e.Handled here so selection works
+        }
+        else
+        {
+            _ctrlRightClickCopy = false;
+            _altRightClickPaste = false;
+        }
+    }
+
+    private void TerminalBox_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_ctrlRightClickCopy)
+        {
+            if (TerminalBox.Selection != null && !TerminalBox.Selection.IsEmpty)
+            {
+                Clipboard.SetText(TerminalBox.Selection.Text);
+                e.Handled = true;
+            }
+            _ctrlRightClickCopy = false;
+        }
+        else if (_altRightClickPaste)
+        {
+            if (Clipboard.ContainsText() && !IsReadOnly && promptStart != null)
+            {
+                string pasteText = Clipboard.GetText(TextDataFormat.Text);
+                pasteText = pasteText.Replace("\r", "").Replace("\n", "");
+                // Move caret to input area if not already there
+                if (!IsCaretAfterPrompt())
+                {
+                    TerminalBox.CaretPosition = TerminalBox.Document.ContentEnd;
+                }
+                TerminalBox.CaretPosition.InsertTextInRun(pasteText);
+                e.Handled = true;
+            }
+            _altRightClickPaste = false;
+        }
     }
 
     private void TerminalBoxSizeChanged(object sender, SizeChangedEventArgs e)

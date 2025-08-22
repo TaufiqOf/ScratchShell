@@ -384,5 +384,8 @@ public partial class XTermTerminalUserControl : UserControl, ITerminal
         TerminalBox.Focus();
     }
 
+    public TerminalTheme Theme { get; set; } = new TerminalTheme();
+    public void RefreshTheme() { /* No-op or implement if needed */ }
+
     #endregion Input Handling
 }
