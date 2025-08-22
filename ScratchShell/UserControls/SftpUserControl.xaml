@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:browsercontrol="clr-namespace:ScratchShell.UserControls.BrowserControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -93,7 +92,7 @@
             Height="200"
             Visibility="Collapsed">
             <!--  Terminal  -->
-            <local:TerminalUserControl
+            <ui:TextBox
                 x:Name="Terminal"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"

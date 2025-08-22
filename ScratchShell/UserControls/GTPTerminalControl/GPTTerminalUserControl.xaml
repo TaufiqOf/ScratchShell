@@ -18,18 +18,34 @@
             Background="Black"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto">
-            <Canvas
-                x:Name="TerminalCanvas"
-                Background="Black"
-                Focusable="True"
-                KeyDown="TerminalControl_KeyDown"
-                MouseDown="TerminalControl_MouseDown"
-                MouseMove="TerminalCanvas_MouseMove"
-                MouseUp="TerminalCanvas_MouseUp">
-                <Canvas.RenderTransform>
-                    <TranslateTransform x:Name="CanvasTransform" />
-                </Canvas.RenderTransform>
-            </Canvas>
+            <Grid Background="Black">
+                <!--  Bitmap-based fast rendering  -->
+                <Image
+                    x:Name="TerminalBitmapImage"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Panel.ZIndex="0"
+                    Opacity="1"
+                    SnapsToDevicePixels="True"
+                    Stretch="None" />
+
+                <!--  Canvas for overlays (selection, cursor, etc.)  -->
+                <Canvas
+                    x:Name="TerminalCanvas"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Panel.ZIndex="1"
+                    Background="Transparent"
+                    Focusable="True"
+                    KeyDown="TerminalControl_KeyDown"
+                    MouseDown="TerminalControl_MouseDown"
+                    MouseMove="TerminalCanvas_MouseMove"
+                    MouseUp="TerminalCanvas_MouseUp">
+                    <Canvas.RenderTransform>
+                        <TranslateTransform x:Name="CanvasTransform" />
+                    </Canvas.RenderTransform>
+                </Canvas>
+            </Grid>
         </ScrollViewer>
 
         <!--  Cursor  -->
@@ -45,5 +61,6 @@
                 <TranslateTransform x:Name="CursorTransform" />
             </Rectangle.RenderTransform>
         </Rectangle>
+
     </Grid>
 </UserControl>

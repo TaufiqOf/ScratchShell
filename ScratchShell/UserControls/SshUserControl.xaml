@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:gtp="clr-namespace:ScratchShell.UserControls.GTPTerminalControl"
-    xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
     xmlns:local1="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:themecontrol="clr-namespace:ScratchShell.UserControls.ThemeControl"
@@ -118,7 +117,7 @@
         <local1:SnippetUserControl
             x:Name="SnippetControl"
             Grid.Column="1"
-            Width="300"
+            Width="400"
             Margin="10"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
@@ -127,7 +126,7 @@
         <themecontrol:ThemeUserControl
             x:Name="ThemeControl"
             Grid.Column="1"
-            Width="300"
+            Width="400"
             Margin="10"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"

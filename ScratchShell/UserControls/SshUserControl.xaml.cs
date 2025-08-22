@@ -1,8 +1,6 @@
 ﻿using Renci.SshNet;
 using ScratchShell.Services;
-using ScratchShell.UserControls.EasyTerminalControl;
 using ScratchShell.UserControls.GTPTerminalControl;
-using ScratchShell.UserControls.XtermTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
 using ScratchShell.Views.Windows;

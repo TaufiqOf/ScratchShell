@@ -86,10 +86,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         if (_server == null)
         {
-            Terminal.AddOutput("Server is not initialized.");
             return;
         }
-        Terminal.AddOutput($"Connecting to {_server.Name} at {_server.Host}:{_server.Port} using {_server.ProtocolType} protocol.");
         // Here you would typically initiate the SSH connection using the server details.
         // For example, you might call a method to connect to the server.
         await ConnectToServer(_server);
@@ -118,13 +116,13 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             await _sftpClient.ConnectAsync(CancellationToken.None);
 
-            Terminal.AddOutput($"Connected to {server.Name} at {server.Host}:{server.Port}.");
+            Log($"Connected to {server.Name} at {server.Host}:{server.Port}.");
             await GoToFolder("~");
             this.TopToolbar.IsEnabled = true;
         }
         catch (Exception ex)
         {
-            Terminal.AddOutput($"Failed to connect to {server.Name}: {ex.Message}");
+            Log($"Failed to connect to {server.Name}: {ex.Message}");
             return;
         }
         ShowProgress(false);
@@ -144,7 +142,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (Exception ex)
         {
-            Terminal.AddOutput($"Failed to list directory on {_server.Name}: {ex.Message}");
+            Log($"Failed to list directory on {_server.Name}: {ex.Message}");
             yield break; // 👈 stop enumeration cleanly
         }
 
@@ -223,11 +221,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
                     await Task.Run(() => DownloadDirectory(item.FullPath, localPath));
 
-                    Terminal.AddOutput($"Downloaded folder {item.Name} to {localPath}");
+                    Log($"Downloaded folder {item.Name} to {localPath}");
                 }
                 catch (Exception ex)
                 {
-                    Terminal.AddOutput($"Failed to download folder {item.Name}: {ex.Message}");
+                    Log($"Failed to download folder {item.Name}: {ex.Message}");
                 }
             }
         }
@@ -249,11 +247,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
                     {
                         await Task.Run(() => _sftpClient.DownloadFile(item.FullPath, fs));
                     }
-                    Terminal.AddOutput($"Downloaded {item.Name} to {saveDialog.FileName}");
+                    Log($"Downloaded {item.Name} to {saveDialog.FileName}");
                 }
                 catch (Exception ex)
                 {
-                    Terminal.AddOutput($"Failed to download {item.Name}: {ex.Message}");
+                    Log($"Failed to download {item.Name}: {ex.Message}");
                 }
             }
         }
@@ -310,12 +308,12 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
                 {
                     await Task.Run(() => _sftpClient.UploadFile(fs, remotePath));
                 }
-                Terminal.AddOutput($"Uploaded {localFilePath} to {remotePath}");
+                Log($"Uploaded {localFilePath} to {remotePath}");
                 await GoToFolder(PathTextBox.Text); // refresh
             }
             catch (Exception ex)
             {
-                Terminal.AddOutput($"Failed to upload {localFilePath}: {ex.Message}");
+                Log($"Failed to upload {localFilePath}: {ex.Message}");
             }
         }
         ShowProgress(false);
@@ -325,14 +323,14 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         _clipboardPath = item.FullPath;
         _clipboardIsCut = false;
-        Terminal.AddOutput($"Copied {item.Name} to clipboard.");
+        Log($"Copied {item.Name} to clipboard.");
     }
 
     private void BrowserCutRequested(BrowserItem item)
     {
         _clipboardPath = item.FullPath;
         _clipboardIsCut = true;
-        Terminal.AddOutput($"Cut {item.Name} to clipboard.");
+        Log($"Cut {item.Name} to clipboard.");
     }
 
     private async void BrowserPasteRequested(BrowserItem item)
@@ -340,7 +338,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         ShowProgress(true);
         if (_clipboardPath == null)
         {
-            Terminal.AddOutput("Clipboard is empty.");
+            Log("Clipboard is empty.");
             return;
         }
 
@@ -360,11 +358,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (_clipboardIsCut)
             {
                 await Task.Run(() => _sftpClient.DeleteFile(_clipboardPath));
-                Terminal.AddOutput($"Moved {_clipboardPath} to {destinationPath}");
+                Log($"Moved {_clipboardPath} to {destinationPath}");
             }
             else
             {
-                Terminal.AddOutput($"Copied {_clipboardPath} to {destinationPath}");
+                Log($"Copied {_clipboardPath} to {destinationPath}");
             }
 
             _clipboardPath = null;
@@ -372,9 +370,14 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (Exception ex)
         {
-            Terminal.AddOutput($"Paste failed: {ex.Message}");
+            Log($"Paste failed: {ex.Message}");
         }
         ShowProgress(false);
+    }
+
+    private void Log(string message)
+    {
+        Terminal.Text = Terminal.Text + message + "\n";
     }
 
     private void LogToggleButtonChecked(object sender, RoutedEventArgs e)

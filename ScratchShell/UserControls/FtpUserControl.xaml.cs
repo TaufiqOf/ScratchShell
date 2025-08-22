@@ -19,14 +19,10 @@ public partial class FtpUserControl : UserControl, IWorkspaceControl
     {
         InitializeComponent();
         this.server = server;
-        Terminal.InputLineSyntax = ">";
-        Terminal.CommandEntered += TerminalSentMessage;
     }
 
     private void TerminalSentMessage(ITerminal obj, string command)
     {
-        var output = $"{Terminal.Output}\nYou Said to the FTP=>{command}";
-        Terminal.AddOutput(output);
     }
 
     public void Dispose()

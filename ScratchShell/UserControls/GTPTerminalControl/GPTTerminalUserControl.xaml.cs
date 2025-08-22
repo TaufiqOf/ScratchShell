@@ -1,5 +1,5 @@
-﻿using ScratchShell.UserControls.TerminalControl;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Printing;
 using System.Text;
@@ -13,6 +13,10 @@ using XtermSharp;
 using System.ComponentModel;
 using System.Collections.Generic;
 using ScratchShell.UserControls.ThemeControl;
+using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
+using System.IO;
+using System.Drawing.Imaging;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -582,8 +586,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
         if (TerminalCanvas != null)
             TerminalCanvas.Background = Theme.Background;
-        // Use the same logic as resize to update everything
-        UpdateTerminalLayoutAndSize();
+        // Only update char size and redraw, do not resize or clear buffer on theme change
+        UpdateCharSize();
+        RedrawTerminal();
         // Clear old selection highlights and selection state
         ClearSelectionHighlightRects();
         _selectionStart = null;
@@ -601,6 +606,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionHighlightRects.Clear();
     }
 
+    // Cache last used control size to avoid unnecessary buffer resize on font change
+    private Size _lastLayoutSize = Size.Empty;
+    private int _lastCols = -1;
+    private int _lastRows = -1;
+
     // Helper to update char size, canvas size, and terminal size (used for both resize and theme change)
     private void UpdateTerminalLayoutAndSize(Size? newSize = null)
     {
@@ -610,7 +620,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int rows = Math.Max(2, (int)(size.Height / _charHeight));
         TerminalCanvas.Width = cols * _charWidth;
         TerminalCanvas.Height = rows * _charHeight;
-        _terminal?.Resize(cols, rows);
+        // Only resize terminal if control pixel size has changed
+        if (_terminal != null && (size != _lastLayoutSize || cols != _lastCols || rows != _lastRows))
+        {
+            _terminal.Resize(cols, rows);
+            _lastLayoutSize = size;
+            _lastCols = cols;
+            _lastRows = rows;
+        }
         TerminalSizeChanged?.Invoke(this, size);
         RedrawTerminal();
     }
@@ -664,6 +681,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     // Redraws the terminal. If onlyRow is provided, only redraw that row.
     private void RedrawTerminal(int? onlyRow = null)
     {
+        Debug.WriteLine($"RedrawTerminal called. onlyRow={onlyRow}");
         if (_terminal == null) return;
         var buffer = _terminal.Buffer;
         TerminalCanvas.Width = _terminal.Cols * _charWidth;
@@ -674,182 +692,137 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
         if (onlyRow.HasValue)
         {
-            // Remove all children for that row (both text and cursor rects)
-            double y = onlyRow.Value * _charHeight;
-            for (int i = TerminalCanvas.Children.Count - 1; i >= 0; i--)
-            {
-                var child = TerminalCanvas.Children[i] as FrameworkElement;
-                if (child != null && Math.Abs(Canvas.GetTop(child) - y) < 0.1)
-                    TerminalCanvas.Children.RemoveAt(i);
-            }
-            // Redraw only that row
-            int row = onlyRow.Value;
-            if (row >= 0 && row < buffer.Lines.Length)
-            {
-                var line = buffer.Lines[row];
-                for (int col = 0; col < _terminal.Cols; col++)
-                {
-                    char ch = ' ';
-                    int attr = XtermSharp.CharData.DefaultAttr;
-                    if (col < line.Length)
-                    {
-                        var cell = line[col];
-                        ch = cell.Code != 0 ? (char)cell.Code : ' ';
-                        attr = cell.Attribute;
-                    }
-                    bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
-                    bool inverse = IsInverse(attr) ^ isCursor;
-                    // Determine foreground and background brushes
-                    Brush fg;
-                    Brush bg;
-                    if (attr == XtermSharp.CharData.DefaultAttr) {
-                        fg = Theme.Foreground;
-                        bg = Theme.Background;
-                    } else {
-                        fg = GetAnsiForeground(attr, inverse);
-                        bg = GetAnsiBackground(attr, inverse);
-                    }
-                    FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
-                    TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
-                    if (isCursor)
-                    {
-                        var rect = new Rectangle
-                        {
-                            Width = _charWidth,
-                            Height = _charHeight,
-                            Fill = fg,
-                            Opacity = 0.8
-                        };
-                        Canvas.SetLeft(rect, col * _charWidth);
-                        Canvas.SetTop(rect, row * _charHeight);
-                        TerminalCanvas.Children.Add(rect);
-                        var tb = new TextBlock
-                        {
-                            Text = ch.ToString(),
-                            FontFamily = Theme.FontFamily,
-                            FontSize = Theme.FontSize,
-                            Foreground = bg,
-                            Background = Theme.Background, // Use theme background for character background
-                            FontWeight = weight,
-                            TextDecorations = deco
-                        };
-                        Canvas.SetLeft(tb, col * _charWidth);
-                        Canvas.SetTop(tb, row * _charHeight);
-                        TerminalCanvas.Children.Add(tb);
-                    }
-                    else
-                    {
-                        var tb = new TextBlock
-                        {
-                            Text = ch.ToString(),
-                            FontFamily = Theme.FontFamily,
-                            FontSize = Theme.FontSize,
-                            Foreground = fg,
-                            Background = Theme.Background, // Use theme background for character background
-                            FontWeight = weight,
-                            TextDecorations = deco
-                        };
-                        Canvas.SetLeft(tb, col * _charWidth);
-                        Canvas.SetTop(tb, row * _charHeight);
-                        TerminalCanvas.Children.Add(tb);
-                    }
-                }
-                // Update snapshot for this row
-                if (_lastRenderedBufferLines != null && row < _lastRenderedBufferLines.Length)
-                {
-                    _lastRenderedBufferLines[row] = BufferLineToString(line, _terminal.Cols);
-                }
-            }
-            return;
+            onlyRow = null;
         }
 
-        // Full redraw (existing logic)
-        TerminalCanvas.Children.Clear();
-        for (int row = 0; row < buffer.Lines.Length; row++) {
-            var line = buffer.Lines[row];
-            for (int col = 0; col < _terminal.Cols; col++)
-            {
-                char ch = ' ';
-                int attr = XtermSharp.CharData.DefaultAttr;
-                if (col < line.Length)
-                {
-                    var cell = line[col];
-                    ch = cell.Code != 0 ? (char)cell.Code : ' ';
-                    attr = cell.Attribute;
-                }
-                bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
-                bool inverse = IsInverse(attr) ^ isCursor;
-                // Determine foreground and background brushes
-                Brush fg;
-                Brush bg;
-                if (attr == XtermSharp.CharData.DefaultAttr) {
-                    fg = Theme.Foreground;
-                    bg = Theme.Background;
-                } else {
-                    fg = GetAnsiForeground(attr, inverse);
-                    bg = GetAnsiBackground(attr, inverse);
-                }
-                FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
-                TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
-                if (isCursor)
-                {
-                    var rect = new Rectangle
-                    {
-                        Width = _charWidth,
-                        Height = _charHeight,
-                        Fill = fg,
-                        Opacity = 0.8
-                    };
-                    Canvas.SetLeft(rect, col * _charWidth);
-                    Canvas.SetTop(rect, row * _charHeight);
-                    TerminalCanvas.Children.Add(rect);
-                    var tb = new TextBlock
-                    {
-                        Text = ch.ToString(),
-                        FontFamily = Theme.FontFamily,
-                        FontSize = Theme.FontSize,
-                        Foreground = bg,
-                        Background = Theme.Background, // Use theme background for character background
-                        FontWeight = weight,
-                        TextDecorations = deco
-                    };
-                    Canvas.SetLeft(tb, col * _charWidth);
-                    Canvas.SetTop(tb, row * _charHeight);
-                    TerminalCanvas.Children.Add(tb);
-                }
-                else
-                {
-                    var tb = new TextBlock
-                    {
-                        Text = ch.ToString(),
-                        FontFamily = Theme.FontFamily,
-                        FontSize = Theme.FontSize,
-                        Foreground = fg,
-                        Background = Theme.Background, // Use theme background for character background
-                        FontWeight = weight,
-                        TextDecorations = deco
-                    };
-                    Canvas.SetLeft(tb, col * _charWidth);
-                    Canvas.SetTop(tb, row * _charHeight);
-                    TerminalCanvas.Children.Add(tb);
-                }
-            }
-        }
-        if (contentHeight < visibleHeight)
+        int cols = _terminal.Cols;
+        int rows = buffer.Lines.Length;
+        double charWidth = _charWidth;
+        double charHeight = _charHeight;
+        // Extract and freeze all DependencyObject values on the UI thread
+        var theme = Theme;
+        var typeface = _typeface;
+        var fgBrush = (theme.Foreground as SolidColorBrush)?.CloneCurrentValue() ?? Brushes.LightGray.CloneCurrentValue();
+        var bgBrush = (theme.Background as SolidColorBrush)?.CloneCurrentValue() ?? Brushes.Black.CloneCurrentValue();
+        fgBrush.Freeze();
+        bgBrush.Freeze();
+        var fontSize = theme.FontSize;
+        var fontFamily = theme.FontFamily.Source; // Use string name
+
+        int pixelWidth = (int)Math.Ceiling(cols * charWidth);
+        int pixelHeight = (int)Math.Ceiling(rows * charHeight);
+        Debug.WriteLine($"Bitmap size: {pixelWidth}x{pixelHeight}");
+
+        Task.Run(() =>
         {
-            var spacer = new Rectangle
+            try
             {
-                Width = TerminalCanvas.Width,
-                Height = ExtraScrollPadding,
-                Fill = Brushes.Transparent
-            };
-            Canvas.SetLeft(spacer, 0);
-            Canvas.SetTop(spacer, contentHeight);
-            TerminalCanvas.Children.Add(spacer);
-        }
-        if (Cursor != null)
-            Cursor.Visibility = Visibility.Collapsed;
-        // Update the buffer snapshot after a full redraw
+                var dv = new DrawingVisual();
+                using (var dc = dv.RenderOpen())
+                {
+                    // Fill background
+                    dc.DrawRectangle(bgBrush, null, new Rect(0, 0, pixelWidth, pixelHeight));
+                    for (int row = 0; row < rows; row++)
+                    {
+                        var line = buffer.Lines[row];
+                        for (int col = 0; col < cols; col++)
+                        {
+                            char ch = ' ';
+                            int attr = XtermSharp.CharData.DefaultAttr;
+                            if (col < line.Length)
+                            {
+                                var cell = line[col];
+                                ch = cell.Code != 0 ? (char)cell.Code : ' ';
+                                attr = cell.Attribute;
+                            }
+                            bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
+                            bool inverse = IsInverse(attr) ^ isCursor;
+                            Brush fg;
+                            Brush bg;
+                            if (attr == XtermSharp.CharData.DefaultAttr)
+                            {
+                                fg = fgBrush;
+                                bg = bgBrush;
+                            }
+                            else
+                            {
+                                fg = GetAnsiForeground(attr, inverse);
+                                bg = GetAnsiBackground(attr, inverse);
+                            }
+                            FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
+                            TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
+                            // Draw background for each cell
+                            dc.DrawRectangle(bg, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
+                            // Draw character
+                            var ft = new FormattedText(
+                                ch.ToString(),
+                                System.Globalization.CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                new Typeface(new FontFamily(fontFamily), FontStyles.Normal, weight, FontStretches.Normal),
+                                fontSize,
+                                fg,
+                                VisualTreeHelper.GetDpi(this).PixelsPerDip
+                            );
+                            dc.DrawText(ft, new Point(col * charWidth, row * charHeight));
+                            // Draw cursor overlay
+                            if (isCursor)
+                            {
+                                dc.DrawRectangle(fg, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
+                                var ftCursor = new FormattedText(
+                                    ch.ToString(),
+                                    System.Globalization.CultureInfo.CurrentCulture,
+                                    FlowDirection.LeftToRight,
+                                    new Typeface(new FontFamily(fontFamily), FontStyles.Normal, weight, FontStretches.Normal),
+                                    fontSize,
+                                    bg,
+                                    VisualTreeHelper.GetDpi(this).PixelsPerDip
+                                );
+                                dc.DrawText(ftCursor, new Point(col * charWidth, row * charHeight));
+                            }
+                        }
+                    }
+                }
+                var bmp = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32);
+                bmp.Render(dv);
+
+                BitmapImage loadedImg = null;
+                try
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        var encoder = new PngBitmapEncoder();
+                        encoder.Frames.Add(BitmapFrame.Create(bmp));
+                        encoder.Save(ms);
+                        ms.Seek(0, SeekOrigin.Begin);
+                        loadedImg = new BitmapImage();
+                        loadedImg.BeginInit();
+                        loadedImg.CacheOption = BitmapCacheOption.OnLoad;
+                        loadedImg.StreamSource = ms;
+                        loadedImg.EndInit();
+                        loadedImg.Freeze();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Exception creating in-memory PNG: {ex}");
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    TerminalBitmapImage.Source = loadedImg;
+                    TerminalBitmapImage.Width = pixelWidth;
+                    TerminalBitmapImage.Height = pixelHeight;
+                    TerminalCanvas.Width = pixelWidth;
+                    TerminalCanvas.Height = pixelHeight;
+                    if (Cursor != null)
+                        Cursor.Visibility = Visibility.Collapsed;
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in RedrawTerminal Task: {ex}");
+            }
+        });
         _lastRenderedBufferLines = new string[buffer.Lines.Length];
         for (int row = 0; row < buffer.Lines.Length; row++)
         {
