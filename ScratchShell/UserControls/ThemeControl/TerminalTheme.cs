@@ -1,5 +1,7 @@
 using System.Windows.Media;
 
+namespace ScratchShell.UserControls.ThemeControl;
+
 public class TerminalTheme
 {
     public FontFamily FontFamily { get; set; } = new FontFamily("Consolas");

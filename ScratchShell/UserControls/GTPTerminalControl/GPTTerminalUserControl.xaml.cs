@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using XtermSharp;
 using System.ComponentModel;
 using System.Collections.Generic;
+using ScratchShell.UserControls.ThemeControl;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 

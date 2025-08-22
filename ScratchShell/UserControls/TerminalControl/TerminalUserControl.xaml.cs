@@ -1,4 +1,5 @@
 ﻿using ScratchShell.UserControls.TerminalControl.Parser;
+using ScratchShell.UserControls.ThemeControl;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Controls;

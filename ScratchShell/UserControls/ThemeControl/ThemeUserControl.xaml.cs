@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Linq;
 
-namespace ScratchShell.UserControls.GTPTerminalControl;
+namespace ScratchShell.UserControls.ThemeControl;
 
 public partial class ThemeUserControl : UserControl
 {

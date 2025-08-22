@@ -1,3 +1,4 @@
+using ScratchShell.UserControls.ThemeControl;
 using System.Diagnostics;
 using System.Text;
 using System.Windows.Controls;

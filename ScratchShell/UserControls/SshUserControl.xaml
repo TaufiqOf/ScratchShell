@@ -7,6 +7,7 @@
     xmlns:local="clr-namespace:ScratchShell.UserControls.TerminalControl"
     xmlns:local1="clr-namespace:ScratchShell.UserControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:themecontrol="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
@@ -123,7 +124,7 @@
             VerticalAlignment="Stretch"
             Visibility="Collapsed" />
         <!--  Theming panel  -->
-        <gtp:ThemeUserControl
+        <themecontrol:ThemeUserControl
             x:Name="ThemeControl"
             Grid.Column="1"
             Width="300"

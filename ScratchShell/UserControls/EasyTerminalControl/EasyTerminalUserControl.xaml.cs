@@ -1,4 +1,5 @@
 ﻿using EasyWindowsTerminalControl;
+using ScratchShell.UserControls.ThemeControl;
 using System.Windows.Controls;
 using System.Windows.Media;
 

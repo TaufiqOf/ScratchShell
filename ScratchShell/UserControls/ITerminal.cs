@@ -1,3 +1,4 @@
+using ScratchShell.UserControls.ThemeControl;
 using System.Windows;
 
 namespace ScratchShell.UserControls;
