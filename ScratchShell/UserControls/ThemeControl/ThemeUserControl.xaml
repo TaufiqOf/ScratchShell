@@ -2,12 +2,11 @@
     x:Class="ScratchShell.UserControls.ThemeControl.ThemeUserControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:colorPicker="clr-namespace:ColorPicker;assembly=ColorPicker"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    d:DesignHeight="450"
-    d:DesignWidth="350"
     mc:Ignorable="d">
 
     <ui:Card
@@ -113,99 +112,118 @@
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Text="Color Settings" />
 
-                    <!--  Foreground Color  -->
+                    <!--  Color Type Selection  -->
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="80" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             VerticalAlignment="Center"
                             FontWeight="Medium"
-                            Text="Text:" />
-                        <Border
-                            x:Name="ForegroundPreview"
+                            Text="Editing:" />
+                        <ComboBox
+                            x:Name="ColorTypeComboBox"
                             Grid.Column="1"
-                            Height="32"
-                            Margin="0,0,8,0"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontWeight="Medium"
-                                Text="Sample" />
-                        </Border>
-                        <ui:Button
-                            x:Name="ForegroundButton"
-                            Grid.Column="2"
-                            Click="ForegroundButton_Click"
-                            Content="Pick"
-                            Icon="{ui:SymbolIcon ColorBackground24}" />
+                            SelectionChanged="ColorTypeComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Text Color" Tag="Foreground" />
+                            <ComboBoxItem Content="Background Color" Tag="Background" />
+                            <ComboBoxItem Content="Selection Color" Tag="Selection" />
+                        </ComboBox>
                     </Grid>
 
-                    <!--  Background Color  -->
+                    <!--  Color Previews  -->
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontWeight="Medium"
-                            Text="Background:" />
-                        <Border
-                            x:Name="BackgroundPreview"
-                            Grid.Column="1"
-                            Height="32"
-                            Margin="0,0,8,0"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4" />
-                        <ui:Button
-                            x:Name="BackgroundButton"
-                            Grid.Column="2"
-                            Click="BackgroundButton_Click"
-                            Content="Pick"
-                            Icon="{ui:SymbolIcon ColorBackground24}" />
+
+                        <!--  Foreground Preview  -->
+                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                            <TextBlock
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Text="Text" />
+                            <Border
+                                x:Name="ForegroundPreview"
+                                Height="32"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="ForegroundPreview_MouseLeftButtonDown">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    Text="Sample" />
+                            </Border>
+                        </StackPanel>
+
+                        <!--  Background Preview  -->
+                        <StackPanel Grid.Column="1" Margin="2,0,2,0">
+                            <TextBlock
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Text="Background" />
+                            <Border
+                                x:Name="BackgroundPreview"
+                                Height="32"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="BackgroundPreview_MouseLeftButtonDown" />
+                        </StackPanel>
+
+                        <!--  Selection Preview  -->
+                        <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                            <TextBlock
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Center"
+                                FontSize="12"
+                                Text="Selection" />
+                            <Border
+                                x:Name="SelectionPreview"
+                                Height="32"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Cursor="Hand"
+                                MouseLeftButtonDown="SelectionPreview_MouseLeftButtonDown">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    Foreground="White"
+                                    Text="Selected" />
+                            </Border>
+                        </StackPanel>
                     </Grid>
 
-                    <!--  Selection Color  -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="80" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock
-                            VerticalAlignment="Center"
-                            FontWeight="Medium"
-                            Text="Selection:" />
-                        <Border
-                            x:Name="SelectionPreview"
-                            Grid.Column="1"
-                            Height="32"
-                            Margin="0,0,8,0"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <TextBlock
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontWeight="Medium"
-                                Foreground="White"
-                                Text="Selected" />
-                        </Border>
-                        <ui:Button
-                            x:Name="SelectionButton"
-                            Grid.Column="2"
-                            Click="SelectionButton_Click"
-                            Content="Pick"
-                            Icon="{ui:SymbolIcon ColorBackground24}" />
-                    </Grid>
+                    <!--  Color Picker  -->
+                    <colorPicker:StandardColorPicker
+                        x:Name="MainColorPicker"
+                        Width="300"
+                        Height="280"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        ColorChanged="MainColorPicker_ColorChanged"
+                        ShowAlpha="False" />
+
+                    <!--  Terminal Color Presets  -->
+                    <TextBlock
+                        Margin="0,12,0,8"
+                        FontSize="12"
+                        FontWeight="Medium"
+                        Text="Terminal Presets:" />
+                    <WrapPanel x:Name="ColorPresetsPanel" />
                 </StackPanel>
             </ui:Card>
 

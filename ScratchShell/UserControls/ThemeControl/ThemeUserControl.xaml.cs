@@ -2,6 +2,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Linq;
+using ColorPicker;
+using ColorPicker.Models;
+using System.Windows.Input;
 
 namespace ScratchShell.UserControls.ThemeControl;
 
@@ -19,23 +22,36 @@ public partial class ThemeUserControl : UserControl
 
     private TerminalTheme _theme => Terminal?.Theme;
 
-    // Predefined color palette for quick selection
+    // Predefined color palette for quick selection with terminal-focused colors
     private readonly Color[] _colorPalette = new Color[]
     {
+        // Common terminal colors
         Colors.Black, Colors.White, Colors.Gray, Colors.LightGray, Colors.DarkGray,
         Colors.Red, Colors.DarkRed, Colors.Green, Colors.DarkGreen, Colors.Blue, Colors.DarkBlue,
         Colors.Yellow, Colors.Orange, Colors.Purple, Colors.Pink, Colors.Cyan, Colors.Magenta,
-        Color.FromRgb(40, 44, 52),    // Dark background
-        Color.FromRgb(248, 248, 242), // Light foreground
+        
+        // Popular terminal theme colors
+        Color.FromRgb(40, 44, 52),    // Atom One Dark background
+        Color.FromRgb(248, 248, 242), // Atom One Dark foreground
         Color.FromRgb(98, 114, 164),  // Blue selection
-        Color.FromRgb(22, 22, 22),    // Very dark
+        Color.FromRgb(22, 22, 22),    // Very dark background
         Color.FromRgb(255, 255, 255), // Pure white
+        Color.FromRgb(46, 52, 54),    // Tango dark
+        Color.FromRgb(211, 215, 207), // Tango light
+        Color.FromRgb(87, 227, 137),  // Terminal green
+        Color.FromRgb(249, 38, 114),  // Monokai pink
+        Color.FromRgb(102, 217, 239), // Monokai cyan
     };
+
+    // Track which color is currently being edited
+    private string _currentColorType = "Foreground";
+    private bool _isUpdatingColorPicker = false;
 
     public ThemeUserControl()
     {
         InitializeComponent();
         Loaded += ThemeUserControl_Loaded;
+        CreateColorPresets();
     }
 
     private void ThemeUserControl_Loaded(object sender, RoutedEventArgs e)
@@ -44,6 +60,9 @@ public partial class ThemeUserControl : UserControl
         FontFamilyComboBox.ItemsSource = Fonts.SystemFontFamilies
             .Where(f => !string.IsNullOrEmpty(f.Source))
             .OrderBy(f => f.Source);
+
+        // Set default color type selection
+        ColorTypeComboBox.SelectedIndex = 0;
 
         if (_theme != null)
         {
@@ -58,6 +77,50 @@ public partial class ThemeUserControl : UserControl
 
             UpdateColorPreviews();
             UpdatePreview();
+            UpdateColorPickerFromTheme();
+        }
+    }
+
+    private void CreateColorPresets()
+    {
+        ColorPresetsPanel.Children.Clear();
+        
+        foreach (var color in _colorPalette)
+        {
+            var colorButton = new Button
+            {
+                Width = 24,
+                Height = 24,
+                Margin = new Thickness(2),
+                Background = new SolidColorBrush(color),
+                BorderBrush = new SolidColorBrush(Colors.Gray),
+                BorderThickness = new Thickness(1),
+                ToolTip = $"RGB({color.R}, {color.G}, {color.B})\nHex: #{color.R:X2}{color.G:X2}{color.B:X2}",
+                Style = null, // Remove any button styling
+                Cursor = Cursors.Hand
+            };
+            
+            // Add hover effect
+            colorButton.MouseEnter += (s, e) => 
+            {
+                colorButton.BorderBrush = new SolidColorBrush(Colors.Black);
+                colorButton.BorderThickness = new Thickness(2);
+            };
+            colorButton.MouseLeave += (s, e) => 
+            {
+                colorButton.BorderBrush = new SolidColorBrush(Colors.Gray);
+                colorButton.BorderThickness = new Thickness(1);
+            };
+            
+            colorButton.Click += (s, e) =>
+            {
+                _isUpdatingColorPicker = true;
+                MainColorPicker.SelectedColor = color;
+                _isUpdatingColorPicker = false;
+                ApplyColorToCurrentType(color);
+            };
+            
+            ColorPresetsPanel.Children.Add(colorButton);
         }
     }
 
@@ -82,6 +145,7 @@ public partial class ThemeUserControl : UserControl
 
             UpdateColorPreviews();
             UpdatePreview();
+            UpdateColorPickerFromTheme();
         }
     }
 
@@ -113,13 +177,58 @@ public partial class ThemeUserControl : UserControl
         PreviewText.FontSize = _theme.FontSize;
     }
 
+    private void UpdateColorPickerFromTheme()
+    {
+        if (_theme == null) return;
+
+        _isUpdatingColorPicker = true;
+        
+        var currentColor = GetCurrentColor();
+        MainColorPicker.SelectedColor = currentColor;
+        
+        _isUpdatingColorPicker = false;
+    }
+
+    private Color GetCurrentColor()
+    {
+        if (_theme == null) return Colors.Black;
+
+        return _currentColorType switch
+        {
+            "Foreground" => (_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
+            "Background" => (_theme.Background as SolidColorBrush)?.Color ?? Colors.Black,
+            "Selection" => _theme.SelectionColor,
+            _ => Colors.Black
+        };
+    }
+
+    private void ApplyColorToCurrentType(Color color)
+    {
+        if (_theme == null) return;
+
+        switch (_currentColorType)
+        {
+            case "Foreground":
+                _theme.Foreground = new SolidColorBrush(color);
+                break;
+            case "Background":
+                _theme.Background = new SolidColorBrush(color);
+                break;
+            case "Selection":
+                _theme.SelectionColor = color;
+                break;
+        }
+
+        UpdateColorPreviews();
+        UpdatePreview();
+    }
+
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_theme != null && FontFamilyComboBox.SelectedItem is FontFamily fontFamily)
         {
             _theme.FontFamily = fontFamily;
             UpdatePreview();
-            // Don't auto-apply theme on every change
         }
     }
 
@@ -131,208 +240,52 @@ public partial class ThemeUserControl : UserControl
             {
                 _theme.FontSize = size;
                 UpdatePreview();
-                // Don't auto-apply theme on every change
             }
         }
     }
 
-    private void ForegroundButton_Click(object sender, RoutedEventArgs e)
+    private void ColorTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var color = ShowColorPickerDialog(_theme?.Foreground);
-        if (color.HasValue)
+        if (ColorTypeComboBox.SelectedItem is ComboBoxItem selectedItem)
         {
-            _theme.Foreground = new SolidColorBrush(color.Value);
-            UpdateColorPreviews();
-            UpdatePreview();
+            _currentColorType = selectedItem.Tag?.ToString() ?? "Foreground";
+            UpdateColorPickerFromTheme();
         }
     }
 
-    private void BackgroundButton_Click(object sender, RoutedEventArgs e)
+    private void MainColorPicker_SelectedColorChanged(object sender, RoutedEventArgs e)
     {
-        var color = ShowColorPickerDialog(_theme?.Background);
-        if (color.HasValue)
+        if (!_isUpdatingColorPicker)
         {
-            _theme.Background = new SolidColorBrush(color.Value);
-            UpdateColorPreviews();
-            UpdatePreview();
+            ApplyColorToCurrentType(MainColorPicker.SelectedColor);
         }
     }
 
-    private void SelectionButton_Click(object sender, RoutedEventArgs e)
+    private void ForegroundPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var color = ShowColorPickerDialog(new SolidColorBrush(_theme?.SelectionColor ?? Colors.Blue));
-        if (color.HasValue)
-        {
-            _theme.SelectionColor = color.Value;
-            UpdateColorPreviews();
-            UpdatePreview();
-        }
+        ColorTypeComboBox.SelectedIndex = 0; // Select "Text Color"
     }
 
-    private Color? ShowColorPickerDialog(Brush? currentBrush)
+    private void BackgroundPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var currentColor = Colors.Black;
-        if (currentBrush is SolidColorBrush solidBrush)
-        {
-            currentColor = solidBrush.Color;
-        }
-
-        // Create a simple color picker window
-        var colorPickerWindow = new Window
-        {
-            Title = "Choose Color",
-            Width = 320,
-            Height = 400,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = Window.GetWindow(this),
-            ResizeMode = ResizeMode.NoResize,
-            Style = (Style)Application.Current.FindResource(typeof(Window)) // Use app theme
-        };
-
-        var mainPanel = new StackPanel { Margin = new Thickness(16) };
-        
-        // Color preview
-        var previewBorder = new Border
-        {
-            Height = 60,
-            Background = new SolidColorBrush(currentColor),
-            BorderBrush = new SolidColorBrush(Colors.Gray),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Margin = new Thickness(0, 0, 0, 16)
-        };
-        mainPanel.Children.Add(previewBorder);
-
-        // Color palette
-        var palettePanel = new WrapPanel { Margin = new Thickness(0, 0, 0, 16) };
-        foreach (var color in _colorPalette)
-        {
-            var colorButton = new Button
-            {
-                Width = 32,
-                Height = 32,
-                Margin = new Thickness(2),
-                Background = new SolidColorBrush(color),
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                BorderThickness = new Thickness(1),
-                ToolTip = $"RGB({color.R}, {color.G}, {color.B})"
-            };
-            colorButton.Click += (s, e) =>
-            {
-                currentColor = color;
-                previewBorder.Background = new SolidColorBrush(currentColor);
-            };
-            palettePanel.Children.Add(colorButton);
-        }
-        mainPanel.Children.Add(palettePanel);
-
-        // RGB sliders
-        var rgbPanel = new StackPanel();
-        
-        var redSlider = CreateColorSlider("Red:", currentColor.R, (value) => {
-            currentColor = Color.FromRgb((byte)value, currentColor.G, currentColor.B);
-            previewBorder.Background = new SolidColorBrush(currentColor);
-        });
-        var greenSlider = CreateColorSlider("Green:", currentColor.G, (value) => {
-            currentColor = Color.FromRgb(currentColor.R, (byte)value, currentColor.B);
-            previewBorder.Background = new SolidColorBrush(currentColor);
-        });
-        var blueSlider = CreateColorSlider("Blue:", currentColor.B, (value) => {
-            currentColor = Color.FromRgb(currentColor.R, currentColor.G, (byte)value);
-            previewBorder.Background = new SolidColorBrush(currentColor);
-        });
-
-        rgbPanel.Children.Add(redSlider);
-        rgbPanel.Children.Add(greenSlider);
-        rgbPanel.Children.Add(blueSlider);
-        mainPanel.Children.Add(rgbPanel);
-
-        // Buttons
-        var buttonPanel = new StackPanel 
-        { 
-            Orientation = Orientation.Horizontal, 
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 16, 0, 0)
-        };
-        
-        var okButton = new Button 
-        { 
-            Content = "OK", 
-            Width = 80, 
-            Margin = new Thickness(0, 0, 8, 0),
-            IsDefault = true
-        };
-        var cancelButton = new Button 
-        { 
-            Content = "Cancel", 
-            Width = 80,
-            IsCancel = true
-        };
-
-        bool dialogResult = false;
-        okButton.Click += (s, e) => { dialogResult = true; colorPickerWindow.Close(); };
-        cancelButton.Click += (s, e) => { dialogResult = false; colorPickerWindow.Close(); };
-
-        buttonPanel.Children.Add(okButton);
-        buttonPanel.Children.Add(cancelButton);
-        mainPanel.Children.Add(buttonPanel);
-
-        colorPickerWindow.Content = mainPanel;
-        colorPickerWindow.ShowDialog();
-
-        return dialogResult ? currentColor : null;
+        ColorTypeComboBox.SelectedIndex = 1; // Select "Background Color"
     }
 
-    private StackPanel CreateColorSlider(string label, byte initialValue, System.Action<double> onValueChanged)
+    private void SelectionPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var panel = new StackPanel { Margin = new Thickness(0, 4, 0, 4) };
-        
-        var headerPanel = new StackPanel 
-        { 
-            Orientation = Orientation.Horizontal, 
-            Margin = new Thickness(0, 0, 0, 4) 
-        };
-        
-        var labelBlock = new TextBlock 
-        { 
-            Text = label, 
-            FontWeight = FontWeights.Medium,
-            Width = 50
-        };
-        
-        var valueBlock = new TextBlock 
-        { 
-            Text = initialValue.ToString(),
-            FontWeight = FontWeights.Normal,
-            Foreground = new SolidColorBrush(Colors.Gray)
-        };
-        
-        headerPanel.Children.Add(labelBlock);
-        headerPanel.Children.Add(valueBlock);
-        
-        var slider = new Slider
-        {
-            Minimum = 0,
-            Maximum = 255,
-            Value = initialValue,
-            TickFrequency = 1,
-            IsSnapToTickEnabled = true
-        };
-        
-        slider.ValueChanged += (s, e) => 
-        {
-            onValueChanged(e.NewValue);
-            valueBlock.Text = ((int)e.NewValue).ToString();
-        };
-        
-        panel.Children.Add(headerPanel);
-        panel.Children.Add(slider);
-        
-        return panel;
+        ColorTypeComboBox.SelectedIndex = 2; // Select "Selection Color"
     }
 
     private void ApplyButton_Click(object sender, RoutedEventArgs e)
     {
         Terminal?.RefreshTheme();
+    }
+
+    private void MainColorPicker_ColorChanged(object sender, RoutedEventArgs e)
+    {
+        if (!_isUpdatingColorPicker)
+        {
+            ApplyColorToCurrentType(MainColorPicker.SelectedColor);
+        }
     }
 }
