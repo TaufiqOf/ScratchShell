@@ -87,6 +87,9 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         // Progress and cancel events - NEW
         Browser.ProgressChanged += OnBrowserProgressChanged;
         Browser.CancelRequested += OnBrowserCancelRequested;
+
+        // Drag and drop events - NEW
+        Browser.FilesDropped += OnBrowserFilesDropped;
     }
 
     private async void HandleFileOperation(BrowserOperationContext context, FileOperationType operationType)
@@ -557,7 +560,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         if (_fileOperationService == null) return;
 
         _fileOperationService.LogRequested += Log;
-        _fileOperationService.ProgressChanged += (show, message) => Browser.ShowProgress(show, show ? message : "");
+        _fileOperationService.ProgressChanged += (show, message, current, total) => Browser.ShowProgress(show, show ? message : "", current, total);
         _fileOperationService.ClipboardStateChanged += OnClipboardStateChanged;
     }
 
@@ -595,7 +598,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
     }
 
-    private void OnBrowserProgressChanged(bool show, string message)
+    private void OnBrowserProgressChanged(bool show, string message, int? current, int? total)
     {
         // Update UI buttons based on progress state
         if (show)
@@ -646,6 +649,62 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         else
         {
             Log("❌ No cancellation token available or already cancelled");
+        }
+    }
+
+    private async void OnBrowserFilesDropped(string[] files)
+    {
+        if (_fileOperationService == null)
+        {
+            Log("❌ File operation service not available");
+            return;
+        }
+
+        if (files == null || files.Length == 0)
+        {
+            Log("❌ No files provided for upload");
+            return;
+        }
+
+        Log($"🎯 Drag and drop upload initiated for {files.Length} item(s)");
+        foreach (var file in files)
+        {
+            var isDirectory = Directory.Exists(file);
+            var fileName = Path.GetFileName(file);
+            Log($"📦 {(isDirectory ? "Folder" : "File")}: {fileName}");
+        }
+
+        // Create cancellation token for drag and drop upload operation
+        _currentOperationCancellation?.Dispose();
+        _currentOperationCancellation = new CancellationTokenSource();
+        Log($"🔧 Created cancellation token for drag and drop upload operation");
+
+        try
+        {
+            var cancellationToken = _currentOperationCancellation.Token;
+            var result = await _fileOperationService.UploadMultipleFilesAsync(files, PathTextBox.Text, cancellationToken);
+
+            if (!result.IsSuccess)
+            {
+                Log($"❌ Drag and drop upload failed: {result.ErrorMessage}");
+            }
+            else
+            {
+                Log($"✅ Successfully completed drag and drop upload");
+                // Refresh directory to show uploaded files
+                await GoToFolder(PathTextBox.Text);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Unexpected error during drag and drop upload: {ex.Message}");
+        }
+        finally
+        {
+            // Clean up cancellation token
+            _currentOperationCancellation?.Dispose();
+            _currentOperationCancellation = null;
+            Log($"🔧 Cleaned up cancellation token for drag and drop upload operation");
         }
     }
 

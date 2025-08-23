@@ -3,7 +3,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    AllowDrop="True"
+    Drop="BrowserUserControl_Drop"
+    DragEnter="BrowserUserControl_DragEnter"
+    DragOver="BrowserUserControl_DragOver"
+    DragLeave="BrowserUserControl_DragLeave">
     <UserControl.Resources>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -254,6 +259,34 @@
                         Content="Cancel"
                         Icon="{ui:SymbolIcon Symbol=Dismiss20}"
                         ToolTip="Cancel current operation" />
+                </StackPanel>
+            </Border>
+
+            <!--  Drag and Drop Overlay  -->
+            <Border
+                x:Name="DragDropOverlay"
+                Background="#80000080"
+                Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ui:SymbolIcon
+                        FontSize="64"
+                        Foreground="White"
+                        Symbol="CloudArrowUp24" />
+                    <TextBlock
+                        x:Name="DragDropText"
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="Drop files and folders here to upload" />
+                    <TextBlock
+                        x:Name="DragDropSubText"
+                        Margin="0,8,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="14"
+                        Foreground="#E0FFFFFF"
+                        Text="Multiple files and folders are supported" />
                 </StackPanel>
             </Border>
         </Grid>

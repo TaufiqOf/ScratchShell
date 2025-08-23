@@ -7,6 +7,7 @@ using Wpf.Ui.Controls;
 using ListViewItem = Wpf.Ui.Controls.ListViewItem;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
+using System.IO;
 
 namespace ScratchShell.UserControls.BrowserControl;
 
@@ -68,9 +69,12 @@ public partial class BrowserUserControl : UserControl
     public event Action? RefreshRequested;
 
     // Progress events - NEW
-    public event Action<bool, string>? ProgressChanged;
+    public event Action<bool, string, int?, int?>? ProgressChanged;
 
     public event Action? CancelRequested;
+
+    // Drag and drop events - NEW
+    public event Action<string[]>? FilesDropped;
 
     private ContextMenu contextMenu;
     private ContextMenu emptySpaceContextMenu;
@@ -1068,11 +1072,20 @@ public partial class BrowserUserControl : UserControl
     /// </summary>
     /// <param name="show">True to show progress, false to hide</param>
     /// <param name="message">Progress message to display</param>
-    public void ShowProgress(bool show, string message = "Operation in progress...")
+    /// <param name="current">Current item number (optional)</param>
+    /// <param name="total">Total number of items (optional)</param>
+    public void ShowProgress(bool show, string message = "Operation in progress...", int? current = null, int? total = null)
     {
         if (show)
         {
-            ProgressText.Text = message;
+            // Format the message with progress count if available
+            var displayMessage = message;
+            if (current.HasValue && total.HasValue)
+            {
+                displayMessage = $"{message}";
+            }
+
+            ProgressText.Text = displayMessage;
             ProgressOverlay.Visibility = Visibility.Visible;
             CancelOperationButton.IsEnabled = true;
 
@@ -1089,7 +1102,7 @@ public partial class BrowserUserControl : UserControl
         }
 
         // Notify parent about progress change
-        ProgressChanged?.Invoke(show, message);
+        ProgressChanged?.Invoke(show, message, current, total);
     }
 
     /// <summary>
@@ -1105,4 +1118,126 @@ public partial class BrowserUserControl : UserControl
     }
 
     #endregion Progress Management
+
+    #region Drag and Drop Event Handlers
+
+    private void BrowserUserControl_DragEnter(object sender, DragEventArgs e)
+    {
+        HandleDragEvent(e);
+    }
+
+    private void BrowserUserControl_DragOver(object sender, DragEventArgs e)
+    {
+        HandleDragEvent(e);
+    }
+
+    private void HandleDragEvent(DragEventArgs e)
+    {
+        // Check if the dragged data contains files
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            // Allow drop if we have files and browser is enabled
+            if (files != null && files.Length > 0 && IsBrowserEnabled)
+            {
+                e.Effects = DragDropEffects.Copy;
+
+                // Show the drag drop overlay
+                ShowDragDropOverlay(true, files);
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+
+        e.Handled = true;
+    }
+
+    private void BrowserUserControl_DragLeave(object sender, DragEventArgs e)
+    {
+        // Hide the drag drop overlay when leaving the control
+        ShowDragDropOverlay(false);
+        e.Handled = true;
+    }
+
+    private void BrowserUserControl_Drop(object sender, DragEventArgs e)
+    {
+        try
+        {
+            // Hide the drag drop overlay
+            ShowDragDropOverlay(false);
+
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                if (files != null && files.Length > 0 && IsBrowserEnabled)
+                {
+                    // Raise the FilesDropped event to notify parent control
+                    FilesDropped?.Invoke(files);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error handling drop: {ex.Message}");
+        }
+
+        e.Handled = true;
+    }
+
+    private void ShowDragDropOverlay(bool show, string[]? files = null)
+    {
+        if (show && files != null)
+        {
+            // Update the overlay text based on what's being dropped
+            var fileCount = files.Length;
+            var folderCount = files.Count(f => Directory.Exists(f));
+            var regularFileCount = fileCount - folderCount;
+
+            string primaryText;
+            string subText;
+
+            if (fileCount == 1)
+            {
+                var fileName = Path.GetFileName(files[0]);
+                var isFolder = Directory.Exists(files[0]);
+                primaryText = $"Drop {(isFolder ? "folder" : "file")} '{fileName}' here to upload";
+                subText = isFolder ? "Folder contents will be uploaded recursively" : "File will be uploaded to current directory";
+            }
+            else
+            {
+                primaryText = $"Drop {fileCount} item(s) here to upload";
+
+                if (folderCount > 0 && regularFileCount > 0)
+                {
+                    subText = $"{regularFileCount} file(s) and {folderCount} folder(s) will be uploaded";
+                }
+                else if (folderCount > 0)
+                {
+                    subText = $"{folderCount} folder(s) will be uploaded recursively";
+                }
+                else
+                {
+                    subText = $"{regularFileCount} file(s) will be uploaded";
+                }
+            }
+
+            DragDropText.Text = primaryText;
+            DragDropSubText.Text = subText;
+            DragDropOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            DragDropOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    #endregion Drag and Drop Event Handlers
 }
