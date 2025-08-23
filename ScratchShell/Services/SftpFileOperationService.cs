@@ -344,10 +344,10 @@ public class SftpFileOperationService : ISftpFileOperationService
     private async Task CopyDirectoryRecursive(string sourcePath, string destinationPath)
     {
         // Create destination directory
-        _sftpClient.CreateDirectory(destinationPath);
+        await Task.Run(() => _sftpClient.CreateDirectory(destinationPath));
 
         // List all items in source directory
-        var items = _sftpClient.ListDirectory(sourcePath);
+        var items = await Task.Run(() => _sftpClient.ListDirectory(sourcePath));
 
         foreach (var item in items)
         {
@@ -373,7 +373,7 @@ public class SftpFileOperationService : ISftpFileOperationService
     private async Task DeleteDirectoryRecursive(string directoryPath)
     {
         // List all items in directory
-        var items = _sftpClient.ListDirectory(directoryPath);
+        var items = await Task.Run(() => _sftpClient.ListDirectory(directoryPath));
 
         foreach (var item in items)
         {
@@ -413,7 +413,7 @@ public class SftpFileOperationService : ISftpFileOperationService
             LogRequested?.Invoke($"??? Deleting item: {resolvedPath}");
 
             // Check if the item is a file or directory
-            var item = _sftpClient.Get(resolvedPath);
+            var item = await Task.Run(() => _sftpClient.Get(resolvedPath));
 
             if (item.IsDirectory)
             {
