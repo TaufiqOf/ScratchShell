@@ -10,22 +10,35 @@ namespace ScratchShell.Services;
 public interface ISftpFileOperationService
 {
     Task<OperationResult> CreateFolderAsync(string folderName, string currentPath, CancellationToken cancellationToken = default);
+
     Task<OperationResult> RenameItemAsync(string oldPath, string newPath, bool isFolder, CancellationToken cancellationToken = default);
+
     Task<OperationResult> UploadFileAsync(string localFilePath, string remotePath, CancellationToken cancellationToken = default);
+
     Task<OperationResult> PasteItemAsync(string destinationPath, CancellationToken cancellationToken = default);
+
     Task<OperationResult> PasteMultiItemsAsync(string destinationPath, CancellationToken cancellationToken = default);
+
     Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder, CancellationToken cancellationToken = default);
+
     Task<OperationResult> DeleteItemAsync(string itemPath, CancellationToken cancellationToken = default);
+
     Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths, CancellationToken cancellationToken = default);
+
     void UpdateClipboard(string itemPath, bool isCut);
+
     void UpdateMultiClipboard(List<string> itemPaths, bool isCut);
+
     bool HasClipboardContent { get; }
     bool HasMultipleClipboardItems { get; }
     string? ClipboardPath { get; }
     List<string> ClipboardPaths { get; }
     bool IsClipboardCut { get; }
+
     event Action<string>? LogRequested;
+
     event Action<bool, string>? ProgressChanged; // Updated to include message
+
     event Action? ClipboardStateChanged;
 }
 
@@ -43,7 +56,9 @@ public class SftpFileOperationService : ISftpFileOperationService
     public bool IsClipboardCut => _clipboardIsCut;
 
     public event Action<string>? LogRequested;
+
     public event Action<bool, string>? ProgressChanged;
+
     public event Action? ClipboardStateChanged;
 
     public SftpFileOperationService(SftpClient sftpClient)
@@ -130,14 +145,14 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             LogRequested?.Invoke($"🔍 Initial cancellation check - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             // Add some artificial delay to make cancellation easier to test
             LogRequested?.Invoke($"🔍 Adding 2-second delay to test cancellation...");
             await Task.Delay(2000, cancellationToken);
-            
+
             LogRequested?.Invoke($"🔍 After delay cancellation check - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read);
             await Task.Run(() => _sftpClient.UploadFile(fs, remotePath), cancellationToken);
 
@@ -202,7 +217,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                 using var ms = new MemoryStream();
                 await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
                 ms.Position = 0;
-                
+
                 cancellationToken.ThrowIfCancellationRequested();
                 await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
             }
@@ -299,7 +314,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    
+
                     var fileName = Path.GetFileName(sourcePath);
                     var fullDestinationPath = $"{destinationPath}/{fileName}";
                     var resolvedSourcePath = ResolveSftpPath(sourcePath);
@@ -321,7 +336,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                         using var ms = new MemoryStream();
                         await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
                         ms.Position = 0;
-                        
+
                         cancellationToken.ThrowIfCancellationRequested();
                         await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
                     }
@@ -398,43 +413,43 @@ public class SftpFileOperationService : ISftpFileOperationService
         {
             var itemName = Path.GetFileName(remotePath);
             ProgressChanged?.Invoke(true, $"⬇️ Downloading {itemName}...");
-            
+
             var resolvedRemotePath = ResolveSftpPath(remotePath);
-            
+
             LogRequested?.Invoke($"📥 Starting download operation");
             LogRequested?.Invoke($"🌐 Remote path: {resolvedRemotePath}");
             LogRequested?.Invoke($"💻 Local path: {localPath}");
-            
+
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             if (isFolder)
             {
                 LogRequested?.Invoke($"📁 Downloading folder recursively: {itemName}");
-                
+
                 // Create local directory if it doesn't exist
                 Directory.CreateDirectory(localPath);
-                
+
                 await DownloadDirectoryRecursive(resolvedRemotePath, localPath, cancellationToken);
-                
+
                 LogRequested?.Invoke($"✅ Successfully downloaded folder '{itemName}' to {localPath}");
             }
             else
             {
                 LogRequested?.Invoke($"📄 Downloading file: {itemName}");
-                
+
                 // Ensure the directory exists
                 var directory = Path.GetDirectoryName(localPath);
                 if (!string.IsNullOrEmpty(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
-                
+
                 using var fs = new FileStream(localPath, FileMode.Create, FileAccess.Write);
                 await Task.Run(() => _sftpClient.DownloadFile(resolvedRemotePath, fs), cancellationToken);
-                
+
                 LogRequested?.Invoke($"✅ Successfully downloaded file '{itemName}' to {localPath}");
             }
-            
+
             return OperationResult.Success();
         }
         catch (OperationCanceledException)
@@ -457,7 +472,7 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         var folderName = Path.GetFileName(remotePath);
         ProgressChanged?.Invoke(true, $"⬇️ Downloading folder {folderName}...");
-        
+
         cancellationToken.ThrowIfCancellationRequested();
 
         // List all items in remote directory
@@ -466,7 +481,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         foreach (var item in items)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             if (item.Name == "." || item.Name == "..") continue;
 
             var remoteItemPath = $"{remotePath}/{item.Name}";
@@ -482,12 +497,12 @@ public class SftpFileOperationService : ISftpFileOperationService
             {
                 ProgressChanged?.Invoke(true, $"⬇️ Downloading file {item.Name}...");
                 LogRequested?.Invoke($"📄 Downloading file: {item.Name} ({item.Attributes.Size:N0} bytes)");
-                
+
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 using var fs = new FileStream(localItemPath, FileMode.Create, FileAccess.Write);
                 await Task.Run(() => _sftpClient.DownloadFile(remoteItemPath, fs), cancellationToken);
-                
+
                 LogRequested?.Invoke($"✅ Downloaded: {item.Name}");
             }
         }
@@ -561,7 +576,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    
+
                     var fileName = Path.GetFileName(itemPath);
                     var resolvedPath = ResolveSftpPath(itemPath);
 
@@ -627,7 +642,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         var folderName = Path.GetFileName(destinationPath);
         var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
         ProgressChanged?.Invoke(true, $"{operation} folder {folderName}...");
-        
+
         LogRequested?.Invoke($"{operation} directory: {sourcePath} → {destinationPath}");
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -642,7 +657,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         foreach (var item in items)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             if (item.Name == "." || item.Name == "..") continue;
 
             var sourceItemPath = $"{sourcePath}/{item.Name}";
@@ -658,20 +673,20 @@ public class SftpFileOperationService : ISftpFileOperationService
                 var fileOperation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
                 ProgressChanged?.Invoke(true, $"{fileOperation} file {item.Name}...");
                 LogRequested?.Invoke($"{fileOperation} file: {item.Name} ({item.Attributes.Size:N0} bytes)");
-                
+
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 using var ms = new MemoryStream();
                 await Task.Run(() => _sftpClient.DownloadFile(sourceItemPath, ms), cancellationToken);
                 ms.Position = 0;
-                
+
                 cancellationToken.ThrowIfCancellationRequested();
                 await Task.Run(() => _sftpClient.UploadFile(ms, destItemPath), cancellationToken);
-                
+
                 LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} file: {item.Name}");
             }
         }
-        
+
         LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} directory: {folderName}");
     }
 
@@ -679,10 +694,10 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         var folderName = Path.GetFileName(directoryPath);
         ProgressChanged?.Invoke(true, $"🗑️ Deleting folder {folderName}...");
-        
+
         LogRequested?.Invoke($"📋 Listing contents of directory: {folderName}");
         LogRequested?.Invoke($"🔍 Cancellation check before listing directory - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
-        
+
         cancellationToken.ThrowIfCancellationRequested();
 
         // List all items in directory
@@ -694,7 +709,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         {
             LogRequested?.Invoke($"🔍 Cancellation check before processing {item.Name} - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             if (item.Name == "." || item.Name == "..") continue;
 
             var itemPath = $"{directoryPath}/{item.Name}";
@@ -708,10 +723,10 @@ public class SftpFileOperationService : ISftpFileOperationService
             {
                 ProgressChanged?.Invoke(true, $"🗑️ Deleting file {item.Name}...");
                 LogRequested?.Invoke($"📄 Deleting file: {item.Name}");
-                
+
                 LogRequested?.Invoke($"🔍 Cancellation check before deleting file {item.Name} - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 await Task.Run(() => _sftpClient.DeleteFile(itemPath), cancellationToken);
                 LogRequested?.Invoke($"✅ Deleted file: {item.Name}");
             }
@@ -748,5 +763,6 @@ public class OperationResult
     }
 
     public static OperationResult Success(object? data = null) => new(true, data: data);
+
     public static OperationResult Failure(string errorMessage) => new(false, errorMessage);
 }

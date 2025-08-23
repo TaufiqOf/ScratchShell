@@ -13,9 +13,9 @@ public class BrowserOperationContext
     public string? AdditionalData { get; }
 
     private BrowserOperationContext(
-        BrowserOperationType operationType, 
-        string currentDirectory, 
-        BrowserItem? targetItem = null, 
+        BrowserOperationType operationType,
+        string currentDirectory,
+        BrowserItem? targetItem = null,
         string? additionalData = null)
     {
         OperationType = operationType;

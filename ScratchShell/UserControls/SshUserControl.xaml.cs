@@ -28,6 +28,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private FullScreenWindow _FullScreen;
 
     public ITerminal Terminal { get; private set; }
+
     public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
     {
         InitializeComponent();
@@ -54,7 +55,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
         CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
-        
+
         // Set up keyboard shortcuts
         InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
@@ -316,7 +317,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         SnippetControl.Visibility = Visibility.Collapsed;
         if (SnippetToggleButton.IsChecked == true)
             SnippetToggleButton.IsChecked = false;
-        
+
         // Set the terminal reference programmatically to avoid binding issues
         if (Terminal != null)
         {

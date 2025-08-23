@@ -13,50 +13,50 @@ public class BrowserItem : INotifyPropertyChanged
     private bool _isNewItem;
     private bool _isSelected;
 
-    public string Name 
-    { 
+    public string Name
+    {
         get => _name;
-        set 
+        set
         {
             _name = value;
             OnPropertyChanged();
         }
     }
 
-    public string OriginalName 
-    { 
+    public string OriginalName
+    {
         get => _originalName;
-        set 
+        set
         {
             _originalName = value;
             OnPropertyChanged();
         }
     }
 
-    public bool IsInEditMode 
-    { 
+    public bool IsInEditMode
+    {
         get => _isInEditMode;
-        set 
+        set
         {
             _isInEditMode = value;
             OnPropertyChanged();
         }
     }
 
-    public bool IsNewItem 
-    { 
+    public bool IsNewItem
+    {
         get => _isNewItem;
-        set 
+        set
         {
             _isNewItem = value;
             OnPropertyChanged();
         }
     }
 
-    public bool IsSelected 
-    { 
+    public bool IsSelected
+    {
         get => _isSelected;
-        set 
+        set
         {
             _isSelected = value;
             OnPropertyChanged();
@@ -71,18 +71,18 @@ public class BrowserItem : INotifyPropertyChanged
     public DateTime LastUpdated { get; set; }
 
     public string DisplayType => IsFolder ? "Folder" : System.IO.Path.GetExtension(Name) ?? "File";
-    
+
     // Add Icon property for Windows Explorer-like appearance
     public SymbolRegular Icon => GetIcon();
-    
+
     private SymbolRegular GetIcon()
     {
         if (Name == "..")
             return SymbolRegular.ArrowUp24;
-            
+
         if (IsFolder)
             return SymbolRegular.Folder24;
-            
+
         // Return icons based on file extension
         var extension = System.IO.Path.GetExtension(Name)?.ToLowerInvariant();
         return extension switch

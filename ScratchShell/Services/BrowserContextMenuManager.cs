@@ -1,7 +1,5 @@
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows;
 using ScratchShell.UserControls.BrowserControl;
+using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
 
@@ -28,31 +26,31 @@ public class BrowserContextMenuManager
     private ContextMenu CreateItemContextMenu()
     {
         var menu = new ContextMenu();
-        
+
         AddItemMenuItem("Cut", BrowserContextMenuAction.Cut, SymbolRegular.Cut24);
         AddItemMenuItem("Copy", BrowserContextMenuAction.Copy, SymbolRegular.Copy24);
         AddItemMenuItem("Paste", BrowserContextMenuAction.Paste, SymbolRegular.ClipboardPaste24);
         AddItemMenuItem("Rename", BrowserContextMenuAction.Rename, SymbolRegular.Rename20);
-        
+
         menu.Items.Add(new Separator());
-        
+
         AddItemMenuItem("Upload", BrowserContextMenuAction.Upload, SymbolRegular.ArrowUpload24);
         AddItemMenuItem("Download", BrowserContextMenuAction.Download, SymbolRegular.ArrowDownload24);
-        
+
         return menu;
     }
 
     private ContextMenu CreateEmptySpaceContextMenu()
     {
         var menu = new ContextMenu();
-        
+
         AddEmptySpaceMenuItem("Paste", BrowserContextMenuAction.EmptySpacePaste, SymbolRegular.ClipboardPaste24);
         AddEmptySpaceMenuItem("Upload", BrowserContextMenuAction.EmptySpaceUpload, SymbolRegular.ArrowUpload24);
-        
+
         menu.Items.Add(new Separator());
-        
+
         AddEmptySpaceMenuItem("New Folder", BrowserContextMenuAction.EmptySpaceNewFolder, SymbolRegular.FolderAdd24);
-        
+
         return menu;
     }
 
@@ -63,7 +61,7 @@ public class BrowserContextMenuManager
             Header = header,
             Icon = new SymbolIcon(icon)
         };
-        
+
         menuItem.Click += (_, _) => ActionRequested?.Invoke(action, null);
         _itemContextMenu.Items.Add(menuItem);
         _itemMenuItems[header] = menuItem;
@@ -76,7 +74,7 @@ public class BrowserContextMenuManager
             Header = header,
             Icon = new SymbolIcon(icon)
         };
-        
+
         menuItem.Click += (_, _) => ActionRequested?.Invoke(action, null);
         _emptySpaceContextMenu.Items.Add(menuItem);
         _emptySpaceMenuItems[header] = menuItem;
@@ -116,7 +114,7 @@ public class BrowserContextMenuManager
         SetItemMenuVisibility("Paste", true);
         SetItemMenuVisibility("Rename", true);
         SetItemMenuVisibility("Download", true);
-        
+
         // Upload only available for folders
         SetItemMenuVisibility("Upload", item.IsFolder);
     }

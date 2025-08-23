@@ -1,22 +1,14 @@
-﻿using System;
+﻿using ScratchShell.UserControls.ThemeControl;
 using System.Diagnostics;
-using System.Linq;
-using System.Printing;
+using System.IO;
 using System.Text;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using XtermSharp;
-using System.ComponentModel;
-using System.Collections.Generic;
-using ScratchShell.UserControls.ThemeControl;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
-using System.IO;
-using System.Drawing.Imaging;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -39,6 +31,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Selection state for copy/paste
     private bool _isSelecting = false;
+
     private (int row, int col)? _selectionStart = null;
     private (int row, int col)? _selectionEnd = null;
     private bool _isCopyHighlight = false;
@@ -50,6 +43,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
         new PropertyMetadata(new TerminalTheme(), OnThemeChanged));
+
     public TerminalTheme Theme
     {
         get => (TerminalTheme)GetValue(ThemeProperty);
@@ -131,17 +125,20 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _terminal = new Terminal(this, new TerminalOptions { Cols = _cols, Rows = _rows });
     }
 
-    public string InputLineSyntax { get => string.Empty; set { } }
+    public string InputLineSyntax
+    { get => string.Empty; set { } }
     public bool IsReadOnly { get; set; }
     public string Text => string.Empty;
 
     public event ITerminal.TerminalCommandHandler CommandEntered;
+
     public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
 
     public void AddOutput(string output)
     {
         if (_terminal == null) return;
-        if (output.Any(c => c == '\0')) {
+        if (output.Any(c => c == '\0'))
+        {
             var bytes = Encoding.Unicode.GetBytes(output);
             output = Encoding.UTF8.GetString(bytes);
         }
@@ -257,7 +254,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                         CommandEntered?.Invoke(this, "\u0003");
                         e.Handled = true;
                         return;
-
                     }
                     else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key >= Key.A && e.Key <= Key.Z)
                     {
@@ -494,7 +490,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 break;
             }
         }
-        if (hasSelectionRects) {
+        if (hasSelectionRects)
+        {
             for (int i = TerminalCanvas.Children.Count - 1; i >= 0; i--)
             {
                 if (TerminalCanvas.Children[i] is Rectangle rect && rect.Tag as string == "SelectionRect")
@@ -613,6 +610,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Cache last used control size to avoid unnecessary buffer resize on font change
     private Size _lastLayoutSize = Size.Empty;
+
     private int _lastCols = -1;
     private int _lastRows = -1;
 
@@ -642,6 +640,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Brushes.Black, Brushes.DarkRed, Brushes.DarkGreen, Brushes.Olive, Brushes.DarkBlue, Brushes.DarkMagenta, Brushes.DarkCyan, Brushes.LightGray,
         Brushes.DarkGray, Brushes.Red, Brushes.Green, Brushes.Yellow, Brushes.Blue, Brushes.Magenta, Brushes.Cyan, Brushes.White
     };
+
     private static Brush[] AnsiBackground = new Brush[] {
         Brushes.Black, Brushes.DarkRed, Brushes.DarkGreen, Brushes.Olive, Brushes.DarkBlue, Brushes.DarkMagenta, Brushes.DarkCyan, Brushes.LightGray,
         Brushes.DarkGray, Brushes.Red, Brushes.Green, Brushes.Yellow, Brushes.Blue, Brushes.Magenta, Brushes.Cyan, Brushes.White
@@ -655,6 +654,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (fg >= 0 && fg < AnsiForeground.Length) return AnsiForeground[fg];
         return Brushes.LightGray;
     }
+
     private static Brush GetAnsiBackground(int attr, bool inverse)
     {
         int fg = (attr >> 9) & 0x1ff;
@@ -663,8 +663,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (bg >= 0 && bg < AnsiBackground.Length) return AnsiBackground[bg];
         return Brushes.Black;
     }
+
     private static bool IsBold(int attr) => ((attr >> 18) & 1) != 0;
+
     private static bool IsUnderline(int attr) => ((attr >> 18) & 4) != 0;
+
     private static bool IsInverse(int attr) => ((attr >> 18) & 0x40) != 0;
 
     // Helper to get a string representation of a buffer line
@@ -877,19 +880,30 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 case Key.Oem5: return shift ? '|' : '\\';
                 case Key.Oem6: return shift ? '}' : ']';
                 case Key.Oem7: return shift ? '"' : '\'';
-                // Add more Oem keys if needed
+                    // Add more Oem keys if needed
             }
         }
         return null;
     }
 
     // ITerminalDelegate implementation (minimal)
-    public void ShowCursor(Terminal terminal) { }
-    public void SetTerminalTitle(Terminal terminal, string title) { }
-    public void SetTerminalIconTitle(Terminal terminal, string title) { }
-    public void SizeChanged(Terminal terminal) { }
-    public void Send(byte[] data) { }
+    public void ShowCursor(Terminal terminal)
+    { }
+
+    public void SetTerminalTitle(Terminal terminal, string title)
+    { }
+
+    public void SetTerminalIconTitle(Terminal terminal, string title)
+    { }
+
+    public void SizeChanged(Terminal terminal)
+    { }
+
+    public void Send(byte[] data)
+    { }
+
     public string WindowCommand(Terminal terminal, XtermSharp.WindowManipulationCommand cmd, params int[] args) => string.Empty;
+
     public bool IsProcessTrusted() => true;
 
     // Public methods for copy/paste operations

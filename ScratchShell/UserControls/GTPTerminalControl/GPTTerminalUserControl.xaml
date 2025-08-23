@@ -61,6 +61,5 @@
                 <TranslateTransform x:Name="CursorTransform" />
             </Rectangle.RenderTransform>
         </Rectangle>
-
     </Grid>
 </UserControl>

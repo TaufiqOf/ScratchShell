@@ -1,9 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Wpf.Ui.Controls;
@@ -25,40 +22,54 @@ public partial class BrowserUserControl : UserControl
 
     // Delegate events
     public event Action<BrowserItem>? CopyRequested;
+
     public event Action<BrowserItem>? CutRequested;
+
     public event Action<BrowserItem>? PasteRequested;
+
     public event Action<BrowserItem>? UploadRequested;
+
     public event Action<BrowserItem>? DownloadRequested;
+
     public event Action<BrowserItem>? DeleteRequested;
+
     public event Action<BrowserItem>? EnterRequested;
+
     public event Action<BrowserItem>? RenameRequested;
 
     // New events for inline editing
     public event Action<BrowserItem, string>? ItemRenamed;
+
     public event Action<BrowserItem>? NewFolderCreated;
+
     public event Action<BrowserItem>? ItemEditCancelled;
 
     // New events for empty space context menu
     public event Action? EmptySpacePasteRequested;
+
     public event Action? EmptySpaceUploadRequested;
+
     public event Action? EmptySpaceNewFolderRequested;
 
     // Multi-select events
     public event Action<List<BrowserItem>>? MultiCopyRequested;
+
     public event Action<List<BrowserItem>>? MultiCutRequested;
+
     public event Action<List<BrowserItem>>? MultiDeleteRequested;
-    
+
     // Selection change event
     public event Action<int>? SelectionChanged;
 
     // View mode change event
     public event Action<BrowserViewMode>? ViewModeChanged;
-    
+
     // Refresh event
     public event Action? RefreshRequested;
 
     // Progress events - NEW
     public event Action<bool, string>? ProgressChanged;
+
     public event Action? CancelRequested;
 
     private ContextMenu contextMenu;
@@ -134,6 +145,7 @@ public partial class BrowserUserControl : UserControl
                 ListViewButton.Background = System.Windows.Media.Brushes.LightBlue;
                 GridViewButton.Background = System.Windows.Media.Brushes.Transparent;
                 break;
+
             case BrowserViewMode.Grid:
                 BrowserList.Visibility = Visibility.Collapsed;
                 GridScrollViewer.Visibility = Visibility.Visible;
@@ -153,7 +165,7 @@ public partial class BrowserUserControl : UserControl
         CurrentViewMode = BrowserViewMode.Grid;
     }
 
-    #endregion
+    #endregion View Mode Management
 
     #region Grid View Event Handlers
 
@@ -206,7 +218,7 @@ public partial class BrowserUserControl : UserControl
                 _gridSelectedItems.Add(item);
                 item.IsSelected = true;
             }
-            
+
             if (item.Name == "..")
             {
                 SetMenuVisibility("Cut", false);
@@ -306,7 +318,7 @@ public partial class BrowserUserControl : UserControl
                     {
                         target = VisualTreeHelper.GetParent(target);
                     }
-                    
+
                     // If we didn't find a Border with BrowserItem, we clicked on empty space
                     if (target == null)
                     {
@@ -330,10 +342,12 @@ public partial class BrowserUserControl : UserControl
                     e.Handled = true;
                 }
                 break;
+
             case Key.F5:
                 RefreshRequested?.Invoke();
                 e.Handled = true;
                 break;
+
             case Key.A:
                 if (Keyboard.Modifiers == ModifierKeys.Control)
                 {
@@ -341,6 +355,7 @@ public partial class BrowserUserControl : UserControl
                     e.Handled = true;
                 }
                 break;
+
             case Key.Delete:
                 var selectedItems = GetSelectedItems().Where(item => item.Name != "..").ToList();
                 if (selectedItems.Any())
@@ -359,7 +374,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    #endregion
+    #endregion Grid View Event Handlers
 
     // Event handlers for inline editing
     private void DisplayTextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -395,6 +410,7 @@ public partial class BrowserUserControl : UserControl
                     CommitEdit(item);
                     e.Handled = true;
                     break;
+
                 case Key.Escape:
                     CancelEdit(item);
                     e.Handled = true;
@@ -414,10 +430,12 @@ public partial class BrowserUserControl : UserControl
                     e.Handled = true;
                 }
                 break;
+
             case Key.F5:
                 RefreshRequested?.Invoke();
                 e.Handled = true;
                 break;
+
             case Key.A:
                 if (Keyboard.Modifiers == ModifierKeys.Control)
                 {
@@ -425,6 +443,7 @@ public partial class BrowserUserControl : UserControl
                     e.Handled = true;
                 }
                 break;
+
             case Key.Delete:
                 var selectedItems = GetSelectedItems().Where(item => item.Name != "..").ToList();
                 if (selectedItems.Any())
@@ -533,7 +552,7 @@ public partial class BrowserUserControl : UserControl
             return false;
 
         string[] reservedNames = { ".", "..", "CON", "PRN", "AUX", "NUL" };
-        if (reservedNames.Any(reserved => 
+        if (reservedNames.Any(reserved =>
             string.Equals(reserved, name, StringComparison.OrdinalIgnoreCase)))
             return false;
 
@@ -543,7 +562,7 @@ public partial class BrowserUserControl : UserControl
     public void StartNewFolderCreation()
     {
         System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] StartNewFolderCreation called");
-        
+
         if (currentlyEditingItem != null)
         {
             System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Committing existing edit item: {currentlyEditingItem.Name}");
@@ -563,7 +582,7 @@ public partial class BrowserUserControl : UserControl
 
         System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Created new folder item with Name: {newFolder.Name}, IsNewItem: {newFolder.IsNewItem}");
         Items.Add(newFolder);
-        
+
         switch (_currentViewMode)
         {
             case BrowserViewMode.List:
@@ -571,6 +590,7 @@ public partial class BrowserUserControl : UserControl
                 BrowserList.ScrollIntoView(newFolder);
                 System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Set selection in ListView");
                 break;
+
             case BrowserViewMode.Grid:
                 ClearGridSelection();
                 _gridSelectedItems.Add(newFolder);
@@ -582,7 +602,7 @@ public partial class BrowserUserControl : UserControl
         currentlyEditingItem = newFolder;
         System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Starting edit on new folder");
         newFolder.StartEdit();
-        
+
         System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] New folder edit started - IsInEditMode: {newFolder.IsInEditMode}");
     }
 
@@ -625,7 +645,7 @@ public partial class BrowserUserControl : UserControl
                     e.Handled = true;
                     return;
                 }
-                
+
                 if (item.IsFolder)
                 {
                     SetMenuVisibility("Cut", true);
@@ -669,18 +689,18 @@ public partial class BrowserUserControl : UserControl
         AddMenuItem("Copy", (_, __) => RaiseContextEvent(CopyRequested), SymbolRegular.Copy24);
         AddMenuItem("Paste", (_, __) => RaiseContextEvent(PasteRequested), SymbolRegular.ClipboardPaste24);
         AddMenuItem("Rename", (_, __) => HandleContextMenuRename(), SymbolRegular.Rename20);
-        
+
         var sep1 = new Separator();
         contextMenu.Items.Add(sep1);
         menuItems["Separator"] = new MenuItem { Header = "Separator", Visibility = Visibility.Collapsed };
         sep1.DataContext = menuItems["Separator"];
-        
+
         AddMenuItem("Upload", (_, __) => RaiseContextEvent(UploadRequested), SymbolRegular.ArrowUpload24);
         AddMenuItem("Download", (_, __) => RaiseContextEvent(DownloadRequested), SymbolRegular.ArrowDownload24);
-        
+
         var sep2 = new Separator();
         contextMenu.Items.Add(sep2);
-        
+
         AddMenuItem("Delete", (_, __) => RaiseContextEvent(DeleteRequested), SymbolRegular.Delete24);
     }
 
@@ -689,10 +709,10 @@ public partial class BrowserUserControl : UserControl
         emptySpaceContextMenu = new ContextMenu();
         AddEmptySpaceMenuItem("Paste", (_, __) => EmptySpacePasteRequested?.Invoke(), SymbolRegular.ClipboardPaste24);
         AddEmptySpaceMenuItem("Upload", (_, __) => EmptySpaceUploadRequested?.Invoke(), SymbolRegular.ArrowUpload24);
-        
+
         var sep = new Separator();
         emptySpaceContextMenu.Items.Add(sep);
-        
+
         AddEmptySpaceMenuItem("New Folder", (_, __) => EmptySpaceNewFolderRequested?.Invoke(), SymbolRegular.FolderAdd24);
     }
 
@@ -731,7 +751,7 @@ public partial class BrowserUserControl : UserControl
     private void RaiseContextEvent(Action<BrowserItem>? action)
     {
         var selectedItems = GetSelectedItems().Where(item => item.Name != "..").ToList();
-        
+
         if (selectedItems.Count > 1)
         {
             if (action == CopyRequested)
@@ -750,7 +770,7 @@ public partial class BrowserUserControl : UserControl
                 return;
             }
         }
-        
+
         if (GetActiveSelectedItem() is BrowserItem item)
             action?.Invoke(item);
     }
@@ -802,7 +822,7 @@ public partial class BrowserUserControl : UserControl
     {
         // Clear existing selection
         ClearGridSelection();
-        
+
         Items.Clear();
         foreach (var item in items)
             Items.Add(item);
@@ -873,7 +893,7 @@ public partial class BrowserUserControl : UserControl
     public List<BrowserItem> GetSelectedItems()
     {
         var selectedItems = new List<BrowserItem>();
-        
+
         switch (_currentViewMode)
         {
             case BrowserViewMode.List:
@@ -888,11 +908,12 @@ public partial class BrowserUserControl : UserControl
                     }
                 }
                 break;
+
             case BrowserViewMode.Grid:
                 selectedItems.AddRange(_gridSelectedItems);
                 break;
         }
-        
+
         return selectedItems;
     }
 
@@ -917,6 +938,7 @@ public partial class BrowserUserControl : UserControl
                     BrowserList.SelectedItems.Remove(parentItem);
                 }
                 break;
+
             case BrowserViewMode.Grid:
                 ClearGridSelection();
                 foreach (var item in Items.Where(item => item.Name != ".."))
@@ -978,26 +1000,30 @@ public partial class BrowserUserControl : UserControl
                     ? Items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
                     : Items.OrderByDescending(i => i.Name, StringComparer.CurrentCultureIgnoreCase);
                 break;
+
             case "LastUpdated":
                 sorted = _lastSortDirection == ListSortDirection.Ascending
                     ? Items.OrderBy(i => i.LastUpdated)
                     : Items.OrderByDescending(i => i.LastUpdated);
                 break;
+
             case "DisplayType":
                 sorted = _lastSortDirection == ListSortDirection.Ascending
                     ? Items.OrderBy(i => i.DisplayType)
                     : Items.OrderByDescending(i => i.DisplayType);
                 break;
+
             case "Size":
                 sorted = _lastSortDirection == ListSortDirection.Ascending
                     ? Items.OrderBy(i => i.Size)
                     : Items.OrderByDescending(i => i.Size);
                 break;
+
             default:
                 return;
         }
-        
-        var parent = Items.FirstOrDefault(i => i.Name == ".." );
+
+        var parent = Items.FirstOrDefault(i => i.Name == "..");
         var sortedList = sorted.ToList();
         if (parent != null)
         {
@@ -1049,7 +1075,7 @@ public partial class BrowserUserControl : UserControl
             ProgressText.Text = message;
             ProgressOverlay.Visibility = Visibility.Visible;
             CancelOperationButton.IsEnabled = true;
-            
+
             // Disable browser interaction during operations
             IsBrowserEnabled = false;
         }
@@ -1057,11 +1083,11 @@ public partial class BrowserUserControl : UserControl
         {
             ProgressOverlay.Visibility = Visibility.Collapsed;
             CancelOperationButton.IsEnabled = false;
-            
+
             // Re-enable browser interaction
             IsBrowserEnabled = true;
         }
-        
+
         // Notify parent about progress change
         ProgressChanged?.Invoke(show, message);
     }
@@ -1073,10 +1099,10 @@ public partial class BrowserUserControl : UserControl
     {
         CancelOperationButton.IsEnabled = false;
         ProgressText.Text = "Cancelling operation...";
-        
+
         // Notify parent that cancel was requested
         CancelRequested?.Invoke();
     }
 
-    #endregion
+    #endregion Progress Management
 }

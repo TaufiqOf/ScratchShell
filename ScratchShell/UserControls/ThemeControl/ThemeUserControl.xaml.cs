@@ -1,10 +1,6 @@
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Linq;
-using ColorPicker;
-using ColorPicker.Models;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ScratchShell.UserControls.ThemeControl;
 
@@ -29,7 +25,7 @@ public partial class ThemeUserControl : UserControl
         Colors.Black, Colors.White, Colors.Gray, Colors.LightGray, Colors.DarkGray,
         Colors.Red, Colors.DarkRed, Colors.Green, Colors.DarkGreen, Colors.Blue, Colors.DarkBlue,
         Colors.Yellow, Colors.Orange, Colors.Purple, Colors.Pink, Colors.Cyan, Colors.Magenta,
-        
+
         // Popular terminal theme colors
         Color.FromRgb(40, 44, 52),    // Atom One Dark background
         Color.FromRgb(248, 248, 242), // Atom One Dark foreground
@@ -45,6 +41,7 @@ public partial class ThemeUserControl : UserControl
 
     // Track which color is currently being edited
     private string _currentColorType = "Foreground";
+
     private bool _isUpdatingColorPicker = false;
 
     public ThemeUserControl()
@@ -68,7 +65,7 @@ public partial class ThemeUserControl : UserControl
         {
             // Set font family
             FontFamilyComboBox.SelectedItem = _theme.FontFamily;
-            
+
             // Set font size
             var sizeItem = FontSizeComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == _theme.FontSize.ToString());
@@ -84,7 +81,7 @@ public partial class ThemeUserControl : UserControl
     private void CreateColorPresets()
     {
         ColorPresetsPanel.Children.Clear();
-        
+
         foreach (var color in _colorPalette)
         {
             var colorButton = new Button
@@ -99,19 +96,19 @@ public partial class ThemeUserControl : UserControl
                 Style = null, // Remove any button styling
                 Cursor = Cursors.Hand
             };
-            
+
             // Add hover effect
-            colorButton.MouseEnter += (s, e) => 
+            colorButton.MouseEnter += (s, e) =>
             {
                 colorButton.BorderBrush = new SolidColorBrush(Colors.Black);
                 colorButton.BorderThickness = new Thickness(2);
             };
-            colorButton.MouseLeave += (s, e) => 
+            colorButton.MouseLeave += (s, e) =>
             {
                 colorButton.BorderBrush = new SolidColorBrush(Colors.Gray);
                 colorButton.BorderThickness = new Thickness(1);
             };
-            
+
             colorButton.Click += (s, e) =>
             {
                 _isUpdatingColorPicker = true;
@@ -119,7 +116,7 @@ public partial class ThemeUserControl : UserControl
                 _isUpdatingColorPicker = false;
                 ApplyColorToCurrentType(color);
             };
-            
+
             ColorPresetsPanel.Children.Add(colorButton);
         }
     }
@@ -137,7 +134,7 @@ public partial class ThemeUserControl : UserControl
         if (_theme != null)
         {
             FontFamilyComboBox.SelectedItem = _theme.FontFamily;
-            
+
             var sizeItem = FontSizeComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == _theme.FontSize.ToString());
             if (sizeItem != null)
@@ -182,10 +179,10 @@ public partial class ThemeUserControl : UserControl
         if (_theme == null) return;
 
         _isUpdatingColorPicker = true;
-        
+
         var currentColor = GetCurrentColor();
         MainColorPicker.SelectedColor = currentColor;
-        
+
         _isUpdatingColorPicker = false;
     }
 
@@ -211,9 +208,11 @@ public partial class ThemeUserControl : UserControl
             case "Foreground":
                 _theme.Foreground = new SolidColorBrush(color);
                 break;
+
             case "Background":
                 _theme.Background = new SolidColorBrush(color);
                 break;
+
             case "Selection":
                 _theme.SelectionColor = color;
                 break;
