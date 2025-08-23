@@ -339,9 +339,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             UpdateSelectionHighlightRect();
             TerminalCanvas.CaptureMouse();
         }
-        else if (e.ChangedButton == MouseButton.Right && Keyboard.Modifiers == ModifierKeys.Control)
+        else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            // Ctrl+Right Click: Copy selection
+            // Ctrl+Left Click: Copy selection
             if (_selectionStart.HasValue && _selectionEnd.HasValue)
             {
                 string selectedText = GetSelectedText();
@@ -353,9 +353,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             }
             e.Handled = true;
         }
-        else if (e.ChangedButton == MouseButton.Right && Keyboard.Modifiers == ModifierKeys.Alt)
+        else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Alt)
         {
-            // Alt+Right Click: Paste clipboard at input area
+            // Alt+Left Click: Paste clipboard at input area
             if (Clipboard.ContainsText())
             {
                 string pasteText = Clipboard.GetText();
@@ -891,4 +891,54 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public void Send(byte[] data) { }
     public string WindowCommand(Terminal terminal, XtermSharp.WindowManipulationCommand cmd, params int[] args) => string.Empty;
     public bool IsProcessTrusted() => true;
+
+    // Public methods for copy/paste operations
+    public bool HasSelection()
+    {
+        return _selectionStart.HasValue && _selectionEnd.HasValue;
+    }
+
+    public void CopySelection()
+    {
+        if (HasSelection())
+        {
+            string selectedText = GetSelectedText();
+            if (!string.IsNullOrEmpty(selectedText))
+            {
+                Clipboard.SetText(selectedText);
+                StartCopyHighlightTransition();
+            }
+        }
+    }
+
+    public void PasteText(string text)
+    {
+        if (!string.IsNullOrEmpty(text) && !IsReadOnly)
+        {
+            PasteAtInputArea(text);
+        }
+    }
+
+    public void PasteFromClipboard()
+    {
+        if (Clipboard.ContainsText() && !IsReadOnly)
+        {
+            string clipboardText = Clipboard.GetText();
+            PasteAtInputArea(clipboardText);
+        }
+    }
+
+    public void SelectAll()
+    {
+        if (_terminal != null)
+        {
+            var buffer = _terminal.Buffer;
+            if (buffer.Lines.Length > 0)
+            {
+                _selectionStart = (0, 0);
+                _selectionEnd = (buffer.Lines.Length - 1, _terminal.Cols - 1);
+                UpdateSelectionHighlightRect();
+            }
+        }
+    }
 }

@@ -26,4 +26,11 @@ public interface ITerminal
     TerminalTheme Theme { get; set; }
 
     void RefreshTheme();
+    
+    // Copy/Paste functionality
+    bool HasSelection();
+    void CopySelection();
+    void PasteFromClipboard();
+    void PasteText(string text);
+    void SelectAll();
 }

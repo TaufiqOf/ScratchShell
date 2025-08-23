@@ -7,6 +7,7 @@ using ScratchShell.Views.Windows;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -42,6 +43,101 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         SnippetControl.OnEditSnippet += SnippetControlOnEditSnippet;
         SnippetControl.OnNewSnippet += SnippetControlOnNewSnippet;
         SnippetManager.OnSnippetInitialized += SnippetManagerOnSnippetInitialized;
+
+        // Set up command bindings for copy/paste
+        SetupCommandBindings();
+    }
+
+    private void SetupCommandBindings()
+    {
+        // Create command bindings for Copy and Paste
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
+        
+        // Set up keyboard shortcuts
+        InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
+    }
+
+    private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        // Enable copy if terminal has selected text
+        e.CanExecute = Terminal != null && HasSelectedText();
+    }
+
+    private void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        CopySelectedText();
+    }
+
+    private void PasteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        // Enable paste if clipboard has text
+        e.CanExecute = Terminal != null && !Terminal.IsReadOnly && Clipboard.ContainsText();
+    }
+
+    private void PasteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        PasteFromClipboard();
+    }
+
+    private void SelectAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+    {
+        e.CanExecute = Terminal != null;
+    }
+
+    private void SelectAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+    {
+        Terminal?.SelectAll();
+    }
+
+    private bool HasSelectedText()
+    {
+        if (Terminal is GPTTerminalUserControl terminalControl)
+        {
+            return terminalControl.HasSelection();
+        }
+        return false;
+    }
+
+    private void CopySelectedText()
+    {
+        if (Terminal is GPTTerminalUserControl terminalControl)
+        {
+            terminalControl.CopySelection();
+        }
+    }
+
+    private void PasteFromClipboard()
+    {
+        if (Terminal != null && !Terminal.IsReadOnly && Clipboard.ContainsText())
+        {
+            if (Terminal is GPTTerminalUserControl terminalControl)
+            {
+                // Use the terminal's paste method first
+                terminalControl.PasteFromClipboard();
+            }
+            else
+            {
+                // Fallback for other terminal implementations
+                string clipboardText = Clipboard.GetText();
+                if (!string.IsNullOrEmpty(clipboardText))
+                {
+                    // Send the clipboard text directly to the shell stream
+                    if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
+                    {
+                        _shellStream.Write(clipboardText);
+                    }
+                    else
+                    {
+                        // Fallback: use Terminal.AddInput if shell stream is not available
+                        Terminal.AddInput(clipboardText);
+                    }
+                }
+            }
+        }
     }
 
     private async Task SnippetManagerOnSnippetInitialized()
@@ -220,6 +316,12 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         SnippetControl.Visibility = Visibility.Collapsed;
         if (SnippetToggleButton.IsChecked == true)
             SnippetToggleButton.IsChecked = false;
+        
+        // Set the terminal reference programmatically to avoid binding issues
+        if (Terminal != null)
+        {
+            ThemeControl.Terminal = Terminal;
+        }
     }
 
     private void ThemeToggleButtonUnchecked(object sender, RoutedEventArgs e)
@@ -450,5 +552,10 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         menuButton.Flyout = ctx;
         menuPanel.Children.Add(menuButton);
         return menuPanel;
+    }
+
+    private void SelectAll_Click(object sender, RoutedEventArgs e)
+    {
+        Terminal?.SelectAll();
     }
 }

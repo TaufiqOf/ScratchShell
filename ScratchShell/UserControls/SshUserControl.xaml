@@ -52,7 +52,7 @@
                     Command="Copy"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=Copy20}"
-                    ToolTip="Copy selected text from terminal" />
+                    ToolTip="Copy selected text from terminal (Ctrl+C)" />
 
                 <!--  Paste  -->
                 <ui:Button
@@ -62,7 +62,7 @@
                     Command="Paste"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
-                    ToolTip="Paste text into terminal" />
+                    ToolTip="Paste text into terminal (Ctrl+V)" />
                 <!--  Separator  -->
                 <Border
                     Grid.Column="2"
@@ -111,7 +111,28 @@
                 Grid.Column="0"
                 Margin="0,0,0,0"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
+                VerticalAlignment="Stretch">
+                <ContentControl.ContextMenu>
+                    <ContextMenu>
+                        <ui:MenuItem
+                            Command="Copy"
+                            Header="Copy"
+                            Icon="{ui:SymbolIcon Symbol=Copy20}"
+                            InputGestureText="Ctrl+C" />
+                        <ui:MenuItem
+                            Command="Paste"
+                            Header="Paste"
+                            Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
+                            InputGestureText="Ctrl+V" />
+                        <Separator />
+                        <ui:MenuItem
+                            Click="SelectAll_Click"
+                            Header="Select All"
+                            Icon="{ui:SymbolIcon Symbol=CheckboxChecked24}"
+                            InputGestureText="Ctrl+A" />
+                    </ContextMenu>
+                </ContentControl.ContextMenu>
+            </ContentControl>
         </Grid>
 
         <local1:SnippetUserControl
