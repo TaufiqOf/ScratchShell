@@ -1,4 +1,4 @@
-using Renci.SshNet;
+﻿using Renci.SshNet;
 using System.IO;
 
 namespace ScratchShell.Services;
@@ -54,21 +54,21 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         try
         {
-            ProgressChanged?.Invoke(true, $"?? Creating folder '{folderName}'...");
+            ProgressChanged?.Invoke(true, $"📁 Creating folder '{folderName}'...");
             var newFolderPath = $"{currentPath}/{folderName}";
             newFolderPath = ResolveSftpPath(newFolderPath);
 
-            LogRequested?.Invoke($"?? Creating new folder '{folderName}' in current directory");
-            LogRequested?.Invoke($"?? Full path: {newFolderPath}");
+            LogRequested?.Invoke($"📁 Creating new folder '{folderName}' in current directory");
+            LogRequested?.Invoke($"📍 Full path: {newFolderPath}");
 
             await Task.Run(() => _sftpClient.CreateDirectory(newFolderPath));
 
-            LogRequested?.Invoke($"? Successfully created folder '{folderName}'");
+            LogRequested?.Invoke($"✅ Successfully created folder '{folderName}'");
             return OperationResult.Success(newFolderPath);
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Failed to create folder '{folderName}': {ex.Message}");
+            LogRequested?.Invoke($"❌ Failed to create folder '{folderName}': {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -81,21 +81,21 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         try
         {
-            ProgressChanged?.Invoke(true, $"?? Renaming {(isFolder ? "folder" : "file")}...");
+            ProgressChanged?.Invoke(true, $"✏️ Renaming {(isFolder ? "folder" : "file")}...");
             var resolvedOldPath = ResolveSftpPath(oldPath);
 
-            LogRequested?.Invoke($"?? Renaming {(isFolder ? "folder" : "file")}");
-            LogRequested?.Invoke($"?? Old path: {resolvedOldPath}");
-            LogRequested?.Invoke($"?? New path: {newPath}");
+            LogRequested?.Invoke($"✏️ Renaming {(isFolder ? "folder" : "file")}");
+            LogRequested?.Invoke($"📍 Old path: {resolvedOldPath}");
+            LogRequested?.Invoke($"📍 New path: {newPath}");
 
             await Task.Run(() => _sftpClient.RenameFile(resolvedOldPath, newPath));
 
-            LogRequested?.Invoke($"? Successfully renamed item");
+            LogRequested?.Invoke($"✅ Successfully renamed item");
             return OperationResult.Success(newPath);
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Failed to rename item: {ex.Message}");
+            LogRequested?.Invoke($"❌ Failed to rename item: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -108,22 +108,22 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         try
         {
-            ProgressChanged?.Invoke(true, $"?? Uploading {Path.GetFileName(localFilePath)}...");
+            ProgressChanged?.Invoke(true, $"⬆️ Uploading {Path.GetFileName(localFilePath)}...");
             remotePath = ResolveSftpPath(remotePath);
             var fileInfo = new FileInfo(localFilePath);
 
-            LogRequested?.Invoke($"?? Selected file for upload: {localFilePath} ({fileInfo.Length:N0} bytes)");
-            LogRequested?.Invoke($"?? Upload destination: {remotePath}");
+            LogRequested?.Invoke($"📤 Selected file for upload: {localFilePath} ({fileInfo.Length:N0} bytes)");
+            LogRequested?.Invoke($"📍 Upload destination: {remotePath}");
 
             using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read);
             await Task.Run(() => _sftpClient.UploadFile(fs, remotePath));
 
-            LogRequested?.Invoke($"? Successfully uploaded {Path.GetFileName(localFilePath)} to {remotePath}");
+            LogRequested?.Invoke($"✅ Successfully uploaded {Path.GetFileName(localFilePath)} to {remotePath}");
             return OperationResult.Success();
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Failed to upload {localFilePath}: {ex.Message}");
+            LogRequested?.Invoke($"❌ Failed to upload {localFilePath}: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -143,12 +143,12 @@ public class SftpFileOperationService : ISftpFileOperationService
         try
         {
             var fileName = !string.IsNullOrEmpty(_clipboardPath) ? Path.GetFileName(_clipboardPath) : "item";
-            var operation = _clipboardIsCut ? "?? Moving" : "?? Copying";
+            var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
             ProgressChanged?.Invoke(true, $"{operation} {fileName}...");
 
             if (string.IsNullOrEmpty(_clipboardPath))
             {
-                LogRequested?.Invoke($"? Paste operation failed: Clipboard is empty");
+                LogRequested?.Invoke($"❌ Paste operation failed: Clipboard is empty");
                 return OperationResult.Failure("Clipboard is empty");
             }
 
@@ -157,8 +157,8 @@ public class SftpFileOperationService : ISftpFileOperationService
             var resolvedDestinationPath = ResolveSftpPath(fullDestinationPath);
 
             LogRequested?.Invoke(_clipboardIsCut ?
-                $"?? Moving file from {resolvedSourcePath} to {resolvedDestinationPath}" :
-                $"?? Copying file from {resolvedSourcePath} to {resolvedDestinationPath}");
+                $"🚚 Moving file from {resolvedSourcePath} to {resolvedDestinationPath}" :
+                $"📋 Copying file from {resolvedSourcePath} to {resolvedDestinationPath}");
 
             // Check if source is a directory
             var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath));
@@ -169,18 +169,18 @@ public class SftpFileOperationService : ISftpFileOperationService
             }
             else
             {
-                LogRequested?.Invoke($"?? Downloading file to memory for transfer");
+                LogRequested?.Invoke($"⬇️ Downloading file to memory for transfer");
                 using var ms = new MemoryStream();
                 await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms));
                 ms.Position = 0;
 
-                LogRequested?.Invoke($"?? Uploading file to destination");
+                LogRequested?.Invoke($"⬆️ Uploading file to destination");
                 await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath));
             }
 
             if (_clipboardIsCut)
             {
-                LogRequested?.Invoke($"??? Deleting original: {resolvedSourcePath}");
+                LogRequested?.Invoke($"🗑️ Deleting original: {resolvedSourcePath}");
                 if (sourceFile.IsDirectory)
                 {
                     await DeleteDirectoryRecursive(resolvedSourcePath);
@@ -189,11 +189,11 @@ public class SftpFileOperationService : ISftpFileOperationService
                 {
                     await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath));
                 }
-                LogRequested?.Invoke($"? Successfully moved {resolvedSourcePath} to {resolvedDestinationPath}");
+                LogRequested?.Invoke($"✅ Successfully moved {resolvedSourcePath} to {resolvedDestinationPath}");
             }
             else
             {
-                LogRequested?.Invoke($"? Successfully copied {resolvedSourcePath} to {resolvedDestinationPath}");
+                LogRequested?.Invoke($"✅ Successfully copied {resolvedSourcePath} to {resolvedDestinationPath}");
             }
 
             // Clear clipboard after operation
@@ -206,7 +206,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Paste operation failed: {ex.Message}");
+            LogRequested?.Invoke($"❌ Paste operation failed: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -224,8 +224,8 @@ public class SftpFileOperationService : ISftpFileOperationService
         ClipboardStateChanged?.Invoke();
 
         LogRequested?.Invoke(isCut ?
-            $"?? Cut to clipboard: {itemPath}" :
-            $"?? Copied to clipboard: {itemPath}");
+            $"✂️ Cut to clipboard: {itemPath}" :
+            $"📋 Copied to clipboard: {itemPath}");
     }
 
     public void UpdateMultiClipboard(List<string> itemPaths, bool isCut)
@@ -238,19 +238,19 @@ public class SftpFileOperationService : ISftpFileOperationService
 
         var operation = isCut ? "Cut" : "Copied";
         var itemCount = itemPaths.Count;
-        LogRequested?.Invoke($"{(isCut ? "??" : "??")} {operation} {itemCount} item(s) to clipboard");
+        LogRequested?.Invoke($"{(isCut ? "✂️" : "📋")} {operation} {itemCount} item(s) to clipboard");
     }
 
     public async Task<OperationResult> PasteMultiItemsAsync(string destinationPath)
     {
         try
         {
-            var operation = _clipboardIsCut ? "?? Moving" : "?? Copying";
+            var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
             ProgressChanged?.Invoke(true, $"{operation} {_clipboardPaths.Count} items...");
 
             if (!_clipboardPaths.Any())
             {
-                LogRequested?.Invoke($"? Paste operation failed: Clipboard is empty");
+                LogRequested?.Invoke($"❌ Paste operation failed: Clipboard is empty");
                 return OperationResult.Failure("Clipboard is empty");
             }
 
@@ -258,7 +258,7 @@ public class SftpFileOperationService : ISftpFileOperationService
             var failCount = 0;
             var errors = new List<string>();
 
-            LogRequested?.Invoke($"?? Starting paste operation for {_clipboardPaths.Count} item(s)");
+            LogRequested?.Invoke($"🔄 Starting paste operation for {_clipboardPaths.Count} item(s)");
 
             foreach (var sourcePath in _clipboardPaths)
             {
@@ -270,8 +270,8 @@ public class SftpFileOperationService : ISftpFileOperationService
                     var resolvedDestinationPath = ResolveSftpPath(fullDestinationPath);
 
                     LogRequested?.Invoke(_clipboardIsCut ?
-                        $"?? Moving {fileName}" :
-                        $"?? Copying {fileName}");
+                        $"🚚 Moving {fileName}" :
+                        $"📋 Copying {fileName}");
 
                     // Check if source is a directory
                     var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath));
@@ -301,7 +301,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                     }
 
                     successCount++;
-                    LogRequested?.Invoke($"? Successfully {(_clipboardIsCut ? "moved" : "copied")} {fileName}");
+                    LogRequested?.Invoke($"✅ Successfully {(_clipboardIsCut ? "moved" : "copied")} {fileName}");
                 }
                 catch (Exception ex)
                 {
@@ -309,7 +309,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                     var fileName = Path.GetFileName(sourcePath);
                     var errorMsg = $"Failed to {(_clipboardIsCut ? "move" : "copy")} {fileName}: {ex.Message}";
                     errors.Add(errorMsg);
-                    LogRequested?.Invoke($"? {errorMsg}");
+                    LogRequested?.Invoke($"❌ {errorMsg}");
                 }
             }
 
@@ -323,7 +323,7 @@ public class SftpFileOperationService : ISftpFileOperationService
             }
 
             var summary = $"Operation completed: {successCount} successful, {failCount} failed";
-            LogRequested?.Invoke($"?? {summary}");
+            LogRequested?.Invoke($"📊 {summary}");
 
             if (failCount > 0)
             {
@@ -334,7 +334,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Multi-paste operation failed: {ex.Message}");
+            LogRequested?.Invoke($"❌ Multi-paste operation failed: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -346,13 +346,13 @@ public class SftpFileOperationService : ISftpFileOperationService
     private async Task CopyDirectoryRecursive(string sourcePath, string destinationPath)
     {
         var folderName = Path.GetFileName(destinationPath);
-        var operation = _clipboardIsCut ? "?? Moving" : "?? Copying";
+        var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
         ProgressChanged?.Invoke(true, $"{operation} folder {folderName}...");
         
-        LogRequested?.Invoke($"{operation} directory: {sourcePath} ? {destinationPath}");
+        LogRequested?.Invoke($"{operation} directory: {sourcePath} → {destinationPath}");
 
         // Create destination directory
-        LogRequested?.Invoke($"?? Creating destination directory: {folderName}");
+        LogRequested?.Invoke($"📁 Creating destination directory: {folderName}");
         await Task.Run(() => _sftpClient.CreateDirectory(destinationPath));
 
         // List all items in source directory
@@ -367,12 +367,12 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             if (item.IsDirectory)
             {
-                LogRequested?.Invoke($"?? Processing subdirectory: {item.Name}");
+                LogRequested?.Invoke($"📁 Processing subdirectory: {item.Name}");
                 await CopyDirectoryRecursive(sourceItemPath, destItemPath);
             }
             else
             {
-                var fileOperation = _clipboardIsCut ? "?? Moving" : "?? Copying";
+                var fileOperation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
                 ProgressChanged?.Invoke(true, $"{fileOperation} file {item.Name}...");
                 LogRequested?.Invoke($"{fileOperation} file: {item.Name} ({item.Attributes.Size:N0} bytes)");
                 
@@ -381,19 +381,19 @@ public class SftpFileOperationService : ISftpFileOperationService
                 ms.Position = 0;
                 await Task.Run(() => _sftpClient.UploadFile(ms, destItemPath));
                 
-                LogRequested?.Invoke($"? {(_clipboardIsCut ? "Moved" : "Copied")} file: {item.Name}");
+                LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} file: {item.Name}");
             }
         }
         
-        LogRequested?.Invoke($"? {(_clipboardIsCut ? "Moved" : "Copied")} directory: {folderName}");
+        LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} directory: {folderName}");
     }
 
     private async Task DeleteDirectoryRecursive(string directoryPath)
     {
         var folderName = Path.GetFileName(directoryPath);
-        ProgressChanged?.Invoke(true, $"??? Deleting folder {folderName}...");
+        ProgressChanged?.Invoke(true, $"🗑️ Deleting folder {folderName}...");
         
-        LogRequested?.Invoke($"??? Listing contents of directory: {folderName}");
+        LogRequested?.Invoke($"📋 Listing contents of directory: {folderName}");
         
         // List all items in directory
         var items = await Task.Run(() => _sftpClient.ListDirectory(directoryPath));
@@ -406,22 +406,22 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             if (item.IsDirectory)
             {
-                LogRequested?.Invoke($"?? Recursively deleting subdirectory: {item.Name}");
+                LogRequested?.Invoke($"📁 Recursively deleting subdirectory: {item.Name}");
                 await DeleteDirectoryRecursive(itemPath);
             }
             else
             {
-                ProgressChanged?.Invoke(true, $"??? Deleting file {item.Name}...");
-                LogRequested?.Invoke($"?? Deleting file: {item.Name}");
+                ProgressChanged?.Invoke(true, $"🗑️ Deleting file {item.Name}...");
+                LogRequested?.Invoke($"📄 Deleting file: {item.Name}");
                 await Task.Run(() => _sftpClient.DeleteFile(itemPath));
-                LogRequested?.Invoke($"? Deleted file: {item.Name}");
+                LogRequested?.Invoke($"✅ Deleted file: {item.Name}");
             }
         }
 
         // Delete the directory itself
-        LogRequested?.Invoke($"??? Deleting empty directory: {folderName}");
+        LogRequested?.Invoke($"🗑️ Deleting empty directory: {folderName}");
         await Task.Run(() => _sftpClient.DeleteDirectory(directoryPath));
-        LogRequested?.Invoke($"? Deleted directory: {folderName}");
+        LogRequested?.Invoke($"✅ Deleted directory: {folderName}");
     }
 
     public async Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder)
@@ -429,28 +429,28 @@ public class SftpFileOperationService : ISftpFileOperationService
         try
         {
             var itemName = Path.GetFileName(remotePath);
-            ProgressChanged?.Invoke(true, $"?? Downloading {itemName}...");
+            ProgressChanged?.Invoke(true, $"⬇️ Downloading {itemName}...");
             
             var resolvedRemotePath = ResolveSftpPath(remotePath);
             
-            LogRequested?.Invoke($"?? Starting download operation");
-            LogRequested?.Invoke($"?? Remote path: {resolvedRemotePath}");
-            LogRequested?.Invoke($"?? Local path: {localPath}");
+            LogRequested?.Invoke($"📥 Starting download operation");
+            LogRequested?.Invoke($"🌐 Remote path: {resolvedRemotePath}");
+            LogRequested?.Invoke($"💻 Local path: {localPath}");
             
             if (isFolder)
             {
-                LogRequested?.Invoke($"?? Downloading folder recursively: {itemName}");
+                LogRequested?.Invoke($"📁 Downloading folder recursively: {itemName}");
                 
                 // Create local directory if it doesn't exist
                 Directory.CreateDirectory(localPath);
                 
                 await DownloadDirectoryRecursive(resolvedRemotePath, localPath);
                 
-                LogRequested?.Invoke($"? Successfully downloaded folder '{itemName}' to {localPath}");
+                LogRequested?.Invoke($"✅ Successfully downloaded folder '{itemName}' to {localPath}");
             }
             else
             {
-                LogRequested?.Invoke($"?? Downloading file: {itemName}");
+                LogRequested?.Invoke($"📄 Downloading file: {itemName}");
                 
                 // Ensure the directory exists
                 var directory = Path.GetDirectoryName(localPath);
@@ -462,14 +462,14 @@ public class SftpFileOperationService : ISftpFileOperationService
                 using var fs = new FileStream(localPath, FileMode.Create, FileAccess.Write);
                 await Task.Run(() => _sftpClient.DownloadFile(resolvedRemotePath, fs));
                 
-                LogRequested?.Invoke($"? Successfully downloaded file '{itemName}' to {localPath}");
+                LogRequested?.Invoke($"✅ Successfully downloaded file '{itemName}' to {localPath}");
             }
             
             return OperationResult.Success();
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Failed to download {Path.GetFileName(remotePath)}: {ex.Message}");
+            LogRequested?.Invoke($"❌ Failed to download {Path.GetFileName(remotePath)}: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -481,7 +481,7 @@ public class SftpFileOperationService : ISftpFileOperationService
     private async Task DownloadDirectoryRecursive(string remotePath, string localPath)
     {
         var folderName = Path.GetFileName(remotePath);
-        ProgressChanged?.Invoke(true, $"?? Downloading folder {folderName}...");
+        ProgressChanged?.Invoke(true, $"⬇️ Downloading folder {folderName}...");
         
         // List all items in remote directory
         var items = await Task.Run(() => _sftpClient.ListDirectory(remotePath));
@@ -495,19 +495,19 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             if (item.IsDirectory)
             {
-                LogRequested?.Invoke($"?? Creating local directory: {item.Name}");
+                LogRequested?.Invoke($"📁 Creating local directory: {item.Name}");
                 Directory.CreateDirectory(localItemPath);
                 await DownloadDirectoryRecursive(remoteItemPath, localItemPath);
             }
             else
             {
-                ProgressChanged?.Invoke(true, $"?? Downloading file {item.Name}...");
-                LogRequested?.Invoke($"?? Downloading file: {item.Name} ({item.Attributes.Size:N0} bytes)");
+                ProgressChanged?.Invoke(true, $"⬇️ Downloading file {item.Name}...");
+                LogRequested?.Invoke($"📄 Downloading file: {item.Name} ({item.Attributes.Size:N0} bytes)");
                 
                 using var fs = new FileStream(localItemPath, FileMode.Create, FileAccess.Write);
                 await Task.Run(() => _sftpClient.DownloadFile(remoteItemPath, fs));
                 
-                LogRequested?.Invoke($"? Downloaded: {item.Name}");
+                LogRequested?.Invoke($"✅ Downloaded: {item.Name}");
             }
         }
     }
@@ -517,31 +517,31 @@ public class SftpFileOperationService : ISftpFileOperationService
         try
         {
             var fileName = Path.GetFileName(itemPath);
-            ProgressChanged?.Invoke(true, $"??? Deleting {fileName}...");
+            ProgressChanged?.Invoke(true, $"🗑️ Deleting {fileName}...");
             var resolvedPath = ResolveSftpPath(itemPath);
 
-            LogRequested?.Invoke($"??? Deleting item: {resolvedPath}");
+            LogRequested?.Invoke($"🗑️ Deleting item: {resolvedPath}");
 
             // Check if the item is a file or directory
             var item = await Task.Run(() => _sftpClient.Get(resolvedPath));
 
             if (item.IsDirectory)
             {
-                LogRequested?.Invoke($"?? Deleting directory recursively: {Path.GetFileName(resolvedPath)}");
+                LogRequested?.Invoke($"📁 Deleting directory recursively: {Path.GetFileName(resolvedPath)}");
                 await DeleteDirectoryRecursive(resolvedPath);
             }
             else
             {
-                LogRequested?.Invoke($"?? Deleting file: {Path.GetFileName(resolvedPath)}");
+                LogRequested?.Invoke($"📄 Deleting file: {Path.GetFileName(resolvedPath)}");
                 await Task.Run(() => _sftpClient.DeleteFile(resolvedPath));
             }
 
-            LogRequested?.Invoke($"? Successfully deleted: {Path.GetFileName(resolvedPath)}");
+            LogRequested?.Invoke($"✅ Successfully deleted: {Path.GetFileName(resolvedPath)}");
             return OperationResult.Success();
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Failed to delete {Path.GetFileName(itemPath)}: {ex.Message}");
+            LogRequested?.Invoke($"❌ Failed to delete {Path.GetFileName(itemPath)}: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
@@ -554,11 +554,11 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         try
         {
-            ProgressChanged?.Invoke(true, $"??? Deleting {itemPaths.Count} items...");
+            ProgressChanged?.Invoke(true, $"🗑️ Deleting {itemPaths.Count} items...");
 
             if (!itemPaths.Any())
             {
-                LogRequested?.Invoke($"? Delete operation failed: No items provided");
+                LogRequested?.Invoke($"❌ Delete operation failed: No items provided");
                 return OperationResult.Failure("No items provided");
             }
 
@@ -566,7 +566,7 @@ public class SftpFileOperationService : ISftpFileOperationService
             var failCount = 0;
             var errors = new List<string>();
 
-            LogRequested?.Invoke($"??? Starting delete operation for {itemPaths.Count} item(s)");
+            LogRequested?.Invoke($"🗑️ Starting delete operation for {itemPaths.Count} item(s)");
 
             foreach (var itemPath in itemPaths)
             {
@@ -575,7 +575,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                     var fileName = Path.GetFileName(itemPath);
                     var resolvedPath = ResolveSftpPath(itemPath);
 
-                    LogRequested?.Invoke($"??? Deleting {fileName}");
+                    LogRequested?.Invoke($"🗑️ Deleting {fileName}");
                     var item = await Task.Run(() => _sftpClient.Get(resolvedPath));
                     // Check if source is a directory
 
@@ -589,7 +589,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                     }
 
                     successCount++;
-                    LogRequested?.Invoke($"? Successfully deleted {fileName}");
+                    LogRequested?.Invoke($"✅ Successfully deleted {fileName}");
                 }
                 catch (Exception ex)
                 {
@@ -597,12 +597,12 @@ public class SftpFileOperationService : ISftpFileOperationService
                     var fileName = Path.GetFileName(itemPath);
                     var errorMsg = $"Failed to delete {fileName}: {ex.Message}";
                     errors.Add(errorMsg);
-                    LogRequested?.Invoke($"? {errorMsg}");
+                    LogRequested?.Invoke($"❌ {errorMsg}");
                 }
             }
 
             var summary = $"Delete operation completed: {successCount} successful, {failCount} failed";
-            LogRequested?.Invoke($"?? {summary}");
+            LogRequested?.Invoke($"📊 {summary}");
 
             if (failCount > 0)
             {
@@ -613,7 +613,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
         catch (Exception ex)
         {
-            LogRequested?.Invoke($"? Multi-delete operation failed: {ex.Message}");
+            LogRequested?.Invoke($"❌ Multi-delete operation failed: {ex.Message}");
             return OperationResult.Failure(ex.Message);
         }
         finally
