@@ -47,6 +47,9 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         // Set up command bindings for copy/paste
         SetupCommandBindings();
+        
+        // Set up selection change monitoring
+        SetupSelectionMonitoring();
     }
 
     private void SetupCommandBindings()
@@ -60,6 +63,46 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
+    }
+
+    private void SetupSelectionMonitoring()
+    {
+        // Hook into mouse and keyboard events that can change selection
+        if (Terminal is GPTTerminalUserControl terminalControl)
+        {
+            // Use a lower frequency timer to reduce performance impact
+            var selectionTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(200) // Check every 200ms (reduced frequency)
+            };
+            selectionTimer.Tick += (s, e) => UpdateSelectionState();
+            selectionTimer.Start();
+            
+            // Also hook into control events that might change selection
+            terminalControl.MouseUp += (s, e) => UpdateSelectionState();
+            terminalControl.KeyUp += (s, e) => UpdateSelectionState();
+            terminalControl.GotFocus += (s, e) => UpdateSelectionState();
+            terminalControl.LostFocus += (s, e) => UpdateSelectionState();
+        }
+        
+        // Set up clipboard monitoring for paste command
+        var clipboardTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(500) // Check clipboard every 500ms
+        };
+        clipboardTimer.Tick += (s, e) => UpdateSelectionState(); // This will also refresh paste state
+        clipboardTimer.Start();
+        
+        // Initial state update
+        UpdateSelectionState();
+    }
+
+    private void UpdateSelectionState()
+    {
+        bool hasSelection = HasSelectedText();
+        
+        // Update copy button and menu items through command manager
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)

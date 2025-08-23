@@ -63,6 +63,9 @@ public partial class ThemeUserControl : UserControl
 
         if (_theme != null)
         {
+            // Validate theme colors before applying
+            ValidateThemeColors();
+
             // Set font family
             FontFamilyComboBox.SelectedItem = _theme.FontFamily;
 
@@ -162,6 +165,12 @@ public partial class ThemeUserControl : UserControl
 
         // Update selection preview
         SelectionPreview.Background = new SolidColorBrush(_theme.SelectionColor);
+
+        // Update cursor preview
+        CursorPreview.Background = _theme.CursorColor ?? _theme.Foreground;
+
+        // Update copy selection preview
+        CopySelectionPreview.Background = new SolidColorBrush(_theme.CopySelectionColor);
     }
 
     private void UpdatePreview()
@@ -195,6 +204,8 @@ public partial class ThemeUserControl : UserControl
             "Foreground" => (_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
             "Background" => (_theme.Background as SolidColorBrush)?.Color ?? Colors.Black,
             "Selection" => _theme.SelectionColor,
+            "Cursor" => (_theme.CursorColor as SolidColorBrush)?.Color ?? (_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
+            "CopySelection" => _theme.CopySelectionColor,
             _ => Colors.Black
         };
     }
@@ -215,6 +226,14 @@ public partial class ThemeUserControl : UserControl
 
             case "Selection":
                 _theme.SelectionColor = color;
+                break;
+
+            case "Cursor":
+                _theme.CursorColor = new SolidColorBrush(color);
+                break;
+
+            case "CopySelection":
+                _theme.CopySelectionColor = color;
                 break;
         }
 
@@ -252,7 +271,7 @@ public partial class ThemeUserControl : UserControl
         }
     }
 
-    private void MainColorPicker_SelectedColorChanged(object sender, RoutedEventArgs e)
+    private void MainColorPicker_ColorChanged(object sender, RoutedEventArgs e)
     {
         if (!_isUpdatingColorPicker)
         {
@@ -275,16 +294,152 @@ public partial class ThemeUserControl : UserControl
         ColorTypeComboBox.SelectedIndex = 2; // Select "Selection Color"
     }
 
+    private void CursorPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        ColorTypeComboBox.SelectedIndex = 3; // Select "Cursor Color"
+    }
+
+    private void CopySelectionPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        ColorTypeComboBox.SelectedIndex = 4; // Select "Copy Highlight Color"
+    }
+
+    // Validate theme colors and provide defaults if needed
+    private void ValidateThemeColors()
+    {
+        if (_theme == null) return;
+
+        // Ensure all required colors have valid values
+        if (_theme.Foreground == null)
+            _theme.Foreground = Brushes.LightGray;
+
+        if (_theme.Background == null)
+            _theme.Background = Brushes.Black;
+
+        if (_theme.CursorColor == null)
+            _theme.CursorColor = _theme.Foreground;
+
+        // Validate alpha values for transparency colors
+        if (_theme.SelectionColor.A == 0)
+            _theme.SelectionColor = Color.FromArgb(80, _theme.SelectionColor.R, _theme.SelectionColor.G, _theme.SelectionColor.B);
+
+        if (_theme.CopySelectionColor.A == 0)
+            _theme.CopySelectionColor = Color.FromArgb(180, _theme.CopySelectionColor.R, _theme.CopySelectionColor.G, _theme.CopySelectionColor.B);
+    }
+
+    // Method to export current theme settings
+    public string ExportThemeSettings()
+    {
+        if (_theme == null) return string.Empty;
+
+        return System.Text.Json.JsonSerializer.Serialize(new
+        {
+            FontFamily = _theme.FontFamily.Source,
+            FontSize = _theme.FontSize,
+            Foreground = ColorToHex((_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White),
+            Background = ColorToHex((_theme.Background as SolidColorBrush)?.Color ?? Colors.Black),
+            SelectionColor = ColorToHex(_theme.SelectionColor),
+            CursorColor = ColorToHex((_theme.CursorColor as SolidColorBrush)?.Color ?? Colors.White),
+            CopySelectionColor = ColorToHex(_theme.CopySelectionColor)
+        }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    }
+
+    // Helper method to convert color to hex string
+    private string ColorToHex(Color color)
+    {
+        return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    // Method to import theme settings from JSON
+    public void ImportThemeSettings(string jsonSettings)
+    {
+        try
+        {
+            var settings = System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonSettings);
+            // Implementation would parse JSON and apply settings
+            // This is a placeholder for future enhancement
+        }
+        catch (Exception ex)
+        {
+            // Handle import errors gracefully
+            System.Diagnostics.Debug.WriteLine($"Failed to import theme settings: {ex.Message}");
+        }
+    }
+
     private void ApplyButton_Click(object sender, RoutedEventArgs e)
     {
         Terminal?.RefreshTheme();
+        
+        // Optional: Save theme settings to user preferences
+        SaveThemeToSettings();
     }
 
-    private void MainColorPicker_ColorChanged(object sender, RoutedEventArgs e)
+    private void SaveThemeToSettings()
     {
-        if (!_isUpdatingColorPicker)
+        // This could be implemented to save theme settings to user preferences
+        // For now, we'll just apply the theme to the terminal
+    }
+
+    // Method to reset theme to defaults
+    private void ResetToDefaults()
+    {
+        if (_theme == null) return;
+
+        _theme.FontFamily = new FontFamily("Consolas");
+        _theme.FontSize = 16.0;
+        _theme.Foreground = Brushes.LightGray;
+        _theme.Background = Brushes.Black;
+        _theme.SelectionColor = Color.FromArgb(80, 0, 120, 255);
+        _theme.CursorColor = Brushes.LightGray;
+        _theme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
+
+        UpdateUIFromTheme();
+        Terminal?.RefreshTheme();
+    }
+
+    // Method to apply a predefined theme
+    public void ApplyPredefinedTheme(string themeName)
+    {
+        if (_theme == null) return;
+
+        switch (themeName.ToLower())
         {
-            ApplyColorToCurrentType(MainColorPicker.SelectedColor);
+            case "dark":
+                _theme.FontFamily = new FontFamily("Consolas");
+                _theme.FontSize = 16.0;
+                _theme.Foreground = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _theme.Background = new SolidColorBrush(Color.FromRgb(40, 44, 52));
+                _theme.SelectionColor = Color.FromArgb(80, 98, 114, 164);
+                _theme.CursorColor = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _theme.CopySelectionColor = Color.FromArgb(180, 87, 227, 137);
+                break;
+
+            case "light":
+                _theme.FontFamily = new FontFamily("Consolas");
+                _theme.FontSize = 16.0;
+                _theme.Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                _theme.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                _theme.SelectionColor = Color.FromArgb(80, 0, 120, 215);
+                _theme.CursorColor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                _theme.CopySelectionColor = Color.FromArgb(180, 0, 150, 0);
+                break;
+
+            case "monokai":
+                _theme.FontFamily = new FontFamily("Consolas");
+                _theme.FontSize = 16.0;
+                _theme.Foreground = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _theme.Background = new SolidColorBrush(Color.FromRgb(39, 40, 34));
+                _theme.SelectionColor = Color.FromArgb(80, 73, 72, 62);
+                _theme.CursorColor = new SolidColorBrush(Color.FromRgb(249, 38, 114));
+                _theme.CopySelectionColor = Color.FromArgb(180, 102, 217, 239);
+                break;
+
+            default:
+                ResetToDefaults();
+                return;
         }
+
+        UpdateUIFromTheme();
+        Terminal?.RefreshTheme();
     }
 }

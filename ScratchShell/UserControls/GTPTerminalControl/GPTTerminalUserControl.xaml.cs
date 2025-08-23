@@ -93,7 +93,23 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             {
                 UpdateTerminalLayoutAndSize(_pendingResizeSize);
             }
+            // Do NOT restart the timer here - it should only be started when a resize actually occurs
         };
+
+        // Hook into SizeChanged event to properly trigger resize debouncing
+        SizeChanged += OnControlSizeChanged;
+    }
+
+    private void OnControlSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.NewSize.Width > 0 && e.NewSize.Height > 0)
+        {
+            _pendingResizeSize = e.NewSize;
+
+            // Restart the debounce timer
+            _resizeRedrawTimer.Stop();
+            _resizeRedrawTimer.Start();
+        }
     }
 
     private void GPTTerminalUserControl_GotFocus(object sender, RoutedEventArgs e)
@@ -129,6 +145,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         // Clean up any running animations and timers
         CleanupHighlightAnimations();
+        
+        // Stop and clean up the resize timer
+        if (_resizeRedrawTimer != null)
+        {
+            _resizeRedrawTimer.Stop();
+            _resizeRedrawTimer = null;
+        }
     }
 
     private void CleanupHighlightAnimations()
@@ -367,10 +390,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         TerminalCanvas.Focus();
         _isFocused = true; // Ensure focus state is updated when clicking on terminal
-        
-        var pos = e.GetPosition(TerminalCanvas);
-        int col = (int)(pos.X / _charWidth);
-        int row = (int)(pos.Y / _charHeight);
+
+
 
         if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
         {
@@ -384,12 +405,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             foreach (var rect in _selectionHighlightRects)
                 TerminalCanvas.Children.Remove(rect);
             _selectionHighlightRects.Clear();
-            
-            // Start new selection
-            _isSelecting = true;
-            _selectionStart = (row, col);
-            _selectionEnd = (row, col);
-            UpdateSelectionHighlightRect();
+            _selectionStart = null;
+            _selectionEnd = null;
             TerminalCanvas.CaptureMouse();
         }
         else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
@@ -499,15 +516,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                         {
                             _isCopyHighlight = false;
                             // Ensure all rectangles have the default color from theme
-                            foreach (var r in _selectionHighlightRects)
+                            Dispatcher.Invoke(() =>
                             {
-                                if (r.Fill is SolidColorBrush b)
+                                foreach (var r in _selectionHighlightRects)
                                 {
-                                    b.Color = Theme.SelectionColor;
-                                    // Stop any ongoing animations
-                                    b.BeginAnimation(SolidColorBrush.ColorProperty, null);
+                                    if (r.Fill is SolidColorBrush b)
+                                    {
+                                        b.Color = Theme.SelectionColor;
+                                        // Stop any ongoing animations
+                                        b.BeginAnimation(SolidColorBrush.ColorProperty, null);
+                                    }
                                 }
-                            }
+                            });
                         };
                     }
 
@@ -521,13 +541,22 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void TerminalCanvas_MouseMove(object sender, MouseEventArgs e)
     {
-        if (_isSelecting && e.LeftButton == MouseButtonState.Pressed)
+        if (e.LeftButton == MouseButtonState.Pressed)
         {
             var pos = e.GetPosition(TerminalCanvas);
             int col = (int)(pos.X / _charWidth);
             int row = (int)(pos.Y / _charHeight);
-            _selectionEnd = (row, col);
-            UpdateSelectionHighlightRect();
+            if (_isSelecting && e.LeftButton == MouseButtonState.Pressed)
+            {
+                _selectionEnd = (row, col);
+                UpdateSelectionHighlightRect();
+            }
+            else
+            {
+                _isSelecting = true;
+                _selectionStart = (row, col);
+                _selectionEnd = (row, col);
+            }
         }
     }
 
@@ -712,11 +741,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
         if (TerminalGrid != null)
             TerminalGrid.Background = Theme.Background;
-        
+
         // Update char size and redraw
         UpdateCharSize();
         RedrawTerminal();
-        
+
         // Clear old selection highlights and selection state to apply new theme colors
         ClearSelectionHighlightRects();
         _selectionStart = null;
@@ -855,7 +884,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         var buffer = _terminal.Buffer;
 
-
         if (onlyRow.HasValue)
         {
             onlyRow = null;
@@ -865,6 +893,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int rows = buffer.Lines.Length;
         double charWidth = _charWidth;
         double charHeight = _charHeight;
+        bool isFocused = _isFocused; // Capture focus state
+
         // Extract and freeze all DependencyObject values on the UI thread
         var theme = Theme;
         var typeface = _typeface;
@@ -872,6 +902,20 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         var bgBrush = (theme.Background as SolidColorBrush)?.CloneCurrentValue() ?? Brushes.Black.CloneCurrentValue();
         fgBrush.Freeze();
         bgBrush.Freeze();
+
+        // Extract and freeze cursor color on UI thread
+        Brush cursorBrush;
+        if (theme.CursorColor != null)
+        {
+            cursorBrush = (theme.CursorColor as SolidColorBrush)?.CloneCurrentValue() ?? fgBrush;
+            if (cursorBrush != fgBrush)
+                cursorBrush.Freeze();
+        }
+        else
+        {
+            cursorBrush = fgBrush;
+        }
+
         var fontSize = theme.FontSize;
         var fontFamily = theme.FontFamily.Source; // Use string name
 
@@ -931,21 +975,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                             );
                             dc.DrawText(ft, new Point(col * charWidth, row * charHeight));
                             // Draw cursor overlay only when terminal is focused
-                            if (isCursor && _isFocused)
+                            if (isCursor && isFocused)
                             {
-                                // Use theme cursor color if available, otherwise use foreground
-                                Brush cursorBrush;
-                                if (Theme.CursorColor != null)
-                                {
-                                    cursorBrush = (Theme.CursorColor as SolidColorBrush)?.CloneCurrentValue() ?? fgBrush;
-                                    if (cursorBrush != fgBrush)
-                                        cursorBrush.Freeze();
-                                }
-                                else
-                                {
-                                    cursorBrush = fgBrush;
-                                }
-                                
+                                // Use the pre-extracted cursor brush
                                 dc.DrawRectangle(cursorBrush, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
                                 var ftCursor = new FormattedText(
                                     ch.ToString(),
@@ -985,7 +1017,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 {
                     Debug.WriteLine($"Exception creating in-memory PNG: {ex}");
                 }
-                //SaveLoadedImageToFile(loadedImg, $"D:\\test\\{Ulid.NewUlid()}.png");
 
                 Dispatcher.Invoke(() =>
                 {
@@ -1114,7 +1145,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public void SetTerminalIconTitle(Terminal terminal, string title)
     { }
 
-    public void SizeChanged(Terminal terminal)
+    void ITerminalDelegate.SizeChanged(Terminal terminal)
     { }
 
     public void Send(byte[] data)
