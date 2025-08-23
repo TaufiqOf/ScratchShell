@@ -44,6 +44,7 @@
 
                 <!--  Navigation buttons  -->
                 <ui:Button
+                    x:Name="BackButton"
                     Grid.Column="0"
                     Margin="2"
                     Padding="8,6"
@@ -54,6 +55,7 @@
                     ToolTip="Back (Alt+Left Arrow)" />
 
                 <ui:Button
+                    x:Name="ForwardButton"
                     Grid.Column="1"
                     Margin="2"
                     Padding="8,6"
@@ -64,6 +66,7 @@
                     ToolTip="Forward (Alt+Right Arrow)" />
 
                 <ui:Button
+                    x:Name="RefreshButton"
                     Grid.Column="2"
                     Margin="2"
                     Padding="8,6"
@@ -74,11 +77,12 @@
                     ToolTip="Refresh (F5)" />
 
                 <ui:Button
+                    x:Name="UpButton"
                     Grid.Column="3"
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="BackButton_Click"
+                    Click="UpButton_Click"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=FolderArrowUp20}"
                     ToolTip="Up one level" />
@@ -121,21 +125,9 @@
                     ToolTip="Paste (Ctrl+V)" />
 
                 <!--  View and utility buttons  -->
-                <ToggleButton
-                    x:Name="LogToggleButton"
-                    Grid.Column="7"
-                    Margin="2"
-                    Padding="8,6"
-                    VerticalAlignment="Stretch"
-                    Checked="LogToggleButtonChecked"
-                    FontSize="16"
-                    ToolTip="Show/hide log panel"
-                    Unchecked="LogToggleButtonUnChecked">
-                    <ui:SymbolIcon Symbol="TextBulletListSquare20" />
-                </ToggleButton>
-
                 <ui:Button
-                    Grid.Column="8"
+                    x:Name="OptionsButton"
+                    Grid.Column="7"
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
@@ -145,7 +137,7 @@
 
                 <ui:Button
                     x:Name="FullScreenButton"
-                    Grid.Column="9"
+                    Grid.Column="8"
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
@@ -153,13 +145,27 @@
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
                     ToolTip="Full screen mode" />
+
+                <!--  Log toggle button moved to the end  -->
+                <ToggleButton
+                    x:Name="LogToggleButton"
+                    Grid.Column="10"
+                    Margin="2"
+                    Padding="8,6"
+                    VerticalAlignment="Stretch"
+                    Checked="LogToggleButtonChecked"
+                    FontSize="16"
+                    ToolTip="Show/hide log panel"
+                    Unchecked="LogToggleButtonUnChecked">
+                    <ui:SymbolIcon Symbol="TextBulletListSquare20" />
+                </ToggleButton>
             </Grid>
 
-            <!--  Browser control  -->
+            <!--  Browser control with separate progress overlay that doesn't cover LogGrid  -->
             <Grid Grid.Row="1" Margin="5,5,5,0">
                 <ContentControl x:Name="BrowserContentControl" />
                 
-                <!-- Progress overlay -->
+                <!-- Progress overlay - positioned to only cover browser area, not LogGrid -->
                 <Border x:Name="ProgressOverlay"
                         Background="#80000000"
                         Visibility="Collapsed">

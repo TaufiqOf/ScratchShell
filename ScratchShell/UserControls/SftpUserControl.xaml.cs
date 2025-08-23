@@ -40,7 +40,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         BrowserContentControl.Content = Browser;
         
         this.Loaded += ControlLoaded;
-        this.TopToolbar.IsEnabled = false;
+        // Don't disable entire TopToolbar to keep LogToggleButton always enabled
+        // Individual buttons will be enabled/disabled as needed
         this.KeyDown += SftpUserControl_KeyDown;
         
         SetupBrowserEvents();
@@ -73,6 +74,9 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         
         // Selection change
         Browser.SelectionChanged += OnBrowserSelectionChanged;
+        
+        // Refresh requested
+        Browser.RefreshRequested += async () => await GoToFolder(PathTextBox.Text);
     }
 
     private async void HandleFileOperation(BrowserOperationContext context, FileOperationType operationType)
@@ -170,7 +174,6 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         if (context.TargetItem == null) return OperationResult.Failure("No item selected");
 
         Log($"⬇️ Download requested for: {context.TargetItem.Name}");
-        ShowProgress(true, $"Downloading {context.TargetItem.Name}...");
 
         try
         {
@@ -183,9 +186,62 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
                 return await HandleFileDownload(context.TargetItem);
             }
         }
-        finally
+        catch (Exception ex)
         {
-            ShowProgress(false);
+            Log($"❌ Download operation failed: {ex.Message}");
+            return OperationResult.Failure(ex.Message);
+        }
+    }
+
+    private async Task<OperationResult> HandleFolderDownload(BrowserItem folderItem)
+    {
+        Log($"📁 Preparing to download directory: {folderItem.Name}");
+        
+        var dlg = new CommonOpenFileDialog
+        {
+            IsFolderPicker = true,
+            Multiselect = false,
+            Title = $"Select destination folder for {folderItem.Name}",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+
+        if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+        {
+            Log($"📂 Download destination selected: {dlg.FileName}");
+            var localPath = Path.Combine(dlg.FileName, folderItem.Name);
+            
+            // Use the service method instead of direct SFTP calls
+            return await _fileOperationService!.DownloadItemAsync(folderItem.FullPath, localPath, true);
+        }
+        else
+        {
+            Log($"🚫 Download cancelled by user");
+            return OperationResult.Success();
+        }
+    }
+
+    private async Task<OperationResult> HandleFileDownload(BrowserItem fileItem)
+    {
+        Log($"📄 Preparing to download file: {fileItem.Name} ({fileItem.SizeFormatted})");
+        
+        var saveDialog = new SaveFileDialog
+        {
+            FileName = fileItem.Name,
+            Title = "Download File",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+        };
+
+        if (saveDialog.ShowDialog() == true)
+        {
+            Log($"💾 Download destination selected: {saveDialog.FileName}");
+            
+            // Use the service method instead of direct SFTP calls
+            return await _fileOperationService!.DownloadItemAsync(fileItem.FullPath, saveDialog.FileName, false);
+        }
+        else
+        {
+            Log($"🚫 Download cancelled by user");
+            return OperationResult.Success();
         }
     }
 
@@ -354,80 +410,6 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
     }
 
-    private async Task<OperationResult> HandleFolderDownload(BrowserItem folderItem)
-    {
-        Log($"📁 Preparing to download directory: {folderItem.Name}");
-        
-        var dlg = new CommonOpenFileDialog
-        {
-            IsFolderPicker = true,
-            Multiselect = false,
-            Title = $"Select destination folder for {folderItem.Name}",
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        };
-
-        if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
-        {
-            Log($"📂 Download destination selected: {dlg.FileName}");
-            try
-            {
-                var localPath = Path.Combine(dlg.FileName, folderItem.Name);
-                Directory.CreateDirectory(localPath);
-                Log($"📁 Created local directory: {localPath}");
-
-                await Task.Run(() => DownloadDirectory(folderItem.FullPath, localPath));
-
-                Log($"✅ Successfully downloaded folder {folderItem.Name} to {localPath}");
-                return OperationResult.Success();
-            }
-            catch (Exception ex)
-            {
-                Log($"❌ Failed to download folder {folderItem.Name}: {ex.Message}");
-                return OperationResult.Failure(ex.Message);
-            }
-        }
-        else
-        {
-            Log($"🚫 Download cancelled by user");
-            return OperationResult.Success();
-        }
-    }
-
-    private async Task<OperationResult> HandleFileDownload(BrowserItem fileItem)
-    {
-        Log($"📄 Preparing to download file: {fileItem.Name} ({fileItem.SizeFormatted})");
-        
-        var saveDialog = new SaveFileDialog
-        {
-            FileName = fileItem.Name,
-            Title = "Download File",
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        };
-
-        if (saveDialog.ShowDialog() == true)
-        {
-            Log($"💾 Download destination selected: {saveDialog.FileName}");
-            try
-            {
-                using var fs = new FileStream(saveDialog.FileName, FileMode.Create, FileAccess.Write);
-                await Task.Run(() => _sftpClient!.DownloadFile(fileItem.FullPath, fs));
-                
-                Log($"✅ Successfully downloaded {fileItem.Name} to {saveDialog.FileName}");
-                return OperationResult.Success();
-            }
-            catch (Exception ex)
-            {
-                Log($"❌ Failed to download {fileItem.Name}: {ex.Message}");
-                return OperationResult.Failure(ex.Message);
-            }
-        }
-        else
-        {
-            Log($"🚫 Download cancelled by user");
-            return OperationResult.Success();
-        }
-    }
-
     #region Connection and Navigation Methods
 
     private async void ControlLoaded(object sender, RoutedEventArgs e)
@@ -456,7 +438,18 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Log($"📂 Working directory: {_sftpClient.WorkingDirectory}");
             
             await GoToFolder("~");
-            TopToolbar.IsEnabled = true;
+            
+            // Enable individual buttons that should be available after connection
+            // Navigation button states will be set by UpdateNavigationButtonStates() in GoToFolder
+            RefreshButton.IsEnabled = true;
+            CreateFolderButton.IsEnabled = true;
+            OptionsButton.IsEnabled = true;
+            FullScreenButton.IsEnabled = true;
+            PathTextBox.IsEnabled = true;
+            // ForwardButton remains disabled by design
+            // PasteButton will be enabled by OnClipboardStateChanged when clipboard has content
+            // BackButton and UpButton will be enabled/disabled based on path in UpdateNavigationButtonStates
+            
             Browser.UpdateEmptySpaceContextMenu(false);
             
             // Initialize paste button state
@@ -499,7 +492,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         if (_fileOperationService == null) return;
         
         _fileOperationService.LogRequested += Log;
-        _fileOperationService.ProgressChanged += (show) => ShowProgress(show, show ? "Processing file operation..." : "");
+        _fileOperationService.ProgressChanged += (show, message) => ShowProgress(show, show ? message : "");
         _fileOperationService.ClipboardStateChanged += OnClipboardStateChanged;
     }
 
@@ -510,8 +503,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         // Update browser context menu
         Browser.UpdateEmptySpaceContextMenu(hasClipboardContent);
         
-        // Update paste button state
-        PasteButton.IsEnabled = hasClipboardContent;
+        // Update paste button state - consider both clipboard content and current progress state
+        // Only enable if there's clipboard content AND no operation is in progress
+        var isOperationInProgress = ProgressOverlay.Visibility == Visibility.Visible;
+        PasteButton.IsEnabled = hasClipboardContent && !isOperationInProgress;
         
         // Update tooltip based on clipboard state
         if (hasClipboardContent)
@@ -540,8 +535,19 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         if (obj.IsFolder)
         {
-            Log($"📁 Navigating to folder: {obj.FullPath}");
-            await GoToFolder(obj.FullPath);
+            if (obj.Name == "..")
+            {
+                // Handle parent directory navigation
+                var currentPath = PathTextBox.Text;
+                var parentPath = GetParentPath(currentPath);
+                Log($"📁 Navigating to parent directory: {parentPath}");
+                await GoToFolder(parentPath);
+            }
+            else
+            {
+                Log($"📁 Navigating to folder: {obj.FullPath}");
+                await GoToFolder(obj.FullPath);
+            }
         }
         else
         {
@@ -551,30 +557,118 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async Task GoToFolder(string path)
     {
-        Log($"🔄 Loading directory: {path}");
-        ShowProgress(true, $"Loading directory: {path}");
+        // Resolve path properly - handle cases like "/home/user/.." 
+        var resolvedPath = ResolvePath(path);
+        
+        Log($"🔄 Loading directory: {resolvedPath}");
+        ShowProgress(true, $"Loading directory: {resolvedPath}");
         Browser.Clear();
-        PathTextBox.Text = path;
+        
+        // Use the resolved path for the PathTextBox
+        PathTextBox.Text = resolvedPath;
 
         // Add parent folder entry
         Browser.AddItem(new BrowserItem
         {
             Name = "..",
-            FullPath = $"{path}/..",
+            FullPath = $"{resolvedPath}/..",
             IsFolder = true,
             LastUpdated = DateTime.Now,
             Size = 0
         });
 
         int itemCount = 0;
-        await foreach (var item in FileDriveControlGetDirectory(path))
+        await foreach (var item in FileDriveControlGetDirectory(resolvedPath))
         {
             Browser.AddItem(item);
             itemCount++;
         }
 
-        Log($"✅ Directory loaded successfully: {itemCount} items found in {path}");
+        Log($"✅ Directory loaded successfully: {itemCount} items found in {resolvedPath}");
         ShowProgress(false);
+        
+        // Update navigation button states based on current path
+        UpdateNavigationButtonStates();
+    }
+
+    private bool IsAtRootPath()
+    {
+        var currentPath = PathTextBox.Text?.Trim();
+        return string.IsNullOrEmpty(currentPath) || currentPath == "/" || currentPath == "~";
+    }
+
+    private void UpdateNavigationButtonStates()
+    {
+        var isAtRoot = IsAtRootPath();
+        
+        // Disable back and up buttons when at root, enable when not at root
+        BackButton.IsEnabled = !isAtRoot;
+        UpButton.IsEnabled = !isAtRoot;
+        
+        // Update tooltips to reflect the state
+        if (isAtRoot)
+        {
+            BackButton.ToolTip = "Back (disabled - at root)";
+            UpButton.ToolTip = "Up one level (disabled - at root)";
+        }
+        else
+        {
+            BackButton.ToolTip = "Back (Alt+Left Arrow)";
+            UpButton.ToolTip = "Up one level";
+        }
+    }
+
+    private string ResolvePath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "/";
+
+        // Handle special cases
+        if (path == "~")
+        {
+            return _sftpClient?.WorkingDirectory ?? "/";
+        }
+
+        // If path contains ".." resolve it
+        if (path.Contains(".."))
+        {
+            var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var resolvedParts = new List<string>();
+
+            foreach (var part in parts)
+            {
+                if (part == "..")
+                {
+                    // Go up one level - remove the last directory if exists
+                    if (resolvedParts.Count > 0)
+                    {
+                        resolvedParts.RemoveAt(resolvedParts.Count - 1);
+                    }
+                }
+                else if (part != ".")
+                {
+                    resolvedParts.Add(part);
+                }
+            }
+
+            // Construct the resolved path
+            if (resolvedParts.Count == 0)
+            {
+                return "/";
+            }
+            else
+            {
+                return "/" + string.Join("/", resolvedParts);
+            }
+        }
+
+        // Ensure path starts with /
+        if (!path.StartsWith("/"))
+        {
+            path = "/" + path;
+        }
+
+        return path;
     }
 
     #endregion
@@ -695,9 +789,54 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        var parentPath = $"{PathTextBox.Text}/..";
+        var currentPath = PathTextBox.Text;
+        var parentPath = GetParentPath(currentPath);
+        
         Log($"⬅️ Navigating back to parent directory: {parentPath}");
         await GoToFolder(parentPath);
+    }
+
+    private async void UpButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentPath = PathTextBox.Text;
+        var parentPath = GetParentPath(currentPath);
+        
+        Log($"⬆️ Going up one level to: {parentPath}");
+        await GoToFolder(parentPath);
+    }
+
+    private string GetParentPath(string currentPath)
+    {
+        // Handle special cases
+        if (string.IsNullOrEmpty(currentPath) || currentPath == "/" || currentPath == "~")
+        {
+            return "/"; // Already at root
+        }
+
+        // Remove trailing slash if present
+        currentPath = currentPath.TrimEnd('/');
+        
+        // If the path is just a single directory name, go to root
+        if (!currentPath.Contains('/'))
+        {
+            return "/";
+        }
+
+        // Get the parent directory by removing the last segment
+        var lastSlashIndex = currentPath.LastIndexOf('/');
+        if (lastSlashIndex == 0)
+        {
+            // Parent is root directory
+            return "/";
+        }
+        else if (lastSlashIndex > 0)
+        {
+            // Return the path up to the last slash
+            return currentPath.Substring(0, lastSlashIndex);
+        }
+
+        // Fallback to root
+        return "/";
     }
 
     private async void PathTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -786,7 +925,43 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private void ShowProgress(bool show)
     {
-        TopToolbar.IsEnabled = !show;
+        // Don't disable the entire TopToolbar to keep LogToggleButton always enabled
+        // Instead, disable individual buttons that shouldn't be used during operations
+        
+        if (show)
+        {
+            // During operations, disable all buttons except LogToggleButton
+            BackButton.IsEnabled = false;
+            ForwardButton.IsEnabled = false; // Forward is already disabled by design
+            RefreshButton.IsEnabled = false;
+            UpButton.IsEnabled = false;
+            CreateFolderButton.IsEnabled = false;
+            PasteButton.IsEnabled = false;
+            OptionsButton.IsEnabled = false;
+            FullScreenButton.IsEnabled = false;
+            PathTextBox.IsEnabled = false;
+        }
+        else
+        {
+            // After operations, restore button states based on current path and other conditions
+            var isAtRoot = IsAtRootPath();
+            
+            BackButton.IsEnabled = !isAtRoot;
+            ForwardButton.IsEnabled = false; // Forward is always disabled by design
+            RefreshButton.IsEnabled = true;
+            UpButton.IsEnabled = !isAtRoot;
+            CreateFolderButton.IsEnabled = true;
+            PasteButton.IsEnabled = _fileOperationService?.HasClipboardContent ?? false;
+            OptionsButton.IsEnabled = true;
+            FullScreenButton.IsEnabled = true;
+            PathTextBox.IsEnabled = true;
+            
+            // Update tooltips
+            UpdateNavigationButtonStates();
+        }
+        
+        // LogToggleButton remains enabled (it's not handled here)
+        
         Progress.IsIndeterminate = show;
         Browser.IsBrowserEnabled = !show;
         ProgressOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
@@ -794,7 +969,43 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private void ShowProgress(bool show, string message = "Operation in progress...")
     {
-        TopToolbar.IsEnabled = !show;
+        // Don't disable the entire TopToolbar to keep LogToggleButton always enabled
+        // Instead, disable individual buttons that shouldn't be used during operations
+        
+        if (show)
+        {
+            // During operations, disable all buttons except LogToggleButton
+            BackButton.IsEnabled = false;
+            ForwardButton.IsEnabled = false; // Forward is already disabled by design
+            RefreshButton.IsEnabled = false;
+            UpButton.IsEnabled = false;
+            CreateFolderButton.IsEnabled = false;
+            PasteButton.IsEnabled = false;
+            OptionsButton.IsEnabled = false;
+            FullScreenButton.IsEnabled = false;
+            PathTextBox.IsEnabled = false;
+        }
+        else
+        {
+            // After operations, restore button states based on current path and other conditions
+            var isAtRoot = IsAtRootPath();
+            
+            BackButton.IsEnabled = !isAtRoot;
+            ForwardButton.IsEnabled = false; // Forward is always disabled by design
+            RefreshButton.IsEnabled = true;
+            UpButton.IsEnabled = !isAtRoot;
+            CreateFolderButton.IsEnabled = true;
+            PasteButton.IsEnabled = _fileOperationService?.HasClipboardContent ?? false;
+            OptionsButton.IsEnabled = true;
+            FullScreenButton.IsEnabled = true;
+            PathTextBox.IsEnabled = true;
+            
+            // Update tooltips
+            UpdateNavigationButtonStates();
+        }
+        
+        // LogToggleButton remains enabled (it's not handled here)
+        
         Progress.IsIndeterminate = show;
         Browser.IsBrowserEnabled = !show;
         ProgressOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;

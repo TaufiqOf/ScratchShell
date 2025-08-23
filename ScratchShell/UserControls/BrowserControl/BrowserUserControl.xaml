@@ -204,6 +204,7 @@
             Grid.Row="1"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto"
+            MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp"
             Visibility="Collapsed">
             <ItemsControl
                 x:Name="BrowserGrid"

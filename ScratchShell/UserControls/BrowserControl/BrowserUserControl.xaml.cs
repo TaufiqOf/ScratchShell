@@ -53,6 +53,9 @@ public partial class BrowserUserControl : UserControl
 
     // View mode change event
     public event Action<BrowserViewMode>? ViewModeChanged;
+    
+    // Refresh event
+    public event Action? RefreshRequested;
 
     private ContextMenu contextMenu;
     private ContextMenu emptySpaceContextMenu;
@@ -327,16 +330,34 @@ public partial class BrowserUserControl : UserControl
             {
                 emptySpaceContextMenu.PlacementTarget = BrowserGrid;
                 emptySpaceContextMenu.IsOpen = true;
+                e.Handled = true;
             }
             else
             {
-                hitTest = VisualTreeHelper.HitTest(GridScrollViewer, e.GetPosition(GridScrollViewer));
-                if (hitTest?.VisualHit == GridScrollViewer)
+                // Check if we're clicking on the WrapPanel (empty area within BrowserGrid)
+                var wrapPanel = FindChild<WrapPanel>(BrowserGrid);
+                if (wrapPanel != null)
                 {
-                    emptySpaceContextMenu.PlacementTarget = BrowserGrid;
-                    emptySpaceContextMenu.IsOpen = true;
+                    var wrapPanelHitTest = VisualTreeHelper.HitTest(wrapPanel, e.GetPosition(wrapPanel));
+                    if (wrapPanelHitTest?.VisualHit == wrapPanel)
+                    {
+                        emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+                        emptySpaceContextMenu.IsOpen = true;
+                        e.Handled = true;
+                    }
                 }
             }
+        }
+    }
+
+    private void GridScrollViewer_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            // Show empty space context menu when right-clicking on scroll viewer
+            emptySpaceContextMenu.PlacementTarget = GridScrollViewer;
+            emptySpaceContextMenu.IsOpen = true;
+            e.Handled = true;
         }
     }
 
@@ -350,6 +371,10 @@ public partial class BrowserUserControl : UserControl
                     StartInlineRename(_gridSelectedItems[0]);
                     e.Handled = true;
                 }
+                break;
+            case Key.F5:
+                RefreshRequested?.Invoke();
+                e.Handled = true;
                 break;
             case Key.A:
                 if (Keyboard.Modifiers == ModifierKeys.Control)
@@ -430,6 +455,10 @@ public partial class BrowserUserControl : UserControl
                     StartInlineRename(item);
                     e.Handled = true;
                 }
+                break;
+            case Key.F5:
+                RefreshRequested?.Invoke();
+                e.Handled = true;
                 break;
             case Key.A:
                 if (Keyboard.Modifiers == ModifierKeys.Control)
