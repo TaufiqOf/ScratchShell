@@ -44,8 +44,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private (int row, int col)? _selectionEnd = null;
     private bool _isCopyHighlight = false;
     private SolidColorBrush _selectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 0, 120, 255));
-    private readonly System.Windows.Media.Color _defaultSelectionColor = System.Windows.Media.Color.FromArgb(80, 0, 120, 255);
-    private readonly System.Windows.Media.Color _copySelectionColor = System.Windows.Media.Color.FromArgb(180, 144, 238, 144); // LightGreen
     private System.Windows.Threading.DispatcherTimer? _copyHighlightTimer;
 
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
@@ -75,10 +73,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         InitializeComponent();
         Loaded += GPTTerminalUserControl_Loaded;
+        Unloaded += GPTTerminalUserControl_Unloaded;
 
         // Add focus event handlers to track when terminal gains/loses focus
         GotFocus += GPTTerminalUserControl_GotFocus;
         LostFocus += GPTTerminalUserControl_LostFocus;
+
+        // Initialize selection brush with theme color
+        _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
 
         _resizeRedrawTimer = new System.Windows.Threading.DispatcherTimer
         {
@@ -123,14 +125,30 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         UpdateTerminalLayoutAndSize();
     }
 
-    protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+    private void GPTTerminalUserControl_Unloaded(object sender, RoutedEventArgs e)
     {
-        base.OnRenderSizeChanged(sizeInfo);
-        if (_terminal != null)
+        // Clean up any running animations and timers
+        CleanupHighlightAnimations();
+    }
+
+    private void CleanupHighlightAnimations()
+    {
+        // Stop copy highlight timer
+        if (_copyHighlightTimer != null)
         {
-            _pendingResizeSize = sizeInfo.NewSize;
-            _resizeRedrawTimer.Stop();
-            _resizeRedrawTimer.Start();
+            _copyHighlightTimer.Stop();
+            _copyHighlightTimer = null;
+        }
+
+        _isCopyHighlight = false;
+
+        // Stop all animations on selection rectangles
+        foreach (var rect in _selectionHighlightRects)
+        {
+            if (rect.Fill is SolidColorBrush brush)
+            {
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            }
         }
     }
 
@@ -348,16 +366,25 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e)
     {
         TerminalCanvas.Focus();
+        _isFocused = true; // Ensure focus state is updated when clicking on terminal
+        
         var pos = e.GetPosition(TerminalCanvas);
         int col = (int)(pos.X / _charWidth);
         int row = (int)(pos.Y / _charHeight);
 
         if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
         {
+            // Stop any ongoing copy highlight animation when starting a new selection
+            if (_isCopyHighlight)
+            {
+                CleanupHighlightAnimations();
+            }
+
             // Clear previous selection rectangles
             foreach (var rect in _selectionHighlightRects)
                 TerminalCanvas.Children.Remove(rect);
             _selectionHighlightRects.Clear();
+            
             // Start new selection
             _isSelecting = true;
             _selectionStart = (row, col);
@@ -393,51 +420,103 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void StartCopyHighlightTransition()
     {
+        // Stop any existing copy highlight timer
+        if (_copyHighlightTimer != null)
+        {
+            _copyHighlightTimer.Stop();
+            _copyHighlightTimer = null;
+        }
+
         _isCopyHighlight = true;
-        var animToGreen = new ColorAnimation
+
+        // First, ensure we have selection rectangles to animate
+        if (_selectionHighlightRects.Count == 0)
         {
-            From = _defaultSelectionColor,
-            To = _copySelectionColor,
-            Duration = TimeSpan.FromMilliseconds(400), // Smooth transition to green
-            AutoReverse = false
-        };
-        animToGreen.Completed += (s, e) =>
-        {
-            // Hold green for 1.2s, then fade back
-            _copyHighlightTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1200) };
-            _copyHighlightTimer.Tick += (s2, e2) =>
-            {
-                _copyHighlightTimer.Stop();
-                var animBack = new ColorAnimation
-                {
-                    From = _copySelectionColor,
-                    To = _defaultSelectionColor,
-                    Duration = TimeSpan.FromMilliseconds(600),
-                    AutoReverse = false
-                };
-                animBack.Completed += (s3, e3) =>
-                {
-                    _isCopyHighlight = false;
-                    // Restore color to default
-                    foreach (var rect in _selectionHighlightRects)
-                    {
-                        if (rect.Fill is SolidColorBrush brush)
-                            brush.Color = _defaultSelectionColor;
-                    }
-                };
-                foreach (var rect in _selectionHighlightRects)
-                {
-                    if (rect.Fill is SolidColorBrush brush)
-                        brush.BeginAnimation(SolidColorBrush.ColorProperty, animBack);
-                }
-            };
-            _copyHighlightTimer.Start();
-        };
+            _isCopyHighlight = false;
+            return;
+        }
+
+        // Get colors from theme
+        var defaultSelectionColor = Theme.SelectionColor;
+        var copySelectionColor = Theme.CopySelectionColor;
+
+        // Create animations for each selection rectangle
+        var animationsToGreen = new List<ColorAnimation>();
+        var animationsToDefault = new List<ColorAnimation>();
+
         foreach (var rect in _selectionHighlightRects)
         {
             if (rect.Fill is SolidColorBrush brush)
+            {
+                // Animation to copy color
+                var animToGreen = new ColorAnimation
+                {
+                    From = defaultSelectionColor,
+                    To = copySelectionColor,
+                    Duration = TimeSpan.FromMilliseconds(400),
+                    AutoReverse = false
+                };
+                animationsToGreen.Add(animToGreen);
+
+                // Animation back to default
+                var animToDefault = new ColorAnimation
+                {
+                    From = copySelectionColor,
+                    To = defaultSelectionColor,
+                    Duration = TimeSpan.FromMilliseconds(600),
+                    AutoReverse = false
+                };
+                animationsToDefault.Add(animToDefault);
+
+                // Start the copy color animation
                 brush.BeginAnimation(SolidColorBrush.ColorProperty, animToGreen);
+            }
         }
+
+        // Set up timer to trigger the fade back animation after holding copy color
+        _copyHighlightTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(1600) // 400ms to copy color + 1200ms hold
+        };
+
+        _copyHighlightTimer.Tick += (s, e) =>
+        {
+            _copyHighlightTimer.Stop();
+            _copyHighlightTimer = null;
+
+            // Start fade back animations
+            for (int i = 0; i < _selectionHighlightRects.Count && i < animationsToDefault.Count; i++)
+            {
+                var rect = _selectionHighlightRects[i];
+                var animBack = animationsToDefault[i];
+
+                if (rect.Fill is SolidColorBrush brush)
+                {
+                    // Set up completion handler for the last animation
+                    if (i == _selectionHighlightRects.Count - 1)
+                    {
+                        animBack.Completed += (s3, e3) =>
+                        {
+                            _isCopyHighlight = false;
+                            // Ensure all rectangles have the default color from theme
+                            foreach (var r in _selectionHighlightRects)
+                            {
+                                if (r.Fill is SolidColorBrush b)
+                                {
+                                    b.Color = Theme.SelectionColor;
+                                    // Stop any ongoing animations
+                                    b.BeginAnimation(SolidColorBrush.ColorProperty, null);
+                                }
+                            }
+                        };
+                    }
+
+                    brush.BeginAnimation(SolidColorBrush.ColorProperty, animBack);
+                }
+            }
+        };
+
+        _copyHighlightTimer.Start();
     }
 
     private void TerminalCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -467,14 +546,29 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void UpdateSelectionHighlightRect()
     {
+        // Don't interfere with copy highlight transition
+        if (_isCopyHighlight)
+        {
+            return;
+        }
+
+        // Clear existing selection rectangles
         foreach (var rect in _selectionHighlightRects)
         {
             TerminalCanvas.Children.Remove(rect);
         }
         _selectionHighlightRects.Clear();
 
+        // Stop any copy highlight timer that might be running
+        if (_copyHighlightTimer != null)
+        {
+            _copyHighlightTimer.Stop();
+            _copyHighlightTimer = null;
+        }
+
         if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null)
             return;
+
         var (row1, col1) = _selectionStart.Value;
         var (row2, col2) = _selectionEnd.Value;
         int startRow = Math.Min(row1, row2);
@@ -496,7 +590,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             {
                 Width = (colEnd - colStart + 1) * _charWidth,
                 Height = _charHeight,
-                Fill = _selectionBrush,
+                Fill = new SolidColorBrush(Theme.SelectionColor), // Use theme color
                 Opacity = 0.5,
                 IsHitTestVisible = false
             };
@@ -618,21 +712,36 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
         if (TerminalGrid != null)
             TerminalGrid.Background = Theme.Background;
-        // Only update char size and redraw, do not resize or clear buffer on theme change
+        
+        // Update char size and redraw
         UpdateCharSize();
         RedrawTerminal();
-        // Clear old selection highlights and selection state
+        
+        // Clear old selection highlights and selection state to apply new theme colors
         ClearSelectionHighlightRects();
         _selectionStart = null;
         _selectionEnd = null;
-        // Do not draw selection after theme change
     }
 
     // Helper to clear selection highlight rectangles from RootGrid
     private void ClearSelectionHighlightRects()
     {
+        // Stop any ongoing copy highlight animation
+        if (_copyHighlightTimer != null)
+        {
+            _copyHighlightTimer.Stop();
+            _copyHighlightTimer = null;
+        }
+        _isCopyHighlight = false;
+
+        // Clear all selection rectangles and stop their animations
         foreach (var rect in _selectionHighlightRects)
         {
+            if (rect.Fill is SolidColorBrush brush)
+            {
+                // Stop any ongoing animations
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            }
             TerminalCanvas.Children.Remove(rect);
         }
         _selectionHighlightRects.Clear();
@@ -824,14 +933,27 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                             // Draw cursor overlay only when terminal is focused
                             if (isCursor && _isFocused)
                             {
-                                dc.DrawRectangle(fg, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
+                                // Use theme cursor color if available, otherwise use foreground
+                                Brush cursorBrush;
+                                if (Theme.CursorColor != null)
+                                {
+                                    cursorBrush = (Theme.CursorColor as SolidColorBrush)?.CloneCurrentValue() ?? fgBrush;
+                                    if (cursorBrush != fgBrush)
+                                        cursorBrush.Freeze();
+                                }
+                                else
+                                {
+                                    cursorBrush = fgBrush;
+                                }
+                                
+                                dc.DrawRectangle(cursorBrush, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
                                 var ftCursor = new FormattedText(
                                     ch.ToString(),
                                     System.Globalization.CultureInfo.CurrentCulture,
                                     FlowDirection.LeftToRight,
                                     new Typeface(new FontFamily(fontFamily), FontStyles.Normal, weight, FontStretches.Normal),
                                     fontSize,
-                                    bg,
+                                    bg, // Use background color for cursor text to create inverse effect
                                     VisualTreeHelper.GetDpi(this).PixelsPerDip
                                 );
                                 dc.DrawText(ftCursor, new Point(col * charWidth, row * charHeight));
@@ -863,7 +985,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 {
                     Debug.WriteLine($"Exception creating in-memory PNG: {ex}");
                 }
-                SaveLoadedImageToFile(loadedImg, $"D:\\test\\{Ulid.NewUlid()}.png");
+                //SaveLoadedImageToFile(loadedImg, $"D:\\test\\{Ulid.NewUlid()}.png");
 
                 Dispatcher.Invoke(() =>
                 {
