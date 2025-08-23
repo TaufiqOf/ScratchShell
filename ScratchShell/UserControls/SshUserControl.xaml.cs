@@ -138,6 +138,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                     }
                 }
             }
+            Terminal.Focus();
         }
     }
 
@@ -184,6 +185,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         }
         // Here you would typically initiate the SSH connection using the server details.
         // For example, you might call a method to connect to the server.
+        Terminal.Focus(); // Ensure terminal gets focus when loaded
         await ConnectToServer(_server);
     }
 
@@ -397,6 +399,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             return;
         }
         Terminal.AddInput(snippet.Code);
+        Terminal.Focus(); // Ensure terminal gets focus when executing snippet
         await Task.CompletedTask;
     }
 

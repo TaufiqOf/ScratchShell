@@ -36,4 +36,6 @@ public interface ITerminal
     void PasteText(string text);
 
     void SelectAll();
+
+    void Focus();
 }

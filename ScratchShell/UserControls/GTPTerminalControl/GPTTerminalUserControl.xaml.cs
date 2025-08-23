@@ -29,6 +29,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     // Add a field to store the last rendered buffer snapshot
     private string[]? _lastRenderedBufferLines;
 
+    // Add fields to track redraw state and queuing
+    private volatile bool _isRedrawing = false;
+    private volatile bool _redrawRequested = false;
+    private readonly object _redrawLock = new object();
+
+    // Add field to track focus state for cursor visibility
+    private bool _isFocused = false;
+
     // Selection state for copy/paste
     private bool _isSelecting = false;
 
@@ -67,6 +75,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         InitializeComponent();
         Loaded += GPTTerminalUserControl_Loaded;
+
+        // Add focus event handlers to track when terminal gains/loses focus
+        GotFocus += GPTTerminalUserControl_GotFocus;
+        LostFocus += GPTTerminalUserControl_LostFocus;
+
         _resizeRedrawTimer = new System.Windows.Threading.DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(100)
@@ -81,11 +94,28 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         };
     }
 
+    private void GPTTerminalUserControl_GotFocus(object sender, RoutedEventArgs e)
+    {
+        _isFocused = true;
+        Debug.WriteLine("Terminal gained focus - cursor should be visible");
+        // Redraw to show cursor
+        RedrawTerminal();
+    }
+
+    private void GPTTerminalUserControl_LostFocus(object sender, RoutedEventArgs e)
+    {
+        _isFocused = false;
+        Debug.WriteLine("Terminal lost focus - cursor should be hidden");
+        // Redraw to hide cursor
+        RedrawTerminal();
+    }
+
     private void GPTTerminalUserControl_Loaded(object sender, RoutedEventArgs e)
     {
         this.Focus();
         this.Focusable = true;
         this.IsTabStop = true;
+        _isFocused = true; // Set initial focus state
         if (_terminal == null)
         {
             InitializeTerminalEmulator();
@@ -692,12 +722,30 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         Debug.WriteLine($"RedrawTerminal called. onlyRow={onlyRow}");
         if (_terminal == null) return;
+
+        lock (_redrawLock)
+        {
+            // If already redrawing, just set the flag and return
+            if (_isRedrawing)
+            {
+                _redrawRequested = true;
+                Debug.WriteLine("RedrawTerminal: Already redrawing, queuing request");
+                return;
+            }
+
+            // Mark that we're starting a redraw
+            _isRedrawing = true;
+            _redrawRequested = false;
+        }
+
+        // Perform the actual redraw
+        PerformRedraw(onlyRow);
+    }
+
+    private void PerformRedraw(int? onlyRow = null)
+    {
         var buffer = _terminal.Buffer;
-        TerminalCanvas.Width = _terminal.Cols * _charWidth;
-        double contentHeight = buffer.Lines.Length * _charHeight;
-        double visibleHeight = _terminal.Rows * _charHeight;
-        double canvasHeight = Math.Max(contentHeight, visibleHeight);
-        TerminalCanvas.Height = canvasHeight;
+
 
         if (onlyRow.HasValue)
         {
@@ -773,8 +821,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                                 VisualTreeHelper.GetDpi(this).PixelsPerDip
                             );
                             dc.DrawText(ft, new Point(col * charWidth, row * charHeight));
-                            // Draw cursor overlay
-                            if (isCursor)
+                            // Draw cursor overlay only when terminal is focused
+                            if (isCursor && _isFocused)
                             {
                                 dc.DrawRectangle(fg, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
                                 var ftCursor = new FormattedText(
@@ -819,26 +867,59 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
                 Dispatcher.Invoke(() =>
                 {
-                    TerminalBitmapImage.Source = loadedImg;
-                    TerminalBitmapImage.Width = pixelWidth;
-                    TerminalBitmapImage.Height = pixelHeight;
-                    TerminalCanvas.Width = pixelWidth;
-                    TerminalCanvas.Height = pixelHeight;
-                    if (Cursor != null)
-                        Cursor.Visibility = Visibility.Collapsed;
-          
-                   
+                    try
+                    {
+                        TerminalBitmapImage.Source = loadedImg;
+                        TerminalBitmapImage.Width = pixelWidth;
+                        TerminalBitmapImage.Height = pixelHeight;
+                        TerminalCanvas.Width = pixelWidth;
+                        TerminalCanvas.Height = pixelHeight;
+                        if (Cursor != null)
+                            Cursor.Visibility = Visibility.Collapsed;
+                        TerminalCanvas.Width = _terminal.Cols * _charWidth;
+                        double contentHeight = buffer.Lines.Length * _charHeight;
+                        double visibleHeight = _terminal.Rows * _charHeight;
+                        double canvasHeight = Math.Max(contentHeight, visibleHeight);
+                        TerminalCanvas.Height = canvasHeight;
+                    }
+                    finally
+                    {
+                        // Mark redraw as complete and check if another is needed
+                        CompleteRedraw();
+                    }
                 });
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Exception in RedrawTerminal Task: {ex}");
+                // Even on exception, mark redraw as complete
+                Dispatcher.Invoke(() => CompleteRedraw());
             }
         });
+
         _lastRenderedBufferLines = new string[buffer.Lines.Length];
         for (int row = 0; row < buffer.Lines.Length; row++)
         {
             _lastRenderedBufferLines[row] = BufferLineToString(buffer.Lines[row], _terminal.Cols);
+        }
+    }
+
+    private void CompleteRedraw()
+    {
+        bool shouldRedrawAgain = false;
+
+        lock (_redrawLock)
+        {
+            _isRedrawing = false;
+            shouldRedrawAgain = _redrawRequested;
+            _redrawRequested = false;
+        }
+
+        // If another redraw was requested while this one was running, start it now
+        if (shouldRedrawAgain)
+        {
+            Debug.WriteLine("RedrawTerminal: Starting queued redraw");
+            RedrawTerminal();
         }
     }
 
@@ -969,5 +1050,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 UpdateSelectionHighlightRect();
             }
         }
+    }
+
+    public void Focus()
+    {
+        TerminalCanvas.Focus();
     }
 }
