@@ -23,13 +23,14 @@
             </Grid.RowDefinitions>
             <ProgressBar
                 x:Name="Progress"
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="2"
+                Margin="-1,0,0,0"
                 IsIndeterminate="False" />
             <!--  Top toolbar  -->
             <Grid
                 x:Name="TopToolbar"
-                Grid.Row="1"
+                Grid.Row="0"
                 Margin="5"
                 VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>

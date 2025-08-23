@@ -18,7 +18,7 @@
             Background="Black"
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto">
-            <Grid Background="Black">
+            <Grid x:Name="TerminalGrid" Background="Black">
                 <!--  Bitmap-based fast rendering  -->
                 <Image
                     x:Name="TerminalBitmapImage"

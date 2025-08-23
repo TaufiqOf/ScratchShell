@@ -586,8 +586,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         _typeface = new Typeface(Theme.FontFamily.Source);
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
-        if (TerminalCanvas != null)
-            TerminalCanvas.Background = Theme.Background;
+        if (TerminalGrid != null)
+            TerminalGrid.Background = Theme.Background;
         // Only update char size and redraw, do not resize or clear buffer on theme change
         UpdateCharSize();
         RedrawTerminal();
@@ -815,6 +815,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 {
                     Debug.WriteLine($"Exception creating in-memory PNG: {ex}");
                 }
+                SaveLoadedImageToFile(loadedImg, $"D:\\test\\{Ulid.NewUlid()}.png");
 
                 Dispatcher.Invoke(() =>
                 {
@@ -825,6 +826,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     TerminalCanvas.Height = pixelHeight;
                     if (Cursor != null)
                         Cursor.Visibility = Visibility.Collapsed;
+          
+                   
                 });
             }
             catch (Exception ex)
@@ -836,6 +839,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         for (int row = 0; row < buffer.Lines.Length; row++)
         {
             _lastRenderedBufferLines[row] = BufferLineToString(buffer.Lines[row], _terminal.Cols);
+        }
+    }
+
+    private void SaveLoadedImageToFile(BitmapImage image, string filePath)
+    {
+        if (image == null)
+            throw new InvalidOperationException("No image has been rendered yet.");
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(image));
+        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+        {
+            encoder.Save(fs);
         }
     }
 
