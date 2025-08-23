@@ -152,7 +152,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
     public ServerViewModel(IContentDialogService contentDialogService)
     {
         ContentDialogService = contentDialogService;
-        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>();
+        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>().Where(q=>q != ProtocolType.FTP);
 
         // Set default port based on protocol
         SetDefaultPortForProtocol();
@@ -160,7 +160,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
 
     public ServerViewModel(Server server, IContentDialogService contentDialogService)
     {
-        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>();
+        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>().Where(q => q != ProtocolType.FTP);
 
         Id = server.Id;
         Name = server.Name ?? string.Empty;
@@ -179,7 +179,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
 
     public ServerViewModel(ServerViewModel server, IContentDialogService contentDialogService)
     {
-        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>();
+        ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>().Where(q => q != ProtocolType.FTP);
 
         Id = server.Id;
         Name = server.Name;

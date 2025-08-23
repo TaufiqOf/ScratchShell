@@ -56,33 +56,52 @@
                                         <MenuItem
                                             Command="{Binding OpenTerminalCommand}"
                                             CommandParameter="Elevated"
-                                            Header="Elevated" />
+                                            Header="Elevated">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Shield24" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                         <MenuItem
                                             Command="{Binding OpenTerminalCommand}"
                                             CommandParameter="Normal"
-                                            Header="Normal" />
+                                            Header="Normal">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="WindowConsole20" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                     </ContextMenu>
                                 </ui:DropDownButton.Flyout>
                             </ui:DropDownButton>
 
-                            <Button
+                            <ui:DropDownButton
+                                Width="65"
+                                Height="34"
                                 Margin="2"
-                                Command="{Binding EditServerCommand, Mode=OneWay}"
-                                ToolTip="Edit">
-                                <ui:SymbolIcon FontSize="20" Symbol="Edit24" />
-                            </Button>
-                            <Button
-                                Margin="2"
-                                Command="{Binding CopyServerCommand, Mode=OneWay}"
-                                ToolTip="Make A Copy">
-                                <ui:SymbolIcon FontSize="20" Symbol="Copy16" />
-                            </Button>
-                            <Button
-                                Margin="2"
-                                Command="{Binding DeleteServerCommand, Mode=OneWay}"
-                                ToolTip="Delete">
-                                <ui:SymbolIcon FontSize="20" Symbol="Delete24" />
-                            </Button>
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Icon="{ui:SymbolIcon Options24}"
+                                ToolTip="Server Actions">
+                                <ui:DropDownButton.Flyout>
+                                    <ContextMenu>
+                                        <MenuItem Command="{Binding EditServerCommand, Mode=OneWay}" Header="Edit">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Edit24" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding CopyServerCommand, Mode=OneWay}" Header="Copy">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Copy24" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem Command="{Binding DeleteServerCommand, Mode=OneWay}" Header="Delete">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Delete24" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </ui:DropDownButton.Flyout>
+                            </ui:DropDownButton>
                         </StackPanel>
                     </Grid>
                 </ui:CardAction>
