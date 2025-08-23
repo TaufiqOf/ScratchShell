@@ -167,29 +167,27 @@ public partial class BrowserUserControl : UserControl
                 if (_gridSelectedItems.Contains(item))
                 {
                     _gridSelectedItems.Remove(item);
-                    UpdateGridItemSelection(border, false);
+                    item.IsSelected = false;
                 }
                 else
                 {
                     _gridSelectedItems.Add(item);
-                    UpdateGridItemSelection(border, true);
+                    item.IsSelected = true;
                 }
             }
             else if (Keyboard.Modifiers == ModifierKeys.Shift && _lastClickedGridItem != null)
             {
                 // Range selection - simplified for now
-                _gridSelectedItems.Clear();
+                ClearGridSelection();
                 _gridSelectedItems.Add(item);
-                ClearAllGridSelections();
-                UpdateGridItemSelection(border, true);
+                item.IsSelected = true;
             }
             else
             {
                 // Single selection
-                _gridSelectedItems.Clear();
+                ClearGridSelection();
                 _gridSelectedItems.Add(item);
-                ClearAllGridSelections();
-                UpdateGridItemSelection(border, true);
+                item.IsSelected = true;
             }
 
             _lastClickedGridItem = item;
@@ -204,10 +202,9 @@ public partial class BrowserUserControl : UserControl
             // Select the item if not already selected
             if (!_gridSelectedItems.Contains(item))
             {
-                _gridSelectedItems.Clear();
+                ClearGridSelection();
                 _gridSelectedItems.Add(item);
-                ClearAllGridSelections();
-                UpdateGridItemSelection(border, true);
+                item.IsSelected = true;
             }
             
             if (item.Name == "..")
@@ -250,52 +247,14 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void UpdateGridItemSelection(Border border, bool isSelected)
+    private void ClearGridSelection()
     {
-        border.Background = isSelected ? 
-            System.Windows.Media.Brushes.LightBlue : 
-            System.Windows.Media.Brushes.Transparent;
-    }
-
-    private void ClearAllGridSelections()
-    {
-        // Clear visual selection for all grid items
-        foreach (var child in GetGridItemBorders())
+        // Clear the IsSelected property for all items
+        foreach (var item in _gridSelectedItems)
         {
-            child.Background = System.Windows.Media.Brushes.Transparent;
+            item.IsSelected = false;
         }
-    }
-
-    private IEnumerable<Border> GetGridItemBorders()
-    {
-        var wrapPanel = FindChild<WrapPanel>(BrowserGrid);
-        if (wrapPanel != null)
-        {
-            foreach (var child in wrapPanel.Children)
-            {
-                if (child is ContentPresenter presenter && presenter.Content is Border border)
-                {
-                    yield return border;
-                }
-            }
-        }
-    }
-
-    private static T? FindChild<T>(DependencyObject parent) where T : DependencyObject
-    {
-        if (parent == null) return null;
-
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T foundChild)
-                return foundChild;
-
-            var result = FindChild<T>(child);
-            if (result != null)
-                return result;
-        }
-        return null;
+        _gridSelectedItems.Clear();
     }
 
     private void BrowserGridMouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -338,12 +297,18 @@ public partial class BrowserUserControl : UserControl
             }
             else
             {
-                // Check if we're clicking on the WrapPanel (empty area within BrowserGrid)
-                var wrapPanel = FindChild<WrapPanel>(BrowserGrid);
-                if (wrapPanel != null)
+                // Check if we're clicking on empty area - simplified check
+                var target = e.OriginalSource as DependencyObject;
+                if (target != null)
                 {
-                    var wrapPanelHitTest = VisualTreeHelper.HitTest(wrapPanel, e.GetPosition(wrapPanel));
-                    if (wrapPanelHitTest?.VisualHit == wrapPanel)
+                    // Walk up the visual tree to see if we hit a Border with BrowserItem data context
+                    while (target != null && !(target is Border border && border.DataContext is BrowserItem))
+                    {
+                        target = VisualTreeHelper.GetParent(target);
+                    }
+                    
+                    // If we didn't find a Border with BrowserItem, we clicked on empty space
+                    if (target == null)
                     {
                         emptySpaceContextMenu.PlacementTarget = BrowserGrid;
                         emptySpaceContextMenu.IsOpen = true;
@@ -351,17 +316,6 @@ public partial class BrowserUserControl : UserControl
                     }
                 }
             }
-        }
-    }
-
-    private void GridScrollViewer_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton == MouseButton.Right)
-        {
-            // Show empty space context menu when right-clicking on scroll viewer
-            emptySpaceContextMenu.PlacementTarget = GridScrollViewer;
-            emptySpaceContextMenu.IsOpen = true;
-            e.Handled = true;
         }
     }
 
@@ -618,8 +572,9 @@ public partial class BrowserUserControl : UserControl
                 System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Set selection in ListView");
                 break;
             case BrowserViewMode.Grid:
-                _gridSelectedItems.Clear();
+                ClearGridSelection();
                 _gridSelectedItems.Add(newFolder);
+                newFolder.IsSelected = true;
                 System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Set selection in GridView");
                 break;
         }
@@ -845,12 +800,12 @@ public partial class BrowserUserControl : UserControl
 
     public void LoadItems(IEnumerable<BrowserItem> items)
     {
+        // Clear existing selection
+        ClearGridSelection();
+        
         Items.Clear();
         foreach (var item in items)
             Items.Add(item);
-        
-        // Clear grid selection when loading new items
-        _gridSelectedItems.Clear();
     }
 
     public void AddItem(BrowserItem item)
@@ -861,13 +816,17 @@ public partial class BrowserUserControl : UserControl
     public void RemoveItem(BrowserItem item)
     {
         Items.Remove(item);
-        _gridSelectedItems.Remove(item);
+        if (_gridSelectedItems.Contains(item))
+        {
+            _gridSelectedItems.Remove(item);
+            item.IsSelected = false;
+        }
     }
 
     public void Clear()
     {
+        ClearGridSelection();
         Items.Clear();
-        _gridSelectedItems.Clear();
         currentlyEditingItem = null;
     }
 
@@ -959,15 +918,11 @@ public partial class BrowserUserControl : UserControl
                 }
                 break;
             case BrowserViewMode.Grid:
-                _gridSelectedItems.Clear();
-                _gridSelectedItems.AddRange(Items.Where(item => item.Name != ".."));
-                ClearAllGridSelections();
-                foreach (var border in GetGridItemBorders())
+                ClearGridSelection();
+                foreach (var item in Items.Where(item => item.Name != ".."))
                 {
-                    if (border.DataContext is BrowserItem item && item.Name != "..")
-                    {
-                        UpdateGridItemSelection(border, true);
-                    }
+                    _gridSelectedItems.Add(item);
+                    item.IsSelected = true;
                 }
                 break;
         }

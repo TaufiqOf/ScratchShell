@@ -60,6 +60,7 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
+                    Click="ForwardButton_Click"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=ArrowRight20}"
                     IsEnabled="False"

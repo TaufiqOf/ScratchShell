@@ -24,9 +24,18 @@
                 Width="120"
                 Height="120"
                 Margin="5"
-                Background="Transparent"
                 MouseLeftButtonDown="GridItem_MouseLeftButtonDown"
                 MouseRightButtonDown="GridItem_MouseRightButtonDown">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter Property="Background" Value="LightBlue" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
@@ -201,7 +210,6 @@
             <ScrollViewer
                 x:Name="GridScrollViewer"
                 HorizontalScrollBarVisibility="Disabled"
-                MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp"
                 VerticalScrollBarVisibility="Auto"
                 Visibility="Collapsed">
                 <ItemsControl

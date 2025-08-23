@@ -11,6 +11,7 @@ public class BrowserItem : INotifyPropertyChanged
     private string _originalName;
     private bool _isInEditMode;
     private bool _isNewItem;
+    private bool _isSelected;
 
     public string Name 
     { 
@@ -48,6 +49,16 @@ public class BrowserItem : INotifyPropertyChanged
         set 
         {
             _isNewItem = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsSelected 
+    { 
+        get => _isSelected;
+        set 
+        {
+            _isSelected = value;
             OnPropertyChanged();
         }
     }

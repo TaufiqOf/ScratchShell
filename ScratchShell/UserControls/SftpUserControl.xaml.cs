@@ -29,6 +29,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private bool _isInitialized = false;
     private CancellationTokenSource? _currentOperationCancellation;
 
+    // Navigation history for Back/Forward functionality
+    private readonly List<string> _navigationHistory = new();
+    private int _currentHistoryIndex = -1;
+    private bool _isNavigatingFromHistory = false;
+
     public BrowserUserControl Browser { get; }
 
     public SftpUserControl(ServerViewModel server, IContentDialogService contentDialogService)
@@ -491,6 +496,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Log($"✅ Successfully connected to {server.Name} at {server.Host}:{server.Port}");
             Log($"📂 Working directory: {_sftpClient.WorkingDirectory}");
             
+            // Initialize navigation history
+            _navigationHistory.Clear();
+            _currentHistoryIndex = -1;
+            
             await GoToFolder("~");
             
             // Enable individual buttons that should be available after connection
@@ -500,9 +509,9 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             OptionsButton.IsEnabled = true;
             FullScreenButton.IsEnabled = true;
             PathTextBox.IsEnabled = true;
-            // ForwardButton remains disabled by design
+            // BackButton and ForwardButton states will be set by UpdateNavigationButtonStates
             // PasteButton will be enabled by OnClipboardStateChanged when clipboard has content
-            // BackButton and UpButton willbe enabled/disabled based on path in UpdateNavigationButtonStates
+            // UpButton will be enabled/disabled based on path in UpdateNavigationButtonStates
             
             Browser.UpdateEmptySpaceContextMenu(false);
             
@@ -604,8 +613,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             // After operations, restore button states based on current path and other conditions
             var isAtRoot = IsAtRootPath();
             
-            BackButton.IsEnabled = !isAtRoot;
-            ForwardButton.IsEnabled = false; // Forward is always disabled by design
+            BackButton.IsEnabled = CanNavigateBack();
+            ForwardButton.IsEnabled = CanNavigateForward();
             RefreshButton.IsEnabled = true;
             UpButton.IsEnabled = !isAtRoot;
             CreateFolderButton.IsEnabled = true;
@@ -674,6 +683,9 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         // Use the resolved path for the PathTextBox
         PathTextBox.Text = resolvedPath;
 
+        // Add to navigation history before loading
+        AddToNavigationHistory(resolvedPath);
+
         // Add parent folder entry
         Browser.AddItem(new BrowserItem
         {
@@ -694,7 +706,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         Log($"✅ Directory loaded successfully: {itemCount} items found in {resolvedPath}");
         Browser.ShowProgress(false);
         
-        // Update navigation button states based on current path
+        // Update navigation button states based on current path and history
         UpdateNavigationButtonStates();
     }
 
@@ -708,20 +720,96 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         var isAtRoot = IsAtRootPath();
         
-        // Disable back and up buttons when at root, enable when not at root
-        BackButton.IsEnabled = !isAtRoot;
+        // Update Back button based on navigation history
+        var canGoBack = CanNavigateBack();
+        BackButton.IsEnabled = canGoBack;
+        
+        // Update Forward button based on navigation history
+        var canGoForward = CanNavigateForward();
+        ForwardButton.IsEnabled = canGoForward;
+        
+        // Up button is based on path, not history
         UpButton.IsEnabled = !isAtRoot;
         
         // Update tooltips to reflect the state
+        if (canGoBack)
+        {
+            var previousPath = _navigationHistory[_currentHistoryIndex - 1];
+            var previousFolderName = Path.GetFileName(previousPath) ?? previousPath;
+            if (string.IsNullOrEmpty(previousFolderName) || previousFolderName == "/")
+                previousFolderName = "Root";
+            BackButton.ToolTip = $"Back to '{previousFolderName}' (Alt+Left Arrow)";
+        }
+        else
+        {
+            BackButton.ToolTip = "Back (disabled - no previous locations)";
+        }
+
+        if (canGoForward)
+        {
+            var nextPath = _navigationHistory[_currentHistoryIndex + 1];
+            var nextFolderName = Path.GetFileName(nextPath) ?? nextPath;
+            if (string.IsNullOrEmpty(nextFolderName) || nextFolderName == "/")
+                nextFolderName = "Root";
+            ForwardButton.ToolTip = $"Forward to '{nextFolderName}' (Alt+Right Arrow)";
+        }
+        else
+        {
+            ForwardButton.ToolTip = "Forward (disabled - no next locations)";
+        }
+
         if (isAtRoot)
         {
-            BackButton.ToolTip = "Back (disabled - at root)";
             UpButton.ToolTip = "Up one level (disabled - at root)";
         }
         else
         {
-            BackButton.ToolTip = "Back (Alt+Left Arrow)";
             UpButton.ToolTip = "Up one level";
+        }
+    }
+
+    private void UpdateNavigationHistory(string newPath)
+    {
+        // Remove any forward history if we're adding a new entry
+        if (_currentHistoryIndex < _navigationHistory.Count - 1)
+        {
+            _navigationHistory.RemoveRange(_currentHistoryIndex + 1, _navigationHistory.Count - _currentHistoryIndex - 1);
+        }
+
+        // Add new entry to history
+        _navigationHistory.Add(newPath);
+        _currentHistoryIndex = _navigationHistory.Count - 1;
+        
+        Log($"📚 Navigation history updated: {_navigationHistory.Count} item(s)");
+    }
+
+    private void NavigateToPreviousFolder()
+    {
+        if (_currentHistoryIndex > 0)
+        {
+            _currentHistoryIndex--;
+            var previousPath = _navigationHistory[_currentHistoryIndex];
+            Log($"⬅️ Navigating back to: {previousPath}");
+            _ = GoToFolder(previousPath);
+        }
+        else
+        {
+            Log("❌ No more history to navigate back");
+        }
+    }
+
+    private void NavigateToNextFolder()
+    {
+        if (_currentHistoryIndex < _navigationHistory.Count - 1)
+        {
+            _currentHistoryIndex++;
+            var nextPath = _navigationHistory[_currentHistoryIndex];
+            Log($"➡️ Navigating forward to: {nextPath}");
+            _ = GoToFolder(nextPath);
+        }
+        else
+        {
+            Log("❌ No more history to navigate forward");
         }
     }
 
@@ -776,6 +864,90 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
 
         return path;
+    }
+
+    #endregion
+
+    #region Navigation History Management
+
+    private void AddToNavigationHistory(string path)
+    {
+        // Don't add to history if we're navigating from history
+        if (_isNavigatingFromHistory)
+        {
+            _isNavigatingFromHistory = false;
+            return;
+        }
+
+        // Don't add duplicate consecutive entries
+        if (_navigationHistory.Count > 0 && _navigationHistory[_currentHistoryIndex] == path)
+        {
+            return;
+        }
+
+        // If we're not at the end of history, remove everything after current position
+        if (_currentHistoryIndex < _navigationHistory.Count - 1)
+        {
+            _navigationHistory.RemoveRange(_currentHistoryIndex + 1, _navigationHistory.Count - _currentHistoryIndex - 1);
+        }
+
+        // Add new path to history
+        _navigationHistory.Add(path);
+        _currentHistoryIndex = _navigationHistory.Count - 1;
+
+        // Keep history size reasonable (max 50 entries)
+        if (_navigationHistory.Count > 50)
+        {
+            _navigationHistory.RemoveAt(0);
+            _currentHistoryIndex--;
+        }
+
+        UpdateNavigationButtonStates();
+        Log($"📚 Added to navigation history: {path} (Index: {_currentHistoryIndex}, Total: {_navigationHistory.Count})");
+    }
+
+    private async Task NavigateBack()
+    {
+        if (_currentHistoryIndex <= 0)
+        {
+            Log("❌ Cannot navigate back: No previous locations in history");
+            return;
+        }
+
+        _currentHistoryIndex--;
+        var previousPath = _navigationHistory[_currentHistoryIndex];
+        
+        Log($"⬅️ Navigating back to: {previousPath} (Index: {_currentHistoryIndex})");
+        
+        _isNavigatingFromHistory = true;
+        await GoToFolder(previousPath);
+    }
+
+    private async Task NavigateForward()
+    {
+        if (_currentHistoryIndex >= _navigationHistory.Count - 1)
+        {
+            Log("❌ Cannot navigate forward: No next locations in history");
+            return;
+        }
+
+        _currentHistoryIndex++;
+        var nextPath = _navigationHistory[_currentHistoryIndex];
+        
+        Log($"➡️ Navigating forward to: {nextPath} (Index: {_currentHistoryIndex})");
+        
+        _isNavigatingFromHistory = true;
+        await GoToFolder(nextPath);
+    }
+
+    private bool CanNavigateBack()
+    {
+        return _currentHistoryIndex > 0;
+    }
+
+    private bool CanNavigateForward()
+    {
+        return _currentHistoryIndex < _navigationHistory.Count - 1;
     }
 
     #endregion
@@ -858,8 +1030,32 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async void SftpUserControl_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        // Handle keyboard shortcuts
-        if (Keyboard.Modifiers == ModifierKeys.Control)
+        // Handle navigation shortcuts
+        if (Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            switch (e.Key)
+            {
+                case System.Windows.Input.Key.Left:
+                    // Alt+Left Arrow - Navigate Back
+                    if (BackButton.IsEnabled)
+                    {
+                        await NavigateBack();
+                        e.Handled = true;
+                    }
+                    break;
+
+                case System.Windows.Input.Key.Right:
+                    // Alt+Right Arrow - Navigate Forward
+                    if (ForwardButton.IsEnabled)
+                    {
+                        await NavigateForward();
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
+        // Handle other keyboard shortcuts
+        else if (Keyboard.Modifiers == ModifierKeys.Control)
         {
             switch (e.Key)
             {
@@ -896,11 +1092,12 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        var currentPath = PathTextBox.Text;
-        var parentPath = GetParentPath(currentPath);
-        
-        Log($"⬅️ Navigating back to parent directory: {parentPath}");
-        await GoToFolder(parentPath);
+        await NavigateBack();
+    }
+
+    private async void ForwardButton_Click(object sender, RoutedEventArgs e)
+    {
+        await NavigateForward();
     }
 
     private async void UpButton_Click(object sender, RoutedEventArgs e)
@@ -950,8 +1147,12 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         if (e.Key == System.Windows.Input.Key.Enter)
         {
-            Log($"📍 Manual navigation to: {PathTextBox.Text}");
-            await GoToFolder(PathTextBox.Text);
+            var targetPath = PathTextBox.Text?.Trim();
+            if (!string.IsNullOrEmpty(targetPath))
+            {
+                Log($"📍 Manual navigation to: {targetPath}");
+                await GoToFolder(targetPath);
+            }
         }
     }
 
@@ -1107,7 +1308,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         Log($"🖥️ Entering full screen mode");
         FullScreenButton.IsEnabled = false;
         BrowserContentControl.Content = null;
-        var fullScreen = new FullScreenWindow(Browser, _server.Name);
+        var fullScreen = new FullScreenWindow(_contentDialogService, Browser, _server.Name);
         fullScreen.Show();
         fullScreen.Closed += (s, args) =>
         {

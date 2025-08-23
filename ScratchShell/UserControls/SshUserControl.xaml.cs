@@ -303,7 +303,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         FullScreenButton.IsEnabled = false;
         TerminalContentControl.Content = null;
-        _FullScreen = new FullScreenWindow(Terminal, _server.Name, menuButton);
+        _FullScreen = new FullScreenWindow(_contentDialogService, Terminal, _server.Name, menuButton);
         _FullScreen.Show();
         _FullScreen.Closed += (s, args) =>
         {

@@ -28,7 +28,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ContentControl
+        <ContentPresenter
             x:Name="RootContentDialog"
             Grid.Row="0"
             Grid.RowSpan="2"
