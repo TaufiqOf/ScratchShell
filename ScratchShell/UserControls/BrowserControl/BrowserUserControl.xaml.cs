@@ -57,6 +57,10 @@ public partial class BrowserUserControl : UserControl
     // Refresh event
     public event Action? RefreshRequested;
 
+    // Progress events - NEW
+    public event Action<bool, string>? ProgressChanged;
+    public event Action? CancelRequested;
+
     private ContextMenu contextMenu;
     private ContextMenu emptySpaceContextMenu;
     private readonly Dictionary<string, MenuItem> menuItems = new();
@@ -1075,4 +1079,49 @@ public partial class BrowserUserControl : UserControl
             }
         }
     }
+
+    #region Progress Management
+
+    /// <summary>
+    /// Shows or hides the progress overlay
+    /// </summary>
+    /// <param name="show">True to show progress, false to hide</param>
+    /// <param name="message">Progress message to display</param>
+    public void ShowProgress(bool show, string message = "Operation in progress...")
+    {
+        if (show)
+        {
+            ProgressText.Text = message;
+            ProgressOverlay.Visibility = Visibility.Visible;
+            CancelOperationButton.IsEnabled = true;
+            
+            // Disable browser interaction during operations
+            IsBrowserEnabled = false;
+        }
+        else
+        {
+            ProgressOverlay.Visibility = Visibility.Collapsed;
+            CancelOperationButton.IsEnabled = false;
+            
+            // Re-enable browser interaction
+            IsBrowserEnabled = true;
+        }
+        
+        // Notify parent about progress change
+        ProgressChanged?.Invoke(show, message);
+    }
+
+    /// <summary>
+    /// Event handler for the cancel operation button
+    /// </summary>
+    private void CancelOperationButton_Click(object sender, RoutedEventArgs e)
+    {
+        CancelOperationButton.IsEnabled = false;
+        ProgressText.Text = "Cancelling operation...";
+        
+        // Notify parent that cancel was requested
+        CancelRequested?.Invoke();
+    }
+
+    #endregion
 }

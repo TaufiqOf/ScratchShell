@@ -119,107 +119,135 @@
                     ToolTip="List View">
                     <ui:SymbolIcon FontSize="16" Symbol="List24" />
                 </ui:Button>
-
-
             </StackPanel>
         </Border>
 
-        <!--  List View (Default)  -->
-        <ui:ListView
-            x:Name="BrowserList"
-            Grid.Row="1"
-            MouseDoubleClick="BrowserListMouseDoubleClick"
-            MouseRightButtonUp="BrowserList_MouseRightButtonUp"
-            PreviewKeyDown="BrowserList_PreviewKeyDown"
-            PreviewMouseDown="BrowserListPreviewMouseDown"
-            PreviewMouseLeftButtonDown="BrowserList_PreviewMouseLeftButtonDown"
-            SelectionChanged="BrowserList_SelectionChanged"
-            SelectionMode="Extended"
-            Visibility="Visible">
-            <ui:ListView.View>
-                <ui:GridView>
-                    <ui:GridViewColumn Width="350" Header="Name">
-                        <ui:GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="5,2" Orientation="Horizontal">
-                                    <ui:SymbolIcon
-                                        Margin="0,0,8,0"
-                                        VerticalAlignment="Center"
-                                        FontSize="16"
-                                        Symbol="{Binding Icon}" />
+        <!--  Main content area with progress overlay  -->
+        <Grid Grid.Row="1">
+            <!--  List View (Default)  -->
+            <ui:ListView
+                x:Name="BrowserList"
+                MouseDoubleClick="BrowserListMouseDoubleClick"
+                MouseRightButtonUp="BrowserList_MouseRightButtonUp"
+                PreviewKeyDown="BrowserList_PreviewKeyDown"
+                PreviewMouseDown="BrowserListPreviewMouseDown"
+                PreviewMouseLeftButtonDown="BrowserList_PreviewMouseLeftButtonDown"
+                SelectionChanged="BrowserList_SelectionChanged"
+                SelectionMode="Extended"
+                Visibility="Visible">
+                <ui:ListView.View>
+                    <ui:GridView>
+                        <ui:GridViewColumn Width="350" Header="Name">
+                            <ui:GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="5,2" Orientation="Horizontal">
+                                        <ui:SymbolIcon
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            Symbol="{Binding Icon}" />
 
-                                    <!--  Normal display mode  -->
-                                    <TextBlock
-                                        x:Name="DisplayTextBlock"
-                                        VerticalAlignment="Center"
-                                        FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
-                                        MouseLeftButtonDown="DisplayTextBlock_MouseLeftButtonDown"
-                                        Text="{Binding Name}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsInEditMode}" Value="True">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        <!--  Normal display mode  -->
+                                        <TextBlock
+                                            x:Name="DisplayTextBlock"
+                                            VerticalAlignment="Center"
+                                            FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
+                                            MouseLeftButtonDown="DisplayTextBlock_MouseLeftButtonDown"
+                                            Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsInEditMode}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                    <!--  Edit mode  -->
-                                    <TextBox
-                                        x:Name="EditTextBox"
-                                        KeyDown="EditTextBox_KeyDown"
-                                        Loaded="EditTextBox_Loaded"
-                                        LostFocus="EditTextBox_LostFocus"
-                                        Style="{StaticResource EditTextBoxStyle}"
-                                        Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                        Visibility="{Binding IsInEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ui:GridViewColumn.CellTemplate>
-                    </ui:GridViewColumn>
-                    <ui:GridViewColumn Width="120" Header="Date Modified">
-                        <ui:GridViewColumn.DisplayMemberBinding>
-                            <Binding Path="LastUpdated" StringFormat="{}{0:yyyy-MM-dd HH:mm}" />
-                        </ui:GridViewColumn.DisplayMemberBinding>
-                    </ui:GridViewColumn>
-                    <ui:GridViewColumn Width="100" Header="Type">
-                        <ui:GridViewColumn.DisplayMemberBinding>
-                            <Binding Path="DisplayType" />
-                        </ui:GridViewColumn.DisplayMemberBinding>
-                    </ui:GridViewColumn>
-                    <ui:GridViewColumn Width="100" Header="Size">
-                        <ui:GridViewColumn.DisplayMemberBinding>
-                            <Binding Path="SizeFormatted" />
-                        </ui:GridViewColumn.DisplayMemberBinding>
-                    </ui:GridViewColumn>
-                </ui:GridView>
-            </ui:ListView.View>
-        </ui:ListView>
+                                        <!--  Edit mode  -->
+                                        <TextBox
+                                            x:Name="EditTextBox"
+                                            KeyDown="EditTextBox_KeyDown"
+                                            Loaded="EditTextBox_Loaded"
+                                            LostFocus="EditTextBox_LostFocus"
+                                            Style="{StaticResource EditTextBoxStyle}"
+                                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                            Visibility="{Binding IsInEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ui:GridViewColumn.CellTemplate>
+                        </ui:GridViewColumn>
+                        <ui:GridViewColumn Width="120" Header="Date Modified">
+                            <ui:GridViewColumn.DisplayMemberBinding>
+                                <Binding Path="LastUpdated" StringFormat="{}{0:yyyy-MM-dd HH:mm}" />
+                            </ui:GridViewColumn.DisplayMemberBinding>
+                        </ui:GridViewColumn>
+                        <ui:GridViewColumn Width="100" Header="Type">
+                            <ui:GridViewColumn.DisplayMemberBinding>
+                                <Binding Path="DisplayType" />
+                            </ui:GridViewColumn.DisplayMemberBinding>
+                        </ui:GridViewColumn>
+                        <ui:GridViewColumn Width="100" Header="Size">
+                            <ui:GridViewColumn.DisplayMemberBinding>
+                                <Binding Path="SizeFormatted" />
+                            </ui:GridViewColumn.DisplayMemberBinding>
+                        </ui:GridViewColumn>
+                    </ui:GridView>
+                </ui:ListView.View>
+            </ui:ListView>
 
-        <!--  Grid View using ItemsControl to avoid template conflicts  -->
-        <ScrollViewer
-            x:Name="GridScrollViewer"
-            Grid.Row="1"
-            HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto"
-            MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp"
-            Visibility="Collapsed">
-            <ItemsControl
-                x:Name="BrowserGrid"
-                Focusable="True"
-                ItemContainerStyle="{x:Null}"
-                ItemTemplate="{StaticResource GridViewItemContentTemplate}"
-                MouseDoubleClick="BrowserGridMouseDoubleClick"
-                MouseRightButtonUp="BrowserGrid_MouseRightButtonUp"
-                PreviewKeyDown="BrowserGrid_PreviewKeyDown">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
-        </ScrollViewer>
+            <!--  Grid View using ItemsControl to avoid template conflicts  -->
+            <ScrollViewer
+                x:Name="GridScrollViewer"
+                HorizontalScrollBarVisibility="Disabled"
+                MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="Collapsed">
+                <ItemsControl
+                    x:Name="BrowserGrid"
+                    Focusable="True"
+                    ItemContainerStyle="{x:Null}"
+                    ItemTemplate="{StaticResource GridViewItemContentTemplate}"
+                    MouseDoubleClick="BrowserGridMouseDoubleClick"
+                    MouseRightButtonUp="BrowserGrid_MouseRightButtonUp"
+                    PreviewKeyDown="BrowserGrid_PreviewKeyDown">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!--  Progress overlay - now inside BrowserUserControl  -->
+            <Border
+                x:Name="ProgressOverlay"
+                Background="#80000000"
+                Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ui:ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsIndeterminate="True" />
+                    <TextBlock
+                        x:Name="ProgressText"
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="14"
+                        Foreground="White"
+                        Text="Operation in progress..." />
+                    <ui:Button
+                        x:Name="CancelOperationButton"
+                        Width="100"
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        Click="CancelOperationButton_Click"
+                        Content="Cancel"
+                        Icon="{ui:SymbolIcon Symbol=Dismiss20}"
+                        ToolTip="Cancel current operation" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

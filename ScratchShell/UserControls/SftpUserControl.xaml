@@ -161,26 +161,9 @@
                 </ToggleButton>
             </Grid>
 
-            <!--  Browser control with separate progress overlay that doesn't cover LogGrid  -->
+            <!--  Browser control - progress overlay now handled internally by BrowserUserControl  -->
             <Grid Grid.Row="1" Margin="5,5,5,0">
                 <ContentControl x:Name="BrowserContentControl" />
-                
-                <!-- Progress overlay - positioned to only cover browser area, not LogGrid -->
-                <Border x:Name="ProgressOverlay"
-                        Background="#80000000"
-                        Visibility="Collapsed">
-                    <StackPanel HorizontalAlignment="Center" 
-                                VerticalAlignment="Center">
-                        <ui:ProgressRing Width="48" Height="48" 
-                                        IsIndeterminate="True" />
-                        <TextBlock x:Name="ProgressText"
-                                  Text="Operation in progress..."
-                                  Foreground="White"
-                                  FontSize="14"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,10,0,0" />
-                    </StackPanel>
-                </Border>
             </Grid>
 
             <!--  Status bar for selection info  -->

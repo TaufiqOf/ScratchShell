@@ -27,6 +27,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private SftpClient? _sftpClient;
     private ISftpFileOperationService? _fileOperationService;
     private bool _isInitialized = false;
+    private CancellationTokenSource? _currentOperationCancellation;
 
     public BrowserUserControl Browser { get; }
 
@@ -77,6 +78,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         
         // Refresh requested
         Browser.RefreshRequested += async () => await GoToFolder(PathTextBox.Text);
+        
+        // Progress and cancel events - NEW
+        Browser.ProgressChanged += OnBrowserProgressChanged;
+        Browser.CancelRequested += OnBrowserCancelRequested;
     }
 
     private async void HandleFileOperation(BrowserOperationContext context, FileOperationType operationType)
@@ -88,6 +93,20 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
 
         Log($"🔄 {operationType} operation requested for: {context.GetDisplayName()}");
+
+        // Create cancellation token early for operations that need it
+        var needsCancellationToken = operationType == FileOperationType.Paste || 
+                                   operationType == FileOperationType.Upload || 
+                                   operationType == FileOperationType.Download ||
+                                   operationType == FileOperationType.Delete;
+
+        if (needsCancellationToken)
+        {
+            // Create cancellation token before starting the operation
+            _currentOperationCancellation?.Dispose();
+            _currentOperationCancellation = new CancellationTokenSource();
+            Log($"🔧 Created cancellation token for {operationType} operation");
+        }
 
         try
         {
@@ -121,6 +140,16 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             Log($"❌ Unexpected error during {operationType} operation: {ex.Message}");
         }
+        finally
+        {
+            // Clean up cancellation token if we created one
+            if (needsCancellationToken)
+            {
+                _currentOperationCancellation?.Dispose();
+                _currentOperationCancellation = null;
+                Log($"🔧 Cleaned up cancellation token for {operationType} operation");
+            }
+        }
     }
 
     private OperationResult HandleCutOperation(BrowserOperationContext context)
@@ -146,7 +175,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             return OperationResult.Failure("Clipboard is empty");
         }
 
-        return await _fileOperationService.PasteItemAsync(context.CurrentDirectory);
+        var cancellationToken = _currentOperationCancellation?.Token ?? CancellationToken.None;
+        return await _fileOperationService.PasteItemAsync(context.CurrentDirectory, cancellationToken);
     }
 
     private async Task<OperationResult> HandleUploadOperation(BrowserOperationContext context)
@@ -162,7 +192,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             var localFilePath = openDialog.FileName;
             var remotePath = $"{context.CurrentDirectory}/{Path.GetFileName(localFilePath)}";
             
-            return await _fileOperationService!.UploadFileAsync(localFilePath, remotePath);
+            var cancellationToken = _currentOperationCancellation?.Token ?? CancellationToken.None;
+            return await _fileOperationService!.UploadFileAsync(localFilePath, remotePath, cancellationToken);
         }
 
         Log("🚫 Upload cancelled by user");
@@ -210,8 +241,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Log($"📂 Download destination selected: {dlg.FileName}");
             var localPath = Path.Combine(dlg.FileName, folderItem.Name);
             
-            // Use the service method instead of direct SFTP calls
-            return await _fileOperationService!.DownloadItemAsync(folderItem.FullPath, localPath, true);
+            var cancellationToken = _currentOperationCancellation?.Token ?? CancellationToken.None;
+            return await _fileOperationService!.DownloadItemAsync(folderItem.FullPath, localPath, true, cancellationToken);
         }
         else
         {
@@ -235,8 +266,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             Log($"💾 Download destination selected: {saveDialog.FileName}");
             
-            // Use the service method instead of direct SFTP calls
-            return await _fileOperationService!.DownloadItemAsync(fileItem.FullPath, saveDialog.FileName, false);
+            var cancellationToken = _currentOperationCancellation?.Token ?? CancellationToken.None;
+            return await _fileOperationService!.DownloadItemAsync(fileItem.FullPath, saveDialog.FileName, false, cancellationToken);
         }
         else
         {
@@ -255,7 +286,14 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         if (context.TargetItem == null) return OperationResult.Failure("No item selected");
 
-        return await _fileOperationService!.DeleteItemAsync(context.TargetItem.FullPath);
+        Log($"🔍 HandleDeleteOperation called, checking cancellation token state");
+        Log($"🔍 _currentOperationCancellation exists: {_currentOperationCancellation != null}");
+        
+        var cancellationToken = _currentOperationCancellation?.Token ?? CancellationToken.None;
+        Log($"🔍 Using cancellation token - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+        Log($"🔍 Token CanBeCanceled: {cancellationToken.CanBeCanceled}");
+        
+        return await _fileOperationService!.DeleteItemAsync(context.TargetItem.FullPath, cancellationToken);
     }
 
     private void HandleMultiSelectOperation(FileOperationType operationType)
@@ -395,18 +433,34 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             return;
         }
 
-        var itemPaths = items.Select(item => item.FullPath).ToList();
-        var result = await _fileOperationService.DeleteMultiItemsAsync(itemPaths);
-        
-        if (!result.IsSuccess)
+        // Create cancellation token for multi-delete operation
+        _currentOperationCancellation?.Dispose();
+        _currentOperationCancellation = new CancellationTokenSource();
+        Log($"🔧 Created cancellation token for multi-delete operation");
+
+        try
         {
-            Log($"❌ Multi-delete operation failed: {result.ErrorMessage}");
+            var itemPaths = items.Select(item => item.FullPath).ToList();
+            var cancellationToken = _currentOperationCancellation.Token;
+            var result = await _fileOperationService.DeleteMultiItemsAsync(itemPaths, cancellationToken);
+            
+            if (!result.IsSuccess)
+            {
+                Log($"❌ Multi-delete operation failed: {result.ErrorMessage}");
+            }
+            else
+            {
+                Log($"✅ Successfully deleted {items.Count} item(s)");
+                // Refresh directory to show changes
+                await GoToFolder(PathTextBox.Text);
+            }
         }
-        else
+        finally
         {
-            Log($"✅ Successfully deleted {items.Count} item(s)");
-            // Refresh directory to show changes
-            await GoToFolder(PathTextBox.Text);
+            // Clean up cancellation token
+            _currentOperationCancellation?.Dispose();
+            _currentOperationCancellation = null;
+            Log($"🔧 Cleaned up cancellation token for multi-delete operation");
         }
     }
 
@@ -423,7 +477,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private async Task ConnectToServer(ServerViewModel server)
     {
         Log($"🔗 Attempting to connect to {server.Name} ({server.Host}:{server.Port})");
-        ShowProgress(true, $"Connecting to {server.Name}...");
+        Browser.ShowProgress(true, $"Connecting to {server.Name}...");
 
         try
         {
@@ -448,7 +502,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             PathTextBox.IsEnabled = true;
             // ForwardButton remains disabled by design
             // PasteButton will be enabled by OnClipboardStateChanged when clipboard has content
-            // BackButton and UpButton will be enabled/disabled based on path in UpdateNavigationButtonStates
+            // BackButton and UpButton willbe enabled/disabled based on path in UpdateNavigationButtonStates
             
             Browser.UpdateEmptySpaceContextMenu(false);
             
@@ -461,7 +515,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         finally
         {
-            ShowProgress(false);
+            Browser.ShowProgress(false);
         }
     }
 
@@ -492,7 +546,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         if (_fileOperationService == null) return;
         
         _fileOperationService.LogRequested += Log;
-        _fileOperationService.ProgressChanged += (show, message) => ShowProgress(show, show ? message : "");
+        _fileOperationService.ProgressChanged += (show, message) => Browser.ShowProgress(show, show ? message : "");
         _fileOperationService.ClipboardStateChanged += OnClipboardStateChanged;
     }
 
@@ -504,9 +558,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         Browser.UpdateEmptySpaceContextMenu(hasClipboardContent);
         
         // Update paste button state - consider both clipboard content and current progress state
-        // Only enable if there's clipboard content AND no operation is in progress
-        var isOperationInProgress = ProgressOverlay.Visibility == Visibility.Visible;
-        PasteButton.IsEnabled = hasClipboardContent && !isOperationInProgress;
+        // Only enable if there's clipboard content AND no operation is in progress (we'll track this through the button states)
+        PasteButton.IsEnabled = hasClipboardContent && RefreshButton.IsEnabled; // RefreshButton is disabled during operations
         
         // Update tooltip based on clipboard state
         if (hasClipboardContent)
@@ -528,6 +581,60 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         else
         {
             PasteButton.ToolTip = "Paste (Ctrl+V) - No items in clipboard";
+        }
+    }
+
+    private void OnBrowserProgressChanged(bool show, string message)
+    {
+        // Update UI buttons based on progress state
+        if (show)
+        {
+            // During operations, disable all buttons except LogToggleButton
+            BackButton.IsEnabled = false;
+            ForwardButton.IsEnabled = false;
+            RefreshButton.IsEnabled = false;
+            UpButton.IsEnabled = false;
+            CreateFolderButton.IsEnabled = false;
+            PasteButton.IsEnabled = false;
+            OptionsButton.IsEnabled = false;
+            PathTextBox.IsEnabled = false;
+        }
+        else
+        {
+            // After operations, restore button states based on current path and other conditions
+            var isAtRoot = IsAtRootPath();
+            
+            BackButton.IsEnabled = !isAtRoot;
+            ForwardButton.IsEnabled = false; // Forward is always disabled by design
+            RefreshButton.IsEnabled = true;
+            UpButton.IsEnabled = !isAtRoot;
+            CreateFolderButton.IsEnabled = true;
+            PasteButton.IsEnabled = _fileOperationService?.HasClipboardContent ?? false;
+            OptionsButton.IsEnabled = true;
+            FullScreenButton.IsEnabled = true;
+            PathTextBox.IsEnabled = true;
+            
+            // Update tooltips
+            UpdateNavigationButtonStates();
+        }
+        
+        // Update main progress bar
+        Progress.IsIndeterminate = show;
+    }
+
+    private void OnBrowserCancelRequested()
+    {
+        // Handle cancel request from browser control
+        if (_currentOperationCancellation != null && !_currentOperationCancellation.Token.IsCancellationRequested)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            Log($"🔍 [{timestamp}] Cancel requested from browser control");
+            _currentOperationCancellation.Cancel();
+            Log($"✅ [{timestamp}] Cancellation signal sent successfully");
+        }
+        else
+        {
+            Log("❌ No cancellation token available or already cancelled");
         }
     }
 
@@ -561,7 +668,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         var resolvedPath = ResolvePath(path);
         
         Log($"🔄 Loading directory: {resolvedPath}");
-        ShowProgress(true, $"Loading directory: {resolvedPath}");
+        Browser.ShowProgress(true, $"Loading directory: {resolvedPath}");
         Browser.Clear();
         
         // Use the resolved path for the PathTextBox
@@ -585,7 +692,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
 
         Log($"✅ Directory loaded successfully: {itemCount} items found in {resolvedPath}");
-        ShowProgress(false);
+        Browser.ShowProgress(false);
         
         // Update navigation button states based on current path
         UpdateNavigationButtonStates();
@@ -883,16 +990,32 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         if (_fileOperationService == null) return;
 
-        var result = await _fileOperationService.CreateFolderAsync(context.AdditionalData!, context.CurrentDirectory);
-        
-        if (result.IsSuccess)
+        // Create cancellation token for create folder operation
+        _currentOperationCancellation?.Dispose();
+        _currentOperationCancellation = new CancellationTokenSource();
+        Log($"🔧 Created cancellation token for create folder operation");
+
+        try
         {
-            newFolderItem.FullPath = result.Data as string ?? "";
-            newFolderItem.CommitEdit();
+            var cancellationToken = _currentOperationCancellation.Token;
+            var result = await _fileOperationService.CreateFolderAsync(context.AdditionalData!, context.CurrentDirectory, cancellationToken);
+            
+            if (result.IsSuccess)
+            {
+                newFolderItem.FullPath = result.Data as string ?? "";
+                newFolderItem.CommitEdit();
+            }
+            else
+            {
+                Browser.RemoveItem(newFolderItem);
+            }
         }
-        else
+        finally
         {
-            Browser.RemoveItem(newFolderItem);
+            // Clean up cancellation token
+            _currentOperationCancellation?.Dispose();
+            _currentOperationCancellation = null;
+            Log($"🔧 Cleaned up cancellation token for create folder operation");
         }
     }
 
@@ -900,21 +1023,37 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         if (_fileOperationService == null || context.TargetItem == null) return;
 
-        var currentPath = context.TargetItem.FullPath;
-        var parentPath = Path.GetDirectoryName(currentPath.Replace('/', Path.DirectorySeparatorChar))?.Replace(Path.DirectorySeparatorChar, '/');
-        var newPath = $"{parentPath}/{context.AdditionalData}";
+        // Create cancellation token for rename operation
+        _currentOperationCancellation?.Dispose();
+        _currentOperationCancellation = new CancellationTokenSource();
+        Log($"🔧 Created cancellation token for rename operation");
 
-        var result = await _fileOperationService.RenameItemAsync(currentPath, newPath, context.TargetItem.IsFolder);
-        
-        if (result.IsSuccess)
+        try
         {
-            context.TargetItem.FullPath = result.Data as string ?? newPath;
-            context.TargetItem.CommitEdit();
+            var currentPath = context.TargetItem.FullPath;
+            var parentPath = Path.GetDirectoryName(currentPath.Replace('/', Path.DirectorySeparatorChar))?.Replace(Path.DirectorySeparatorChar, '/');
+            var newPath = $"{parentPath}/{context.AdditionalData}";
+
+            var cancellationToken = _currentOperationCancellation.Token;
+            var result = await _fileOperationService.RenameItemAsync(currentPath, newPath, context.TargetItem.IsFolder, cancellationToken);
+            
+            if (result.IsSuccess)
+            {
+                context.TargetItem.FullPath = result.Data as string ?? newPath;
+                context.TargetItem.CommitEdit();
+            }
+            else
+            {
+                context.TargetItem.Name = context.TargetItem.OriginalName;
+                context.TargetItem.CommitEdit();
+            }
         }
-        else
+        finally
         {
-            context.TargetItem.Name = context.TargetItem.OriginalName;
-            context.TargetItem.CommitEdit();
+            // Clean up cancellation token
+            _currentOperationCancellation?.Dispose();
+            _currentOperationCancellation = null;
+            Log($"🔧 Cleaned up cancellation token for rename operation");
         }
     }
 
@@ -922,95 +1061,6 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     #endregion
 
     #region Utility Methods
-
-    private void ShowProgress(bool show)
-    {
-        // Don't disable the entire TopToolbar to keep LogToggleButton always enabled
-        // Instead, disable individual buttons that shouldn't be used during operations
-        
-        if (show)
-        {
-            // During operations, disable all buttons except LogToggleButton
-            BackButton.IsEnabled = false;
-            ForwardButton.IsEnabled = false; // Forward is already disabled by design
-            RefreshButton.IsEnabled = false;
-            UpButton.IsEnabled = false;
-            CreateFolderButton.IsEnabled = false;
-            PasteButton.IsEnabled = false;
-            OptionsButton.IsEnabled = false;
-            FullScreenButton.IsEnabled = false;
-            PathTextBox.IsEnabled = false;
-        }
-        else
-        {
-            // After operations, restore button states based on current path and other conditions
-            var isAtRoot = IsAtRootPath();
-            
-            BackButton.IsEnabled = !isAtRoot;
-            ForwardButton.IsEnabled = false; // Forward is always disabled by design
-            RefreshButton.IsEnabled = true;
-            UpButton.IsEnabled = !isAtRoot;
-            CreateFolderButton.IsEnabled = true;
-            PasteButton.IsEnabled = _fileOperationService?.HasClipboardContent ?? false;
-            OptionsButton.IsEnabled = true;
-            FullScreenButton.IsEnabled = true;
-            PathTextBox.IsEnabled = true;
-            
-            // Update tooltips
-            UpdateNavigationButtonStates();
-        }
-        
-        // LogToggleButton remains enabled (it's not handled here)
-        
-        Progress.IsIndeterminate = show;
-        Browser.IsBrowserEnabled = !show;
-        ProgressOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void ShowProgress(bool show, string message = "Operation in progress...")
-    {
-        // Don't disable the entire TopToolbar to keep LogToggleButton always enabled
-        // Instead, disable individual buttons that shouldn't be used during operations
-        
-        if (show)
-        {
-            // During operations, disable all buttons except LogToggleButton
-            BackButton.IsEnabled = false;
-            ForwardButton.IsEnabled = false; // Forward is already disabled by design
-            RefreshButton.IsEnabled = false;
-            UpButton.IsEnabled = false;
-            CreateFolderButton.IsEnabled = false;
-            PasteButton.IsEnabled = false;
-            OptionsButton.IsEnabled = false;
-            FullScreenButton.IsEnabled = false;
-            PathTextBox.IsEnabled = false;
-        }
-        else
-        {
-            // After operations, restore button states based on current path and other conditions
-            var isAtRoot = IsAtRootPath();
-            
-            BackButton.IsEnabled = !isAtRoot;
-            ForwardButton.IsEnabled = false; // Forward is always disabled by design
-            RefreshButton.IsEnabled = true;
-            UpButton.IsEnabled = !isAtRoot;
-            CreateFolderButton.IsEnabled = true;
-            PasteButton.IsEnabled = _fileOperationService?.HasClipboardContent ?? false;
-            OptionsButton.IsEnabled = true;
-            FullScreenButton.IsEnabled = true;
-            PathTextBox.IsEnabled = true;
-            
-            // Update tooltips
-            UpdateNavigationButtonStates();
-        }
-        
-        // LogToggleButton remains enabled (it's not handled here)
-        
-        Progress.IsIndeterminate = show;
-        Browser.IsBrowserEnabled = !show;
-        ProgressOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
-        ProgressText.Text = message;
-    }
 
     private void Log(string message)
     {
@@ -1071,6 +1121,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     public void Dispose()
     {
+        // Cancel any ongoing operations
+        _currentOperationCancellation?.Cancel();
+        _currentOperationCancellation?.Dispose();
+        
         if (_sftpClient is not null)
         {
             Log($"🔌 Disconnecting from server");

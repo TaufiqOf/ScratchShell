@@ -1,5 +1,6 @@
 ﻿using Renci.SshNet;
 using System.IO;
+using System.Threading;
 
 namespace ScratchShell.Services;
 
@@ -8,14 +9,14 @@ namespace ScratchShell.Services;
 /// </summary>
 public interface ISftpFileOperationService
 {
-    Task<OperationResult> CreateFolderAsync(string folderName, string currentPath);
-    Task<OperationResult> RenameItemAsync(string oldPath, string newPath, bool isFolder);
-    Task<OperationResult> UploadFileAsync(string localFilePath, string remotePath);
-    Task<OperationResult> PasteItemAsync(string destinationPath);
-    Task<OperationResult> PasteMultiItemsAsync(string destinationPath);
-    Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder);
-    Task<OperationResult> DeleteItemAsync(string itemPath);
-    Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths);
+    Task<OperationResult> CreateFolderAsync(string folderName, string currentPath, CancellationToken cancellationToken = default);
+    Task<OperationResult> RenameItemAsync(string oldPath, string newPath, bool isFolder, CancellationToken cancellationToken = default);
+    Task<OperationResult> UploadFileAsync(string localFilePath, string remotePath, CancellationToken cancellationToken = default);
+    Task<OperationResult> PasteItemAsync(string destinationPath, CancellationToken cancellationToken = default);
+    Task<OperationResult> PasteMultiItemsAsync(string destinationPath, CancellationToken cancellationToken = default);
+    Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder, CancellationToken cancellationToken = default);
+    Task<OperationResult> DeleteItemAsync(string itemPath, CancellationToken cancellationToken = default);
+    Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths, CancellationToken cancellationToken = default);
     void UpdateClipboard(string itemPath, bool isCut);
     void UpdateMultiClipboard(List<string> itemPaths, bool isCut);
     bool HasClipboardContent { get; }
@@ -50,7 +51,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
     }
 
-    public async Task<OperationResult> CreateFolderAsync(string folderName, string currentPath)
+    public async Task<OperationResult> CreateFolderAsync(string folderName, string currentPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -61,10 +62,16 @@ public class SftpFileOperationService : ISftpFileOperationService
             LogRequested?.Invoke($"📁 Creating new folder '{folderName}' in current directory");
             LogRequested?.Invoke($"📍 Full path: {newFolderPath}");
 
-            await Task.Run(() => _sftpClient.CreateDirectory(newFolderPath));
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Run(() => _sftpClient.CreateDirectory(newFolderPath), cancellationToken);
 
             LogRequested?.Invoke($"✅ Successfully created folder '{folderName}'");
             return OperationResult.Success(newFolderPath);
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Folder creation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -77,7 +84,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    public async Task<OperationResult> RenameItemAsync(string oldPath, string newPath, bool isFolder)
+    public async Task<OperationResult> RenameItemAsync(string oldPath, string newPath, bool isFolder, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -88,10 +95,16 @@ public class SftpFileOperationService : ISftpFileOperationService
             LogRequested?.Invoke($"📍 Old path: {resolvedOldPath}");
             LogRequested?.Invoke($"📍 New path: {newPath}");
 
-            await Task.Run(() => _sftpClient.RenameFile(resolvedOldPath, newPath));
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Run(() => _sftpClient.RenameFile(resolvedOldPath, newPath), cancellationToken);
 
             LogRequested?.Invoke($"✅ Successfully renamed item");
             return OperationResult.Success(newPath);
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Rename operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -104,7 +117,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    public async Task<OperationResult> UploadFileAsync(string localFilePath, string remotePath)
+    public async Task<OperationResult> UploadFileAsync(string localFilePath, string remotePath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -115,11 +128,26 @@ public class SftpFileOperationService : ISftpFileOperationService
             LogRequested?.Invoke($"📤 Selected file for upload: {localFilePath} ({fileInfo.Length:N0} bytes)");
             LogRequested?.Invoke($"📍 Upload destination: {remotePath}");
 
+            LogRequested?.Invoke($"🔍 Initial cancellation check - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            // Add some artificial delay to make cancellation easier to test
+            LogRequested?.Invoke($"🔍 Adding 2-second delay to test cancellation...");
+            await Task.Delay(2000, cancellationToken);
+            
+            LogRequested?.Invoke($"🔍 After delay cancellation check - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+            cancellationToken.ThrowIfCancellationRequested();
+            
             using var fs = new FileStream(localFilePath, FileMode.Open, FileAccess.Read);
-            await Task.Run(() => _sftpClient.UploadFile(fs, remotePath));
+            await Task.Run(() => _sftpClient.UploadFile(fs, remotePath), cancellationToken);
 
             LogRequested?.Invoke($"✅ Successfully uploaded {Path.GetFileName(localFilePath)} to {remotePath}");
             return OperationResult.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Upload operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -132,12 +160,12 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    public async Task<OperationResult> PasteItemAsync(string destinationPath)
+    public async Task<OperationResult> PasteItemAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
         // If we have multiple items, use the multi-item paste method
         if (_clipboardPaths.Count > 1)
         {
-            return await PasteMultiItemsAsync(destinationPath);
+            return await PasteMultiItemsAsync(destinationPath, cancellationToken);
         }
 
         try
@@ -152,6 +180,8 @@ public class SftpFileOperationService : ISftpFileOperationService
                 return OperationResult.Failure("Clipboard is empty");
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var fullDestinationPath = $"{destinationPath}/{fileName}";
             var resolvedSourcePath = ResolveSftpPath(_clipboardPath);
             var resolvedDestinationPath = ResolveSftpPath(fullDestinationPath);
@@ -161,33 +191,32 @@ public class SftpFileOperationService : ISftpFileOperationService
                 $"📋 Copying file from {resolvedSourcePath} to {resolvedDestinationPath}");
 
             // Check if source is a directory
-            var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath));
+            var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
 
             if (sourceFile.IsDirectory)
             {
-                await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath);
+                await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath, cancellationToken);
             }
             else
             {
-                LogRequested?.Invoke($"⬇️ Downloading file to memory for transfer");
                 using var ms = new MemoryStream();
-                await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms));
+                await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
                 ms.Position = 0;
-
-                LogRequested?.Invoke($"⬆️ Uploading file to destination");
-                await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath));
+                
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
             }
 
             if (_clipboardIsCut)
             {
-                LogRequested?.Invoke($"🗑️ Deleting original: {resolvedSourcePath}");
+                cancellationToken.ThrowIfCancellationRequested();
                 if (sourceFile.IsDirectory)
                 {
-                    await DeleteDirectoryRecursive(resolvedSourcePath);
+                    await DeleteDirectoryRecursive(resolvedSourcePath, cancellationToken);
                 }
                 else
                 {
-                    await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath));
+                    await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath), cancellationToken);
                 }
                 LogRequested?.Invoke($"✅ Successfully moved {resolvedSourcePath} to {resolvedDestinationPath}");
             }
@@ -203,6 +232,11 @@ public class SftpFileOperationService : ISftpFileOperationService
             ClipboardStateChanged?.Invoke();
 
             return OperationResult.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Paste operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -241,7 +275,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         LogRequested?.Invoke($"{(isCut ? "✂️" : "📋")} {operation} {itemCount} item(s) to clipboard");
     }
 
-    public async Task<OperationResult> PasteMultiItemsAsync(string destinationPath)
+    public async Task<OperationResult> PasteMultiItemsAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -264,6 +298,8 @@ public class SftpFileOperationService : ISftpFileOperationService
             {
                 try
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     var fileName = Path.GetFileName(sourcePath);
                     var fullDestinationPath = $"{destinationPath}/{fileName}";
                     var resolvedSourcePath = ResolveSftpPath(sourcePath);
@@ -274,34 +310,42 @@ public class SftpFileOperationService : ISftpFileOperationService
                         $"📋 Copying {fileName}");
 
                     // Check if source is a directory
-                    var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath));
+                    var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
 
                     if (sourceFile.IsDirectory)
                     {
-                        await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath);
+                        await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath, cancellationToken);
                     }
                     else
                     {
                         using var ms = new MemoryStream();
-                        await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms));
+                        await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
                         ms.Position = 0;
-                        await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath));
+                        
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
                     }
 
                     if (_clipboardIsCut)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         if (sourceFile.IsDirectory)
                         {
-                            await DeleteDirectoryRecursive(resolvedSourcePath);
+                            await DeleteDirectoryRecursive(resolvedSourcePath, cancellationToken);
                         }
                         else
                         {
-                            await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath));
+                            await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath), cancellationToken);
                         }
                     }
 
                     successCount++;
                     LogRequested?.Invoke($"✅ Successfully {(_clipboardIsCut ? "moved" : "copied")} {fileName}");
+                }
+                catch (OperationCanceledException)
+                {
+                    LogRequested?.Invoke($"🚫 Multi-paste operation cancelled by user");
+                    return OperationResult.Failure("Operation was cancelled by user");
                 }
                 catch (Exception ex)
                 {
@@ -332,6 +376,11 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             return OperationResult.Success();
         }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Multi-paste operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
+        }
         catch (Exception ex)
         {
             LogRequested?.Invoke($"❌ Multi-paste operation failed: {ex.Message}");
@@ -343,88 +392,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    private async Task CopyDirectoryRecursive(string sourcePath, string destinationPath)
-    {
-        var folderName = Path.GetFileName(destinationPath);
-        var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
-        ProgressChanged?.Invoke(true, $"{operation} folder {folderName}...");
-        
-        LogRequested?.Invoke($"{operation} directory: {sourcePath} → {destinationPath}");
-
-        // Create destination directory
-        LogRequested?.Invoke($"📁 Creating destination directory: {folderName}");
-        await Task.Run(() => _sftpClient.CreateDirectory(destinationPath));
-
-        // List all items in source directory
-        var items = await Task.Run(() => _sftpClient.ListDirectory(sourcePath));
-
-        foreach (var item in items)
-        {
-            if (item.Name == "." || item.Name == "..") continue;
-
-            var sourceItemPath = $"{sourcePath}/{item.Name}";
-            var destItemPath = $"{destinationPath}/{item.Name}";
-
-            if (item.IsDirectory)
-            {
-                LogRequested?.Invoke($"📁 Processing subdirectory: {item.Name}");
-                await CopyDirectoryRecursive(sourceItemPath, destItemPath);
-            }
-            else
-            {
-                var fileOperation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
-                ProgressChanged?.Invoke(true, $"{fileOperation} file {item.Name}...");
-                LogRequested?.Invoke($"{fileOperation} file: {item.Name} ({item.Attributes.Size:N0} bytes)");
-                
-                using var ms = new MemoryStream();
-                await Task.Run(() => _sftpClient.DownloadFile(sourceItemPath, ms));
-                ms.Position = 0;
-                await Task.Run(() => _sftpClient.UploadFile(ms, destItemPath));
-                
-                LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} file: {item.Name}");
-            }
-        }
-        
-        LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} directory: {folderName}");
-    }
-
-    private async Task DeleteDirectoryRecursive(string directoryPath)
-    {
-        var folderName = Path.GetFileName(directoryPath);
-        ProgressChanged?.Invoke(true, $"🗑️ Deleting folder {folderName}...");
-        
-        LogRequested?.Invoke($"📋 Listing contents of directory: {folderName}");
-        
-        // List all items in directory
-        var items = await Task.Run(() => _sftpClient.ListDirectory(directoryPath));
-
-        foreach (var item in items)
-        {
-            if (item.Name == "." || item.Name == "..") continue;
-
-            var itemPath = $"{directoryPath}/{item.Name}";
-
-            if (item.IsDirectory)
-            {
-                LogRequested?.Invoke($"📁 Recursively deleting subdirectory: {item.Name}");
-                await DeleteDirectoryRecursive(itemPath);
-            }
-            else
-            {
-                ProgressChanged?.Invoke(true, $"🗑️ Deleting file {item.Name}...");
-                LogRequested?.Invoke($"📄 Deleting file: {item.Name}");
-                await Task.Run(() => _sftpClient.DeleteFile(itemPath));
-                LogRequested?.Invoke($"✅ Deleted file: {item.Name}");
-            }
-        }
-
-        // Delete the directory itself
-        LogRequested?.Invoke($"🗑️ Deleting empty directory: {folderName}");
-        await Task.Run(() => _sftpClient.DeleteDirectory(directoryPath));
-        LogRequested?.Invoke($"✅ Deleted directory: {folderName}");
-    }
-
-    public async Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder)
+    public async Task<OperationResult> DownloadItemAsync(string remotePath, string localPath, bool isFolder, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -437,6 +405,8 @@ public class SftpFileOperationService : ISftpFileOperationService
             LogRequested?.Invoke($"🌐 Remote path: {resolvedRemotePath}");
             LogRequested?.Invoke($"💻 Local path: {localPath}");
             
+            cancellationToken.ThrowIfCancellationRequested();
+            
             if (isFolder)
             {
                 LogRequested?.Invoke($"📁 Downloading folder recursively: {itemName}");
@@ -444,7 +414,7 @@ public class SftpFileOperationService : ISftpFileOperationService
                 // Create local directory if it doesn't exist
                 Directory.CreateDirectory(localPath);
                 
-                await DownloadDirectoryRecursive(resolvedRemotePath, localPath);
+                await DownloadDirectoryRecursive(resolvedRemotePath, localPath, cancellationToken);
                 
                 LogRequested?.Invoke($"✅ Successfully downloaded folder '{itemName}' to {localPath}");
             }
@@ -460,12 +430,17 @@ public class SftpFileOperationService : ISftpFileOperationService
                 }
                 
                 using var fs = new FileStream(localPath, FileMode.Create, FileAccess.Write);
-                await Task.Run(() => _sftpClient.DownloadFile(resolvedRemotePath, fs));
+                await Task.Run(() => _sftpClient.DownloadFile(resolvedRemotePath, fs), cancellationToken);
                 
                 LogRequested?.Invoke($"✅ Successfully downloaded file '{itemName}' to {localPath}");
             }
             
             return OperationResult.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Download operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -478,16 +453,20 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    private async Task DownloadDirectoryRecursive(string remotePath, string localPath)
+    private async Task DownloadDirectoryRecursive(string remotePath, string localPath, CancellationToken cancellationToken = default)
     {
         var folderName = Path.GetFileName(remotePath);
         ProgressChanged?.Invoke(true, $"⬇️ Downloading folder {folderName}...");
         
+        cancellationToken.ThrowIfCancellationRequested();
+
         // List all items in remote directory
-        var items = await Task.Run(() => _sftpClient.ListDirectory(remotePath));
+        var items = await Task.Run(() => _sftpClient.ListDirectory(remotePath), cancellationToken);
 
         foreach (var item in items)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             if (item.Name == "." || item.Name == "..") continue;
 
             var remoteItemPath = $"{remotePath}/{item.Name}";
@@ -497,22 +476,24 @@ public class SftpFileOperationService : ISftpFileOperationService
             {
                 LogRequested?.Invoke($"📁 Creating local directory: {item.Name}");
                 Directory.CreateDirectory(localItemPath);
-                await DownloadDirectoryRecursive(remoteItemPath, localItemPath);
+                await DownloadDirectoryRecursive(remoteItemPath, localItemPath, cancellationToken);
             }
             else
             {
                 ProgressChanged?.Invoke(true, $"⬇️ Downloading file {item.Name}...");
                 LogRequested?.Invoke($"📄 Downloading file: {item.Name} ({item.Attributes.Size:N0} bytes)");
                 
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 using var fs = new FileStream(localItemPath, FileMode.Create, FileAccess.Write);
-                await Task.Run(() => _sftpClient.DownloadFile(remoteItemPath, fs));
+                await Task.Run(() => _sftpClient.DownloadFile(remoteItemPath, fs), cancellationToken);
                 
                 LogRequested?.Invoke($"✅ Downloaded: {item.Name}");
             }
         }
     }
 
-    public async Task<OperationResult> DeleteItemAsync(string itemPath)
+    public async Task<OperationResult> DeleteItemAsync(string itemPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -522,22 +503,29 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             LogRequested?.Invoke($"🗑️ Deleting item: {resolvedPath}");
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Check if the item is a file or directory
-            var item = await Task.Run(() => _sftpClient.Get(resolvedPath));
+            var item = await Task.Run(() => _sftpClient.Get(resolvedPath), cancellationToken);
 
             if (item.IsDirectory)
             {
                 LogRequested?.Invoke($"📁 Deleting directory recursively: {Path.GetFileName(resolvedPath)}");
-                await DeleteDirectoryRecursive(resolvedPath);
+                await DeleteDirectoryRecursive(resolvedPath, cancellationToken);
             }
             else
             {
                 LogRequested?.Invoke($"📄 Deleting file: {Path.GetFileName(resolvedPath)}");
-                await Task.Run(() => _sftpClient.DeleteFile(resolvedPath));
+                await Task.Run(() => _sftpClient.DeleteFile(resolvedPath), cancellationToken);
             }
 
             LogRequested?.Invoke($"✅ Successfully deleted: {Path.GetFileName(resolvedPath)}");
             return OperationResult.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Delete operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
         {
@@ -550,7 +538,7 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    public async Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths)
+    public async Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -572,24 +560,31 @@ public class SftpFileOperationService : ISftpFileOperationService
             {
                 try
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     var fileName = Path.GetFileName(itemPath);
                     var resolvedPath = ResolveSftpPath(itemPath);
 
                     LogRequested?.Invoke($"🗑️ Deleting {fileName}");
-                    var item = await Task.Run(() => _sftpClient.Get(resolvedPath));
+                    var item = await Task.Run(() => _sftpClient.Get(resolvedPath), cancellationToken);
                     // Check if source is a directory
 
                     if (item.IsDirectory)
                     {
-                        await DeleteDirectoryRecursive(resolvedPath);
+                        await DeleteDirectoryRecursive(resolvedPath, cancellationToken);
                     }
                     else
                     {
-                        await Task.Run(() => _sftpClient.DeleteFile(resolvedPath));
+                        await Task.Run(() => _sftpClient.DeleteFile(resolvedPath), cancellationToken);
                     }
 
                     successCount++;
                     LogRequested?.Invoke($"✅ Successfully deleted {fileName}");
+                }
+                catch (OperationCanceledException)
+                {
+                    LogRequested?.Invoke($"🚫 Multi-delete operation cancelled by user");
+                    return OperationResult.Failure("Operation was cancelled by user");
                 }
                 catch (Exception ex)
                 {
@@ -611,6 +606,11 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             return OperationResult.Success();
         }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke($"🚫 Multi-delete operation cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
+        }
         catch (Exception ex)
         {
             LogRequested?.Invoke($"❌ Multi-delete operation failed: {ex.Message}");
@@ -620,6 +620,110 @@ public class SftpFileOperationService : ISftpFileOperationService
         {
             ProgressChanged?.Invoke(false, "");
         }
+    }
+
+    private async Task CopyDirectoryRecursive(string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
+    {
+        var folderName = Path.GetFileName(destinationPath);
+        var operation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
+        ProgressChanged?.Invoke(true, $"{operation} folder {folderName}...");
+        
+        LogRequested?.Invoke($"{operation} directory: {sourcePath} → {destinationPath}");
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Create destination directory
+        LogRequested?.Invoke($"📁 Creating destination directory: {folderName}");
+        await Task.Run(() => _sftpClient.CreateDirectory(destinationPath), cancellationToken);
+
+        // List all items in source directory
+        var items = await Task.Run(() => _sftpClient.ListDirectory(sourcePath), cancellationToken);
+
+        foreach (var item in items)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            if (item.Name == "." || item.Name == "..") continue;
+
+            var sourceItemPath = $"{sourcePath}/{item.Name}";
+            var destItemPath = $"{destinationPath}/{item.Name}";
+
+            if (item.IsDirectory)
+            {
+                LogRequested?.Invoke($"📁 Processing subdirectory: {item.Name}");
+                await CopyDirectoryRecursive(sourceItemPath, destItemPath, cancellationToken);
+            }
+            else
+            {
+                var fileOperation = _clipboardIsCut ? "🚚 Moving" : "📋 Copying";
+                ProgressChanged?.Invoke(true, $"{fileOperation} file {item.Name}...");
+                LogRequested?.Invoke($"{fileOperation} file: {item.Name} ({item.Attributes.Size:N0} bytes)");
+                
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                using var ms = new MemoryStream();
+                await Task.Run(() => _sftpClient.DownloadFile(sourceItemPath, ms), cancellationToken);
+                ms.Position = 0;
+                
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Run(() => _sftpClient.UploadFile(ms, destItemPath), cancellationToken);
+                
+                LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} file: {item.Name}");
+            }
+        }
+        
+        LogRequested?.Invoke($"✅ {(_clipboardIsCut ? "Moved" : "Copied")} directory: {folderName}");
+    }
+
+    private async Task DeleteDirectoryRecursive(string directoryPath, CancellationToken cancellationToken = default)
+    {
+        var folderName = Path.GetFileName(directoryPath);
+        ProgressChanged?.Invoke(true, $"🗑️ Deleting folder {folderName}...");
+        
+        LogRequested?.Invoke($"📋 Listing contents of directory: {folderName}");
+        LogRequested?.Invoke($"🔍 Cancellation check before listing directory - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+        
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // List all items in directory
+        var items = await Task.Run(() => _sftpClient.ListDirectory(directoryPath), cancellationToken);
+
+        LogRequested?.Invoke($"📋 Found {items.Count()} items in directory {folderName}");
+
+        foreach (var item in items)
+        {
+            LogRequested?.Invoke($"🔍 Cancellation check before processing {item.Name} - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            if (item.Name == "." || item.Name == "..") continue;
+
+            var itemPath = $"{directoryPath}/{item.Name}";
+
+            if (item.IsDirectory)
+            {
+                LogRequested?.Invoke($"📁 Recursively deleting subdirectory: {item.Name}");
+                await DeleteDirectoryRecursive(itemPath, cancellationToken);
+            }
+            else
+            {
+                ProgressChanged?.Invoke(true, $"🗑️ Deleting file {item.Name}...");
+                LogRequested?.Invoke($"📄 Deleting file: {item.Name}");
+                
+                LogRequested?.Invoke($"🔍 Cancellation check before deleting file {item.Name} - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                await Task.Run(() => _sftpClient.DeleteFile(itemPath), cancellationToken);
+                LogRequested?.Invoke($"✅ Deleted file: {item.Name}");
+            }
+        }
+
+        LogRequested?.Invoke($"🔍 Cancellation check before deleting directory {folderName} - IsCancellationRequested: {cancellationToken.IsCancellationRequested}");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Delete the directory itself
+        LogRequested?.Invoke($"🗑️ Deleting empty directory: {folderName}");
+        await Task.Run(() => _sftpClient.DeleteDirectory(directoryPath), cancellationToken);
+        LogRequested?.Invoke($"✅ Deleted directory: {folderName}");
     }
 
     private string ResolveSftpPath(string path)
