@@ -10,6 +10,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -27,6 +28,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private ISftpFileOperationService? _fileOperationService;
     private bool _isInitialized = false;
     private CancellationTokenSource? _currentOperationCancellation;
+    private bool _isDirectoryLoading = false; // Track if GoToFolder is in progress
 
     // Navigation history for Back/Forward functionality
     private readonly List<string> _navigationHistory = new();
@@ -82,7 +84,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         Browser.SelectionChanged += OnBrowserSelectionChanged;
 
         // Refresh requested
-        Browser.RefreshRequested += async () => await GoToFolder(PathTextBox.Text);
+        Browser.RefreshRequested += async () => await SafeRefreshDirectory(PathTextBox.Text, "user refresh request");
 
         // Progress and cancel events - NEW
         Browser.ProgressChanged += OnBrowserProgressChanged;
@@ -106,6 +108,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         var needsCancellationToken = operationType == FileOperationType.Paste ||
                                    operationType == FileOperationType.Upload ||
                                    operationType == FileOperationType.Download ||
+                                   operationType == FileOperationType.Delete;
+
+        var shouldRefreshOnSuccess = operationType == FileOperationType.Paste ||
+                                   operationType == FileOperationType.Upload ||
+                                   operationType == FileOperationType.NewFolder ||
                                    operationType == FileOperationType.Delete;
 
         if (needsCancellationToken)
@@ -133,15 +140,29 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (result != null && !result.IsSuccess)
             {
                 Log($"❌ Operation failed: {result.ErrorMessage}");
+                
+                // Check if the failure was due to cancellation
+                if (result.ErrorMessage?.Contains("cancelled", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    Log($"🔄 Operation was cancelled, refreshing directory");
+                    if (shouldRefreshOnSuccess)
+                    {
+                        await SafeRefreshDirectory(PathTextBox.Text, "after cancelled operation");
+                    }
+                }
             }
-            else if (operationType == FileOperationType.Paste ||
-                     operationType == FileOperationType.Upload ||
-                     operationType == FileOperationType.NewFolder ||
-                     operationType == FileOperationType.Delete)
+            else if (shouldRefreshOnSuccess)
             {
                 // Refresh directory for operations that modify the file system
-                Log($"🔄 Refreshing directory to show changes");
-                await GoToFolder(PathTextBox.Text);
+                await SafeRefreshDirectory(PathTextBox.Text, "after successful operation");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Log($"🚫 {operationType} operation was cancelled");
+            if (shouldRefreshOnSuccess)
+            {
+                await SafeRefreshDirectory(PathTextBox.Text, "after operation cancellation");
             }
         }
         catch (Exception ex)
@@ -457,13 +478,30 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (!result.IsSuccess)
             {
                 Log($"❌ Multi-delete operation failed: {result.ErrorMessage}");
+                
+                // Check if the failure was due to cancellation
+                if (result.ErrorMessage?.Contains("cancelled", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    Log($"🔄 Multi-delete was cancelled, refreshing directory");
+                    await SafeRefreshDirectory(PathTextBox.Text, "after cancelled multi-delete");
+                }
             }
             else
             {
                 Log($"✅ Successfully deleted {items.Count} item(s)");
                 // Refresh directory to show changes
-                await GoToFolder(PathTextBox.Text);
+                await SafeRefreshDirectory(PathTextBox.Text, "after successful multi-delete");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Log($"🚫 Multi-delete operation was cancelled by user");
+            // Refresh directory even after cancellation
+            await SafeRefreshDirectory(PathTextBox.Text, "after multi-delete cancellation");
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Unexpected error during multi-delete: {ex.Message}");
         }
         finally
         {
@@ -645,6 +683,34 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Log($"🔍 [{timestamp}] Cancel requested from browser control");
             _currentOperationCancellation.Cancel();
             Log($"✅ [{timestamp}] Cancellation signal sent successfully");
+            
+            // Start a task to refresh after cancellation without blocking the UI
+            _ = Task.Run(async () =>
+            {
+                // Wait a moment for the cancellation to be processed
+                await Task.Delay(1000); // Give time for the operation to clean up
+                
+                // Execute refresh on UI thread, but only if not already loading
+                Application.Current.Dispatcher.Invoke(async () =>
+                {
+                    try
+                    {
+                        if (!_isDirectoryLoading)
+                        {
+                            Log($"🔄 Refreshing directory after cancellation");
+                            await SafeRefreshDirectory(PathTextBox.Text, "after cancellation");
+                        }
+                        else
+                        {
+                            Log($"⚠️ Directory refresh after cancellation skipped - loading already in progress");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"❌ Error refreshing after cancellation: {ex.Message}");
+                    }
+                });
+            });
         }
         else
         {
@@ -687,13 +753,26 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (!result.IsSuccess)
             {
                 Log($"❌ Drag and drop upload failed: {result.ErrorMessage}");
+                
+                // Check if the failure was due to cancellation
+                if (result.ErrorMessage?.Contains("cancelled", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    Log($"🔄 Drag and drop upload was cancelled, refreshing directory");
+                    await SafeRefreshDirectory(PathTextBox.Text, "after cancelled drag and drop");
+                }
             }
             else
             {
                 Log($"✅ Successfully completed drag and drop upload");
                 // Refresh directory to show uploaded files
-                await GoToFolder(PathTextBox.Text);
+                await SafeRefreshDirectory(PathTextBox.Text, "after successful drag and drop");
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Log($"🚫 Drag and drop upload was cancelled by user");
+            // Refresh directory even after cancellation
+            await SafeRefreshDirectory(PathTextBox.Text, "after drag and drop cancellation");
         }
         catch (Exception ex)
         {
@@ -734,41 +813,62 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async Task GoToFolder(string path)
     {
-        // Resolve path properly - handle cases like "/home/user/.."
-        var resolvedPath = ResolvePath(path);
-
-        Log($"🔄 Loading directory: {resolvedPath}");
-        Browser.ShowProgress(true, $"Loading directory: {resolvedPath}");
-        Browser.Clear();
-
-        // Use the resolved path for the PathTextBox
-        PathTextBox.Text = resolvedPath;
-
-        // Add to navigation history before loading
-        AddToNavigationHistory(resolvedPath);
-
-        // Add parent folder entry
-        Browser.AddItem(new BrowserItem
+        // Prevent concurrent directory loading operations
+        if (_isDirectoryLoading)
         {
-            Name = "..",
-            FullPath = $"{resolvedPath}/..",
-            IsFolder = true,
-            LastUpdated = DateTime.Now,
-            Size = 0
-        });
-
-        int itemCount = 0;
-        await foreach (var item in FileDriveControlGetDirectory(resolvedPath))
-        {
-            Browser.AddItem(item);
-            itemCount++;
+            Log($"⚠️ Directory loading already in progress, ignoring request for: {path}");
+            return;
         }
 
-        Log($"✅ Directory loaded successfully: {itemCount} items found in {resolvedPath}");
-        Browser.ShowProgress(false);
+        try
+        {
+            _isDirectoryLoading = true;
+            
+            // Resolve path properly - handle cases like "/home/user/.."
+            var resolvedPath = ResolvePath(path);
 
-        // Update navigation button states based on current path and history
-        UpdateNavigationButtonStates();
+            Log($"🔄 Loading directory: {resolvedPath}");
+            Browser.ShowProgress(true, $"Loading directory: {resolvedPath}");
+            Browser.Clear();
+
+            // Use the resolved path for the PathTextBox
+            PathTextBox.Text = resolvedPath;
+
+            // Add to navigation history before loading
+            AddToNavigationHistory(resolvedPath);
+
+            // Add parent folder entry
+            Browser.AddItem(new BrowserItem
+            {
+                Name = "..",
+                FullPath = $"{resolvedPath}/..",
+                IsFolder = true,
+                LastUpdated = DateTime.Now,
+                Size = 0
+            });
+
+            int itemCount = 0;
+            await foreach (var item in FileDriveControlGetDirectory(resolvedPath))
+            {
+                Browser.AddItem(item);
+                itemCount++;
+            }
+
+            Log($"✅ Directory loaded successfully: {itemCount} items found in {resolvedPath}");
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Error loading directory {path}: {ex.Message}");
+            throw; // Re-throw to maintain error handling behavior
+        }
+        finally
+        {
+            _isDirectoryLoading = false;
+            Browser.ShowProgress(false);
+
+            // Update navigation button states based on current path and history
+            UpdateNavigationButtonStates();
+        }
     }
 
     private bool IsAtRootPath()
@@ -1085,6 +1185,33 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         return path.Replace("~", _sftpClient.WorkingDirectory);
     }
 
+    /// <summary>
+    /// Safely requests a directory refresh, respecting the current loading state
+    /// </summary>
+    /// <param name="path">The path to load</param>
+    /// <param name="reason">The reason for the refresh (for logging)</param>
+    /// <returns>True if refresh was attempted, false if skipped due to loading in progress</returns>
+    private async Task<bool> SafeRefreshDirectory(string path, string reason = "refresh")
+    {
+        if (_isDirectoryLoading)
+        {
+            Log($"⚠️ Directory {reason} skipped - loading already in progress for: {path}");
+            return false;
+        }
+
+        try
+        {
+            Log($"🔄 Directory {reason} requested for: {path}");
+            await GoToFolder(path);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Error during directory {reason}: {ex.Message}");
+            return false;
+        }
+    }
+
     #endregion Existing Helper Methods (kept for compatibility)
 
     #region UI Event Handlers
@@ -1147,8 +1274,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async void RefreshButton_Click(object sender, RoutedEventArgs e)
     {
-        Log($"🔄 Refreshing current directory: {PathTextBox.Text}");
-        await GoToFolder(PathTextBox.Text);
+        await SafeRefreshDirectory(PathTextBox.Text, "refresh button click");
     }
 
     private async void BackButton_Click(object sender, RoutedEventArgs e)
@@ -1270,7 +1396,26 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             else
             {
                 Browser.RemoveItem(newFolderItem);
+                
+                // Check if the failure was due to cancellation and refresh
+                if (result.ErrorMessage?.Contains("cancelled", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    Log($"🔄 Folder creation was cancelled, refreshing directory");
+                    await SafeRefreshDirectory(PathTextBox.Text, "after cancelled folder creation");
+                }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Log($"🚫 Create folder operation was cancelled by user");
+            Browser.RemoveItem(newFolderItem);
+            // Refresh directory after cancellation
+            await SafeRefreshDirectory(PathTextBox.Text, "after folder creation cancellation");
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Unexpected error during folder creation: {ex.Message}");
+            Browser.RemoveItem(newFolderItem);
         }
         finally
         {
@@ -1308,7 +1453,28 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             {
                 context.TargetItem.Name = context.TargetItem.OriginalName;
                 context.TargetItem.CommitEdit();
+                
+                // Check if the failure was due to cancellation and refresh
+                if (result.ErrorMessage?.Contains("cancelled", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    Log($"🔄 Rename operation was cancelled, refreshing directory");
+                    await SafeRefreshDirectory(PathTextBox.Text, "after cancelled rename");
+                }
             }
+        }
+        catch (OperationCanceledException)
+        {
+            Log($"🚫 Rename operation was cancelled by user");
+            context.TargetItem.Name = context.TargetItem.OriginalName;
+            context.TargetItem.CommitEdit();
+            // Refresh directory after cancellation
+            await SafeRefreshDirectory(PathTextBox.Text, "after rename cancellation");
+        }
+        catch (Exception ex)
+        {
+            Log($"❌ Unexpected error during rename: {ex.Message}");
+            context.TargetItem.Name = context.TargetItem.OriginalName;
+            context.TargetItem.CommitEdit();
         }
         finally
         {
