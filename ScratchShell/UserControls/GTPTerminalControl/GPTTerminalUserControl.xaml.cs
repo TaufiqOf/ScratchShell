@@ -381,8 +381,12 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         var text = sb.ToString().TrimEnd();
         // Find last $ or # and return everything after it
         int promptIdx = Math.Max(text.LastIndexOf('$'), text.LastIndexOf('#'));
-        if (promptIdx >= 0 && promptIdx + 1 < text.Length)
-            return text.Substring(promptIdx + 1).Trim();
+        if (promptIdx >= 0)
+        {
+            // Return everything after the prompt character (could be empty string if nothing follows)
+            return promptIdx + 1 < text.Length ? text.Substring(promptIdx + 1).Trim() : string.Empty;
+        }
+        // If no prompt character found, assume the entire line is user input
         return text;
     }
 

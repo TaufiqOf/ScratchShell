@@ -5,10 +5,10 @@
     xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     AllowDrop="True"
-    Drop="BrowserUserControl_Drop"
     DragEnter="BrowserUserControl_DragEnter"
+    DragLeave="BrowserUserControl_DragLeave"
     DragOver="BrowserUserControl_DragOver"
-    DragLeave="BrowserUserControl_DragLeave">
+    Drop="BrowserUserControl_Drop">
     <UserControl.Resources>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

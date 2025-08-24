@@ -257,7 +257,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var rows = (uint)Math.Max(1, Terminal.Height / 16);
             var pixelWidth = (uint)Terminal.Width;
             var pixelHeight = (uint)Terminal.Height;
-            _shellStream = _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096);
+            _shellStream = await Task.Run(()=> _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
 
             StartReadLoop();
         }
@@ -326,7 +326,15 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         try
         {
-            _shellStream.WriteLine(command);
+            // If command is empty or whitespace, just send a carriage return for a new prompt
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                _shellStream.Write("\r");
+            }
+            else
+            {
+                _shellStream.WriteLine(command);
+            }
         }
         catch (Exception ex)
         {
