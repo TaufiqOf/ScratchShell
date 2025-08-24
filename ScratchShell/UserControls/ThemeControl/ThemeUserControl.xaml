@@ -284,6 +284,49 @@
                             FontWeight="Medium"
                             Text="Terminal Presets:" />
                         <WrapPanel x:Name="ColorPresetsPanel" />
+
+                        <!--  Theme Presets  -->
+                        <TextBlock
+                            Margin="0,16,0,8"
+                            FontSize="12"
+                            FontWeight="Medium"
+                            Text="Predefined Themes:" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <ui:Button Grid.Column="0"
+                                      x:Name="DarkThemeButton"
+                                      Margin="0,0,4,0"
+                                      Appearance="Secondary"
+                                      Content="Dark"
+                                      Icon="{ui:SymbolIcon WeatherMoon16}"
+                                      Click="DarkThemeButton_Click"
+                                      ToolTip="Apply dark theme"/>
+                            
+
+                            <ui:Button Grid.Column="1"
+                                      x:Name="LightThemeButton"
+                                      Margin="2,0,2,0"
+                                      Appearance="Secondary"
+                                      Content="Light"
+                                      Icon="{ui:SymbolIcon WeatherSunny16}"
+                                      Click="LightThemeButton_Click"
+                                      ToolTip="Apply light theme"/>
+                            
+
+                            <ui:Button Grid.Column="2"
+                                      x:Name="MonokaiThemeButton"
+                                      Margin="4,0,0,0"
+                                      Appearance="Secondary"
+                                      Content="Monokai"
+                                      Icon="{ui:SymbolIcon ColorBackground20}"
+                                      Click="MonokaiThemeButton_Click"
+                                      ToolTip="Apply Monokai theme"/>
+                        </Grid>
                     </StackPanel>
                 </ui:Card>
 
@@ -295,20 +338,48 @@
                             FontSize="14"
                             FontWeight="Medium"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="Preview" />
-                        <Border
-                            x:Name="PreviewBorder"
-                            Height="60"
-                            Padding="8"
-                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <TextBlock
-                                x:Name="PreviewText"
-                                VerticalAlignment="Center"
-                                FontFamily="Consolas"
-                                Text="$ echo 'Hello World!'&#x0A;Hello World!" />
-                        </Border>
+                            Text="Terminal Preview" />
+                        
+                        <!-- Enhanced Terminal Preview -->
+                        <local:TerminalPreviewControl 
+                            x:Name="TerminalPreview"
+                            Height="180"
+                            Theme="{Binding _theme, RelativeSource={RelativeSource AncestorType=local:ThemeUserControl}}"
+                            Margin="0,4"/>
+                        
+                        <!-- Preview Controls -->
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0"
+                                      VerticalAlignment="Center"
+                                      FontSize="11"
+                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                      Text="Interactive preview showing all theme colors in action"/>
+                            
+
+                            <ui:Button Grid.Column="1"
+                                      x:Name="RefreshPreviewButton"
+                                      Margin="8,0,4,0"
+                                      Appearance="Secondary"
+                                      Content="Refresh"
+                                      Icon="{ui:SymbolIcon ArrowClockwise20}"
+                                      Click="RefreshPreviewButton_Click"
+                                      ToolTip="Refresh preview with current theme settings"/>
+                            
+
+                            <ui:Button Grid.Column="2"
+                                      x:Name="ResetThemeButton"
+                                      Appearance="Secondary"
+                                      Content="Reset"
+                                      Icon="{ui:SymbolIcon ArrowReset20}"
+                                      Click="ResetThemeButton_Click"
+                                      ToolTip="Reset theme to default values"/>
+                        </Grid>
                     </StackPanel>
                 </ui:Card>
             </StackPanel>

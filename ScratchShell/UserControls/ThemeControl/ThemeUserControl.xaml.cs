@@ -177,10 +177,12 @@ public partial class ThemeUserControl : UserControl
     {
         if (_theme == null) return;
 
-        PreviewBorder.Background = _theme.Background;
-        PreviewText.Foreground = _theme.Foreground;
-        PreviewText.FontFamily = _theme.FontFamily;
-        PreviewText.FontSize = _theme.FontSize;
+        // Update the comprehensive terminal preview
+        var terminalPreview = FindName("TerminalPreview") as TerminalPreviewControl;
+        if (terminalPreview != null)
+        {
+            terminalPreview.UpdatePreview(_theme);
+        }
     }
 
     private void UpdateColorPickerFromTheme()
@@ -279,6 +281,78 @@ public partial class ThemeUserControl : UserControl
         }
     }
 
+    private void ApplyButton_Click(object sender, RoutedEventArgs e)
+    {
+        Terminal?.RefreshTheme();
+        
+        // Optional: Save theme settings to user preferences
+        SaveThemeToSettings();
+    }
+
+    private void SaveThemeToSettings()
+    {
+        // This could be implemented to save theme settings to user preferences
+        // For now, we'll just apply the theme to the terminal
+    }
+
+    private void RefreshPreviewButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Force refresh the terminal preview
+        var terminalPreview = FindName("TerminalPreview") as TerminalPreviewControl;
+        if (terminalPreview != null)
+        {
+            terminalPreview.RefreshPreview();
+        }
+        UpdateColorPreviews();
+    }
+
+    private void ResetThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+        ResetToDefaults();
+    }
+
+    private void DarkThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyPredefinedTheme("dark");
+    }
+
+    private void LightThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyPredefinedTheme("light");
+    }
+
+    private void MonokaiThemeButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyPredefinedTheme("monokai");
+    }
+
+    /// <summary>
+    /// Public method to get available predefined themes
+    /// </summary>
+    /// <returns>Array of available theme names</returns>
+    public string[] GetAvailableThemes()
+    {
+        return new[] { "dark", "light", "monokai" };
+    }
+
+    /// <summary>
+    /// Public method to apply a theme by name
+    /// </summary>
+    /// <param name="themeName">Name of the theme to apply</param>
+    /// <returns>True if theme was applied successfully</returns>
+    public bool ApplyTheme(string themeName)
+    {
+        try
+        {
+            ApplyPredefinedTheme(themeName);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private void ForegroundPreview_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         ColorTypeComboBox.SelectedIndex = 0; // Select "Text Color"
@@ -366,20 +440,6 @@ public partial class ThemeUserControl : UserControl
         }
     }
 
-    private void ApplyButton_Click(object sender, RoutedEventArgs e)
-    {
-        Terminal?.RefreshTheme();
-        
-        // Optional: Save theme settings to user preferences
-        SaveThemeToSettings();
-    }
-
-    private void SaveThemeToSettings()
-    {
-        // This could be implemented to save theme settings to user preferences
-        // For now, we'll just apply the theme to the terminal
-    }
-
     // Method to reset theme to defaults
     private void ResetToDefaults()
     {
@@ -394,6 +454,7 @@ public partial class ThemeUserControl : UserControl
         _theme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
 
         UpdateUIFromTheme();
+        UpdatePreview();
         Terminal?.RefreshTheme();
     }
 
@@ -440,6 +501,7 @@ public partial class ThemeUserControl : UserControl
         }
 
         UpdateUIFromTheme();
+        UpdatePreview();
         Terminal?.RefreshTheme();
     }
 }

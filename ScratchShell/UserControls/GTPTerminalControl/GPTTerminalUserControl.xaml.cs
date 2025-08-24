@@ -88,10 +88,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         };
         _resizeRedrawTimer.Tick += (s, e) =>
         {
-            _resizeRedrawTimer.Stop();
-            if (_terminal != null)
+            // Stop the timer and check if it's still valid
+            if (_resizeRedrawTimer != null)
             {
-                UpdateTerminalLayoutAndSize(_pendingResizeSize);
+                _resizeRedrawTimer.Stop();
+                if (_terminal != null)
+                {
+                    UpdateTerminalLayoutAndSize(_pendingResizeSize);
+                }
             }
             // Do NOT restart the timer here - it should only be started when a resize actually occurs
         };
@@ -106,9 +110,12 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             _pendingResizeSize = e.NewSize;
 
-            // Restart the debounce timer
-            _resizeRedrawTimer.Stop();
-            _resizeRedrawTimer.Start();
+            // Restart the debounce timer - but only if it hasn't been disposed
+            if (_resizeRedrawTimer != null)
+            {
+                _resizeRedrawTimer.Stop();
+                _resizeRedrawTimer.Start();
+            }
         }
     }
 
@@ -145,6 +152,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         // Clean up any running animations and timers
         CleanupHighlightAnimations();
+        
+        // Unsubscribe from events to prevent further callbacks
+        SizeChanged -= OnControlSizeChanged;
         
         // Stop and clean up the resize timer
         if (_resizeRedrawTimer != null)
@@ -961,7 +971,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                             else
                             {
                                 fg = GetAnsiForeground(attr, inverse);
-                                bg = GetAnsiBackground(attr, inverse);
+                                bg = bgBrush;
                             }
                             FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
                             TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
