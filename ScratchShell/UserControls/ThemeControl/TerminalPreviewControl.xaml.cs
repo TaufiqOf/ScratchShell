@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
 namespace ScratchShell.UserControls.ThemeControl;
@@ -13,7 +14,7 @@ public partial class TerminalPreviewControl : UserControl
 {
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(TerminalPreviewControl),
-        new PropertyMetadata(null, OnThemeChanged));
+        new PropertyMetadata(null, OnThemeChanged, CoerceThemeValue));
 
     public TerminalTheme Theme
     {
@@ -21,79 +22,10 @@ public partial class TerminalPreviewControl : UserControl
         set => SetValue(ThemeProperty, value);
     }
 
-    // Dependency properties for individual theme components
-    public static readonly DependencyProperty ForegroundProperty = DependencyProperty.Register(
-        nameof(Foreground), typeof(Brush), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(Brushes.LightGray, FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty BackgroundProperty = DependencyProperty.Register(
-        nameof(Background), typeof(Brush), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty FontFamilyProperty = DependencyProperty.Register(
-        nameof(FontFamily), typeof(FontFamily), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(new FontFamily("Consolas"), FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty FontSizeProperty = DependencyProperty.Register(
-        nameof(FontSize), typeof(double), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(12.0, FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty SelectionColorProperty = DependencyProperty.Register(
-        nameof(SelectionColor), typeof(Color), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(Color.FromArgb(80, 0, 120, 255), FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty CursorColorProperty = DependencyProperty.Register(
-        nameof(CursorColor), typeof(Brush), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(Brushes.LightGray, FrameworkPropertyMetadataOptions.AffectsRender));
-
-    public static readonly DependencyProperty CopySelectionColorProperty = DependencyProperty.Register(
-        nameof(CopySelectionColor), typeof(Color), typeof(TerminalPreviewControl),
-        new FrameworkPropertyMetadata(Color.FromArgb(180, 144, 238, 144), FrameworkPropertyMetadataOptions.AffectsRender));
-
-    private DispatcherTimer _animationTimer;
+    private Storyboard _copyHighlightStoryboard;
+    private DispatcherTimer _manualAnimationTimer;
     private int _animationStep = 0;
-
-    public new Brush Foreground
-    {
-        get => (Brush)GetValue(ForegroundProperty);
-        set => SetValue(ForegroundProperty, value);
-    }
-
-    public new Brush Background
-    {
-        get => (Brush)GetValue(BackgroundProperty);
-        set => SetValue(BackgroundProperty, value);
-    }
-
-    public new FontFamily FontFamily
-    {
-        get => (FontFamily)GetValue(FontFamilyProperty);
-        set => SetValue(FontFamilyProperty, value);
-    }
-
-    public new double FontSize
-    {
-        get => (double)GetValue(FontSizeProperty);
-        set => SetValue(FontSizeProperty, value);
-    }
-
-    public Color SelectionColor
-    {
-        get => (Color)GetValue(SelectionColorProperty);
-        set => SetValue(SelectionColorProperty, value);
-    }
-
-    public Brush CursorColor
-    {
-        get => (Brush)GetValue(CursorColorProperty);
-        set => SetValue(CursorColorProperty, value);
-    }
-
-    public Color CopySelectionColor
-    {
-        get => (Color)GetValue(CopySelectionColorProperty);
-        set => SetValue(CopySelectionColorProperty, value);
-    }
+    private DateTime _animationStartTime;
 
     public TerminalPreviewControl()
     {
@@ -101,71 +33,249 @@ public partial class TerminalPreviewControl : UserControl
         
         // Set initial theme if available
         UpdateFromTheme();
-
-        // Initialize animation timer
-        _animationTimer = new DispatcherTimer
+        
+        // Start the copy highlight animation when loaded with a small delay
+        Loaded += (s, e) => 
         {
-            Interval = TimeSpan.FromSeconds(3)
+            // Use Dispatcher to ensure we're on the UI thread and add a small delay
+            Dispatcher.BeginInvoke(() => StartCopyHighlightAnimation(), DispatcherPriority.Loaded);
         };
-        _animationTimer.Tick += AnimationTimer_Tick;
-        _animationTimer.Start();
+        
+        // Stop animation when unloaded to prevent memory leaks
+        Unloaded += (s, e) => StopCopyHighlightAnimation();
     }
 
-    private void AnimationTimer_Tick(object sender, EventArgs e)
+    private void StartCopyHighlightAnimation()
     {
-        // Cycle through different demonstration states
-        _animationStep = (_animationStep + 1) % 4;
-        
-        switch (_animationStep)
+        if (Theme == null || CopyHighlightDemo == null) 
         {
-            case 0:
-                // Show normal state
-                if (SelectionDemo != null) SelectionDemo.Visibility = Visibility.Collapsed;
-                if (CopyHighlightDemo != null) CopyHighlightDemo.Visibility = Visibility.Collapsed;
-                break;
-            case 1:
-                // Show selection
-                if (SelectionDemo != null) SelectionDemo.Visibility = Visibility.Visible;
-                if (CopyHighlightDemo != null) CopyHighlightDemo.Visibility = Visibility.Collapsed;
-                break;
-            case 2:
-                // Show copy highlight
-                if (SelectionDemo != null) SelectionDemo.Visibility = Visibility.Collapsed;
-                if (CopyHighlightDemo != null) CopyHighlightDemo.Visibility = Visibility.Visible;
-                break;
-            case 3:
-                // Show both
-                if (SelectionDemo != null) SelectionDemo.Visibility = Visibility.Visible;
-                if (CopyHighlightDemo != null) CopyHighlightDemo.Visibility = Visibility.Visible;
-                break;
+            System.Diagnostics.Debug.WriteLine($"StartCopyHighlightAnimation: Theme={Theme}, CopyHighlightDemo={CopyHighlightDemo}");
+            return;
         }
+
+        System.Diagnostics.Debug.WriteLine($"Starting copy highlight animation with colors: Selection={Theme.SelectionColor}, Copy={Theme.CopySelectionColor}");
+
+        // Stop any existing animation
+        StopCopyHighlightAnimation();
+
+        // For now, use the reliable manual animation approach
+        // The storyboard approach has targeting issues with the Background.Color property
+        System.Diagnostics.Debug.WriteLine("Using manual animation for reliable color transitions");
+        StartManualAnimation();
+        
+        // Keep the storyboard code for future debugging if needed
+        // bool storyboardWorked = TryStoryboardAnimation();
+        // if (!storyboardWorked)
+        // {
+        //     System.Diagnostics.Debug.WriteLine("Storyboard failed, falling back to manual animation");
+        //     StartManualAnimation();
+        // }
+    }
+
+    private bool TryStoryboardAnimation()
+    {
+        try
+        {
+            // Create a new SolidColorBrush specifically for animation and ensure it's attached to the element
+            var animationBrush = new SolidColorBrush(Theme.SelectionColor);
+            
+            // IMPORTANT: Register the brush as a resource so it can be found by the animation system
+            animationBrush.SetValue(FrameworkElement.NameProperty, "AnimationBrush");
+            CopyHighlightDemo.Background = animationBrush;
+
+            // Create the storyboard for the looping animation
+            _copyHighlightStoryboard = new Storyboard();
+            
+            // Create color animation sequence with pauses
+            var colorAnimation = new ColorAnimationUsingKeyFrames
+            {
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+
+            // Define the animation sequence:
+            // 0s: Start with SelectionColor
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(Theme.SelectionColor, TimeSpan.Zero));
+            
+            // 0.8s: Fade to CopySelectionColor
+            colorAnimation.KeyFrames.Add(new EasingColorKeyFrame(Theme.CopySelectionColor, TimeSpan.FromMilliseconds(800))
+            {
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            });
+            
+            // 2.0s: Hold at CopySelectionColor (1.2s pause)
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(Theme.CopySelectionColor, TimeSpan.FromMilliseconds(2000)));
+            
+            // 2.8s: Fade back to SelectionColor
+            colorAnimation.KeyFrames.Add(new EasingColorKeyFrame(Theme.SelectionColor, TimeSpan.FromMilliseconds(2800))
+            {
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+            });
+            
+            // 4.0s: Hold at SelectionColor (1.2s pause) before loop restarts
+            colorAnimation.KeyFrames.Add(new DiscreteColorKeyFrame(
+                Theme.SelectionColor, 
+                TimeSpan.FromMilliseconds(4000)));
+
+            // Target the animation directly to the brush instead of through the element
+            Storyboard.SetTarget(colorAnimation, animationBrush);
+            Storyboard.SetTargetProperty(colorAnimation, new PropertyPath(SolidColorBrush.ColorProperty));
+
+            // Add animation to storyboard
+            _copyHighlightStoryboard.Children.Add(colorAnimation);
+
+            // Start the animation - need to specify a namescope for the storyboard to find the target
+            _copyHighlightStoryboard.Begin(CopyHighlightDemo, true);
+            
+            System.Diagnostics.Debug.WriteLine("Storyboard animation started successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Storyboard animation failed: {ex.Message}");
+            return false;
+        }
+    }
+
+    private void StartManualAnimation()
+    {
+        // Initialize manual animation state
+        _animationStep = 0;
+        _animationStartTime = DateTime.Now;
+        
+        // Set initial color
+        CopyHighlightDemo.Background = new SolidColorBrush(Theme.SelectionColor);
+        
+        // Create and start timer
+        _manualAnimationTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(50) // Update every 50ms for smooth animation
+        };
+        _manualAnimationTimer.Tick += ManualAnimationTimer_Tick;
+        _manualAnimationTimer.Start();
+        
+        System.Diagnostics.Debug.WriteLine("Manual animation started");
+    }
+
+    private void ManualAnimationTimer_Tick(object sender, EventArgs e)
+    {
+        if (Theme == null || CopyHighlightDemo == null)
+        {
+            StopCopyHighlightAnimation();
+            return;
+        }
+
+        var elapsed = DateTime.Now - _animationStartTime;
+        var totalMs = elapsed.TotalMilliseconds;
+        
+        // 4-second cycle: 0-800ms fade to copy, 800-2000ms hold, 2000-2800ms fade back, 2800-4000ms hold
+        var cycleMs = totalMs % 4000;
+        
+        Color currentColor;
+        
+        if (cycleMs <= 800)
+        {
+            // Fade from Selection to Copy (0-800ms)
+            var progress = cycleMs / 800.0;
+            currentColor = InterpolateColor(Theme.SelectionColor, Theme.CopySelectionColor, progress);
+        }
+        else if (cycleMs <= 2000)
+        {
+            // Hold at Copy (800-2000ms)
+            currentColor = Theme.CopySelectionColor;
+        }
+        else if (cycleMs <= 2800)
+        {
+            // Fade from Copy back to Selection (2000-2800ms)
+            var progress = (cycleMs - 2000) / 800.0;
+            currentColor = InterpolateColor(Theme.CopySelectionColor, Theme.SelectionColor, progress);
+        }
+        else
+        {
+            // Hold at Selection (2800-4000ms)
+            currentColor = Theme.SelectionColor;
+        }
+        
+        // Update the background color
+        if (CopyHighlightDemo.Background is SolidColorBrush brush)
+        {
+            brush.Color = currentColor;
+        }
+        else
+        {
+            CopyHighlightDemo.Background = new SolidColorBrush(currentColor);
+        }
+    }
+
+    private Color InterpolateColor(Color from, Color to, double progress)
+    {
+        // Clamp progress to 0-1 range
+        progress = Math.Max(0, Math.Min(1, progress));
+        
+        // Apply easing (sine ease in-out)
+        progress = (Math.Sin((progress - 0.5) * Math.PI) + 1) / 2;
+        
+        return Color.FromArgb(
+            (byte)(from.A + (to.A - from.A) * progress),
+            (byte)(from.R + (to.R - from.R) * progress),
+            (byte)(from.G + (to.G - from.G) * progress),
+            (byte)(from.B + (to.B - from.B) * progress)
+        );
+    }
+
+    private void StopCopyHighlightAnimation()
+    {
+        // Stop storyboard animation
+        if (_copyHighlightStoryboard != null)
+        {
+            _copyHighlightStoryboard.Stop();
+            _copyHighlightStoryboard = null;
+        }
+        
+        // Stop manual animation
+        if (_manualAnimationTimer != null)
+        {
+            _manualAnimationTimer.Stop();
+            _manualAnimationTimer = null;
+        }
+        
+        System.Diagnostics.Debug.WriteLine("Animation stopped");
     }
 
     private static void OnThemeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is TerminalPreviewControl control)
         {
-            control.UpdateFromTheme();
+            // Since XAML bindings now handle the updates, we just need to invalidate the visual
+            control.InvalidateVisual();
+            
+            // Also update the main border background if needed (fallback)
+            if (control.MainBorder != null && control.Theme?.Background != null)
+            {
+                control.MainBorder.Background = control.Theme.Background;
+            }
+
+            // Restart animation with new theme colors
+            control.StartCopyHighlightAnimation();
         }
+    }
+
+    private static object CoerceThemeValue(DependencyObject d, object value)
+    {
+        // This method is called whenever the Theme property value is being set
+        return value;
     }
 
     private void UpdateFromTheme()
     {
         if (Theme == null) return;
 
-        // Update individual properties from theme
-        Foreground = Theme.Foreground ?? Brushes.LightGray;
-        Background = Theme.Background ?? Brushes.Black;
-        FontFamily = Theme.FontFamily ?? new FontFamily("Consolas");
-        FontSize = Theme.FontSize > 0 ? Theme.FontSize : 12.0;
-        SelectionColor = Theme.SelectionColor;
-        CursorColor = Theme.CursorColor ?? Theme.Foreground ?? Brushes.LightGray;
-        CopySelectionColor = Theme.CopySelectionColor;
-
-        // Update the main border background
+        // The XAML bindings now handle most of the theme updates automatically
+        // We just need to force a visual update and handle any special cases
+        
+        // Update the main border background as fallback (since it's also bound in XAML now)
         if (MainBorder != null)
         {
-            MainBorder.Background = Background;
+            MainBorder.Background = Theme.Background;
         }
 
         // Force a visual update
@@ -179,28 +289,13 @@ public partial class TerminalPreviewControl : UserControl
     public void UpdatePreview(TerminalTheme theme)
     {
         Theme = theme;
-    }
-
-    /// <summary>
-    /// Triggers a visual refresh of the preview
-    /// </summary>
-    public void RefreshPreview()
-    {
-        UpdateFromTheme();
-        
-        // Reset animation
-        _animationStep = 0;
-        if (_animationTimer != null)
-        {
-            _animationTimer.Stop();
-            _animationTimer.Start();
-        }
+        // Animation will be restarted automatically via OnThemeChanged
+        StartCopyHighlightAnimation();
     }
 
     public void Dispose()
     {
-        _animationTimer?.Stop();
-        _animationTimer = null;
+        StopCopyHighlightAnimation();
     }
 }
 

@@ -421,7 +421,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _selectionHighlightRects.Clear();
             _selectionStart = null;
             _selectionEnd = null;
-            TerminalCanvas.CaptureMouse();
+            //TerminalCanvas.CaptureMouse();
         }
         else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
         {

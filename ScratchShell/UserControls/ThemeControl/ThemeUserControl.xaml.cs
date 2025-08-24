@@ -10,13 +10,26 @@ public partial class ThemeUserControl : UserControl
         nameof(Terminal), typeof(ITerminal), typeof(ThemeUserControl),
         new PropertyMetadata(null, OnTerminalChanged));
 
+    public static readonly DependencyProperty PreviewThemeProperty = DependencyProperty.Register(
+        nameof(PreviewTheme), typeof(TerminalTheme), typeof(ThemeUserControl),
+        new PropertyMetadata(null));
+
     public ITerminal Terminal
     {
         get => (ITerminal)GetValue(TerminalProperty);
         set => SetValue(TerminalProperty, value);
     }
 
+    public TerminalTheme PreviewTheme
+    {
+        get => (TerminalTheme)GetValue(PreviewThemeProperty);
+        set => SetValue(PreviewThemeProperty, value);
+    }
+
     private TerminalTheme _theme => Terminal?.Theme;
+    
+    // Separate preview theme that doesn't affect the main terminal until Apply is pressed
+    private TerminalTheme _previewTheme;
 
     // Predefined color palette for quick selection with terminal-focused colors
     private readonly Color[] _colorPalette = new Color[]
@@ -49,6 +62,29 @@ public partial class ThemeUserControl : UserControl
         InitializeComponent();
         Loaded += ThemeUserControl_Loaded;
         CreateColorPresets();
+        
+        // Initialize preview theme with defaults if no theme is available yet
+        EnsurePreviewThemeExists();
+    }
+
+    private void EnsurePreviewThemeExists()
+    {
+        if (_previewTheme == null)
+        {
+            // Create a default preview theme
+            _previewTheme = new TerminalTheme
+            {
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 16.0,
+                Foreground = Brushes.LightGray,
+                Background = Brushes.Black,
+                SelectionColor = Color.FromArgb(80, 0, 120, 255),
+                CursorColor = Brushes.LightGray,
+                CopySelectionColor = Color.FromArgb(180, 144, 238, 144)
+            };
+            
+            UpdatePreviewThemeBinding();
+        }
     }
 
     private void ThemeUserControl_Loaded(object sender, RoutedEventArgs e)
@@ -61,17 +97,23 @@ public partial class ThemeUserControl : UserControl
         // Set default color type selection
         ColorTypeComboBox.SelectedIndex = 0;
 
+        // Ensure we have a preview theme
+        EnsurePreviewThemeExists();
+
         if (_theme != null)
         {
+            // Initialize preview theme as a copy of the current theme
+            InitializePreviewTheme();
+            
             // Validate theme colors before applying
             ValidateThemeColors();
 
             // Set font family
-            FontFamilyComboBox.SelectedItem = _theme.FontFamily;
+            FontFamilyComboBox.SelectedItem = _previewTheme.FontFamily;
 
             // Set font size
             var sizeItem = FontSizeComboBox.Items.Cast<ComboBoxItem>()
-                .FirstOrDefault(item => item.Content.ToString() == _theme.FontSize.ToString());
+                .FirstOrDefault(item => item.Content.ToString() == _previewTheme.FontSize.ToString());
             if (sizeItem != null)
                 FontSizeComboBox.SelectedItem = sizeItem;
 
@@ -79,6 +121,44 @@ public partial class ThemeUserControl : UserControl
             UpdatePreview();
             UpdateColorPickerFromTheme();
         }
+        else
+        {
+            // No real theme available, but we have our default preview theme
+            // Update UI to reflect the default preview theme
+            UpdateUIFromTheme();
+        }
+    }
+
+    private void InitializePreviewTheme()
+    {
+        if (_theme == null) return;
+        
+        // Create a copy of the current theme for preview purposes
+        _previewTheme = new TerminalTheme
+        {
+            FontFamily = _theme.FontFamily,
+            FontSize = _theme.FontSize,
+            Foreground = _theme.Foreground,
+            Background = _theme.Background,
+            SelectionColor = _theme.SelectionColor,
+            CursorColor = _theme.CursorColor,
+            CopySelectionColor = _theme.CopySelectionColor
+        };
+        
+        // Update the public property for binding
+        UpdatePreviewThemeBinding();
+    }
+
+    /// <summary>
+    /// Helper method to update the preview theme properties
+    /// Since TerminalTheme now implements INotifyPropertyChanged, we can modify the existing instance
+    /// </summary>
+    private void UpdatePreviewThemeBinding()
+    {
+        if (_previewTheme == null) return;
+        
+        // Just set the reference - no need to create a new instance
+        PreviewTheme = _previewTheme;
     }
 
     private void CreateColorPresets()
@@ -134,60 +214,72 @@ public partial class ThemeUserControl : UserControl
 
     private void UpdateUIFromTheme()
     {
+        EnsurePreviewThemeExists();
+        
         if (_theme != null)
         {
-            FontFamilyComboBox.SelectedItem = _theme.FontFamily;
-
-            var sizeItem = FontSizeComboBox.Items.Cast<ComboBoxItem>()
-                .FirstOrDefault(item => item.Content.ToString() == _theme.FontSize.ToString());
-            if (sizeItem != null)
-                FontSizeComboBox.SelectedItem = sizeItem;
-
-            UpdateColorPreviews();
-            UpdatePreview();
-            UpdateColorPickerFromTheme();
+            // Initialize preview theme if not already done
+            if (_previewTheme == null)
+            {
+                InitializePreviewTheme();
+            }
         }
+
+        // Update UI to reflect the current preview theme
+        FontFamilyComboBox.SelectedItem = _previewTheme.FontFamily;
+
+        var sizeItem = FontSizeComboBox.Items.Cast<ComboBoxItem>()
+            .FirstOrDefault(item => item.Content.ToString() == _previewTheme.FontSize.ToString());
+        if (sizeItem != null)
+            FontSizeComboBox.SelectedItem = sizeItem;
+
+        // Update preview and ensure binding reference is set
+        UpdateColorPreviews();
+        UpdatePreview();
+        UpdateColorPickerFromTheme();
+        UpdatePreviewThemeBinding(); // Still needed to set the initial reference
     }
 
     private void UpdateColorPreviews()
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
         // Update foreground preview
-        ForegroundPreview.Background = _theme.Background;
+        ForegroundPreview.Background = _previewTheme.Background;
         if (ForegroundPreview.Child is TextBlock foregroundText)
         {
-            foregroundText.Foreground = _theme.Foreground;
+            foregroundText.Foreground = _previewTheme.Foreground;
         }
 
         // Update background preview
-        BackgroundPreview.Background = _theme.Background;
+        BackgroundPreview.Background = _previewTheme.Background;
 
         // Update selection preview
-        SelectionPreview.Background = new SolidColorBrush(_theme.SelectionColor);
+        SelectionPreview.Background = new SolidColorBrush(_previewTheme.SelectionColor);
 
         // Update cursor preview
-        CursorPreview.Background = _theme.CursorColor ?? _theme.Foreground;
+        CursorPreview.Background = _previewTheme.CursorColor ?? _previewTheme.Foreground;
 
         // Update copy selection preview
-        CopySelectionPreview.Background = new SolidColorBrush(_theme.CopySelectionColor);
+        CopySelectionPreview.Background = new SolidColorBrush(_previewTheme.CopySelectionColor);
     }
 
     private void UpdatePreview()
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
         // Update the comprehensive terminal preview
         var terminalPreview = FindName("TerminalPreview") as TerminalPreviewControl;
         if (terminalPreview != null)
         {
-            terminalPreview.UpdatePreview(_theme);
+            // Use direct method call as backup/force update
+            terminalPreview.UpdatePreview(_previewTheme);
         }
     }
 
     private void UpdateColorPickerFromTheme()
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
         _isUpdatingColorPicker = true;
 
@@ -199,66 +291,70 @@ public partial class ThemeUserControl : UserControl
 
     private Color GetCurrentColor()
     {
-        if (_theme == null) return Colors.Black;
+        if (_previewTheme == null) return Colors.Black;
 
         return _currentColorType switch
         {
-            "Foreground" => (_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
-            "Background" => (_theme.Background as SolidColorBrush)?.Color ?? Colors.Black,
-            "Selection" => _theme.SelectionColor,
-            "Cursor" => (_theme.CursorColor as SolidColorBrush)?.Color ?? (_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
-            "CopySelection" => _theme.CopySelectionColor,
+            "Foreground" => (_previewTheme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
+            "Background" => (_previewTheme.Background as SolidColorBrush)?.Color ?? Colors.Black,
+            "Selection" => _previewTheme.SelectionColor,
+            "Cursor" => (_previewTheme.CursorColor as SolidColorBrush)?.Color ?? (_previewTheme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
+            "CopySelection" => _previewTheme.CopySelectionColor,
             _ => Colors.Black
         };
     }
 
     private void ApplyColorToCurrentType(Color color)
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
         switch (_currentColorType)
         {
             case "Foreground":
-                _theme.Foreground = new SolidColorBrush(color);
+                _previewTheme.Foreground = new SolidColorBrush(color);
                 break;
 
             case "Background":
-                _theme.Background = new SolidColorBrush(color);
+                _previewTheme.Background = new SolidColorBrush(color);
                 break;
 
             case "Selection":
-                _theme.SelectionColor = color;
+                _previewTheme.SelectionColor = color;
                 break;
 
             case "Cursor":
-                _theme.CursorColor = new SolidColorBrush(color);
+                _previewTheme.CursorColor = new SolidColorBrush(color);
                 break;
 
             case "CopySelection":
-                _theme.CopySelectionColor = color;
+                _previewTheme.CopySelectionColor = color;
                 break;
         }
 
+        // The bindings will automatically update due to INotifyPropertyChanged
+        // We still update the color previews and call UpdatePreview for the direct method call
         UpdateColorPreviews();
         UpdatePreview();
     }
 
     private void FontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_theme != null && FontFamilyComboBox.SelectedItem is FontFamily fontFamily)
+        if (_previewTheme != null && FontFamilyComboBox.SelectedItem is FontFamily fontFamily)
         {
-            _theme.FontFamily = fontFamily;
+            _previewTheme.FontFamily = fontFamily;
+            // The binding will automatically update due to INotifyPropertyChanged
             UpdatePreview();
         }
     }
 
     private void FontSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_theme != null && FontSizeComboBox.SelectedItem is ComboBoxItem selectedItem)
+        if (_previewTheme != null && FontSizeComboBox.SelectedItem is ComboBoxItem selectedItem)
         {
             if (double.TryParse(selectedItem.Content.ToString(), out double size))
             {
-                _theme.FontSize = size;
+                _previewTheme.FontSize = size;
+                // The binding will automatically update due to INotifyPropertyChanged
                 UpdatePreview();
             }
         }
@@ -283,6 +379,19 @@ public partial class ThemeUserControl : UserControl
 
     private void ApplyButton_Click(object sender, RoutedEventArgs e)
     {
+        // Copy the preview theme to the main theme
+        if (_previewTheme != null && _theme != null)
+        {
+            _theme.FontFamily = _previewTheme.FontFamily;
+            _theme.FontSize = _previewTheme.FontSize;
+            _theme.Foreground = _previewTheme.Foreground;
+            _theme.Background = _previewTheme.Background;
+            _theme.SelectionColor = _previewTheme.SelectionColor;
+            _theme.CursorColor = _previewTheme.CursorColor;
+            _theme.CopySelectionColor = _previewTheme.CopySelectionColor;
+        }
+
+        // Apply to the terminal
         Terminal?.RefreshTheme();
         
         // Optional: Save theme settings to user preferences
@@ -295,17 +404,6 @@ public partial class ThemeUserControl : UserControl
         // For now, we'll just apply the theme to the terminal
     }
 
-    private void RefreshPreviewButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Force refresh the terminal preview
-        var terminalPreview = FindName("TerminalPreview") as TerminalPreviewControl;
-        if (terminalPreview != null)
-        {
-            terminalPreview.RefreshPreview();
-        }
-        UpdateColorPreviews();
-    }
-
     private void ResetThemeButton_Click(object sender, RoutedEventArgs e)
     {
         ResetToDefaults();
@@ -313,17 +411,17 @@ public partial class ThemeUserControl : UserControl
 
     private void DarkThemeButton_Click(object sender, RoutedEventArgs e)
     {
-        ApplyPredefinedTheme("dark");
+        ApplyPredefinedThemeToPreview("dark");
     }
 
     private void LightThemeButton_Click(object sender, RoutedEventArgs e)
     {
-        ApplyPredefinedTheme("light");
+        ApplyPredefinedThemeToPreview("light");
     }
 
     private void MonokaiThemeButton_Click(object sender, RoutedEventArgs e)
     {
-        ApplyPredefinedTheme("monokai");
+        ApplyPredefinedThemeToPreview("monokai");
     }
 
     /// <summary>
@@ -381,40 +479,42 @@ public partial class ThemeUserControl : UserControl
     // Validate theme colors and provide defaults if needed
     private void ValidateThemeColors()
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
         // Ensure all required colors have valid values
-        if (_theme.Foreground == null)
-            _theme.Foreground = Brushes.LightGray;
+        if (_previewTheme.Foreground == null)
+            _previewTheme.Foreground = Brushes.LightGray;
 
-        if (_theme.Background == null)
-            _theme.Background = Brushes.Black;
+        if (_previewTheme.Background == null)
+            _previewTheme.Background = Brushes.Black;
 
-        if (_theme.CursorColor == null)
-            _theme.CursorColor = _theme.Foreground;
+        if (_previewTheme.CursorColor == null)
+            _previewTheme.CursorColor = _previewTheme.Foreground;
 
         // Validate alpha values for transparency colors
-        if (_theme.SelectionColor.A == 0)
-            _theme.SelectionColor = Color.FromArgb(80, _theme.SelectionColor.R, _theme.SelectionColor.G, _theme.SelectionColor.B);
+        if (_previewTheme.SelectionColor.A == 0)
+            _previewTheme.SelectionColor = Color.FromArgb(80, _previewTheme.SelectionColor.R, _previewTheme.SelectionColor.G, _previewTheme.SelectionColor.B);
 
-        if (_theme.CopySelectionColor.A == 0)
-            _theme.CopySelectionColor = Color.FromArgb(180, _theme.CopySelectionColor.R, _theme.CopySelectionColor.G, _theme.CopySelectionColor.B);
+        if (_previewTheme.CopySelectionColor.A == 0)
+            _previewTheme.CopySelectionColor = Color.FromArgb(180, _previewTheme.CopySelectionColor.R, _previewTheme.CopySelectionColor.G, _previewTheme.CopySelectionColor.B);
+
+        // Property changes will automatically notify bindings
     }
 
     // Method to export current theme settings
     public string ExportThemeSettings()
     {
-        if (_theme == null) return string.Empty;
+        if (_previewTheme == null) return string.Empty;
 
         return System.Text.Json.JsonSerializer.Serialize(new
         {
-            FontFamily = _theme.FontFamily.Source,
-            FontSize = _theme.FontSize,
-            Foreground = ColorToHex((_theme.Foreground as SolidColorBrush)?.Color ?? Colors.White),
-            Background = ColorToHex((_theme.Background as SolidColorBrush)?.Color ?? Colors.Black),
-            SelectionColor = ColorToHex(_theme.SelectionColor),
-            CursorColor = ColorToHex((_theme.CursorColor as SolidColorBrush)?.Color ?? Colors.White),
-            CopySelectionColor = ColorToHex(_theme.CopySelectionColor)
+            FontFamily = _previewTheme.FontFamily.Source,
+            FontSize = _previewTheme.FontSize,
+            Foreground = ColorToHex((_previewTheme.Foreground as SolidColorBrush)?.Color ?? Colors.White),
+            Background = ColorToHex((_previewTheme.Background as SolidColorBrush)?.Color ?? Colors.Black),
+            SelectionColor = ColorToHex(_previewTheme.SelectionColor),
+            CursorColor = ColorToHex((_previewTheme.CursorColor as SolidColorBrush)?.Color ?? Colors.White),
+            CopySelectionColor = ColorToHex(_previewTheme.CopySelectionColor)
         }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     }
 
@@ -443,22 +543,69 @@ public partial class ThemeUserControl : UserControl
     // Method to reset theme to defaults
     private void ResetToDefaults()
     {
-        if (_theme == null) return;
+        if (_previewTheme == null) return;
 
-        _theme.FontFamily = new FontFamily("Consolas");
-        _theme.FontSize = 16.0;
-        _theme.Foreground = Brushes.LightGray;
-        _theme.Background = Brushes.Black;
-        _theme.SelectionColor = Color.FromArgb(80, 0, 120, 255);
-        _theme.CursorColor = Brushes.LightGray;
-        _theme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
+        _previewTheme.FontFamily = new FontFamily("Consolas");
+        _previewTheme.FontSize = 16.0;
+        _previewTheme.Foreground = Brushes.LightGray;
+        _previewTheme.Background = Brushes.Black;
+        _previewTheme.SelectionColor = Color.FromArgb(80, 0, 120, 255);
+        _previewTheme.CursorColor = Brushes.LightGray;
+        _previewTheme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
 
+        // Update UI to reflect the changes
         UpdateUIFromTheme();
         UpdatePreview();
-        Terminal?.RefreshTheme();
     }
 
-    // Method to apply a predefined theme
+    // Method to apply a predefined theme to preview only
+    private void ApplyPredefinedThemeToPreview(string themeName)
+    {
+        if (_previewTheme == null) return;
+
+        switch (themeName.ToLower())
+        {
+            case "dark":
+                _previewTheme.FontFamily = new FontFamily("Consolas");
+                _previewTheme.FontSize = 16.0;
+                _previewTheme.Foreground = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _previewTheme.Background = new SolidColorBrush(Color.FromRgb(40, 44, 52));
+                _previewTheme.SelectionColor = Color.FromArgb(80, 98, 114, 164);
+                _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _previewTheme.CopySelectionColor = Color.FromArgb(180, 87, 227, 137);
+                break;
+
+            case "light":
+                _previewTheme.FontFamily = new FontFamily("Consolas");
+                _previewTheme.FontSize = 16.0;
+                _previewTheme.Foreground = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                _previewTheme.Background = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                _previewTheme.SelectionColor = Color.FromArgb(80, 0, 120, 215);
+                _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                _previewTheme.CopySelectionColor = Color.FromArgb(180, 0, 150, 0);
+                break;
+
+            case "monokai":
+                _previewTheme.FontFamily = new FontFamily("Consolas");
+                _previewTheme.FontSize = 16.0;
+                _previewTheme.Foreground = new SolidColorBrush(Color.FromRgb(248, 248, 242));
+                _previewTheme.Background = new SolidColorBrush(Color.FromRgb(39, 40, 34));
+                _previewTheme.SelectionColor = Color.FromArgb(80, 73, 72, 62);
+                _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(249, 38, 114));
+                _previewTheme.CopySelectionColor = Color.FromArgb(180, 102, 217, 239);
+                break;
+
+            default:
+                ResetToDefaults();
+                return;
+        }
+
+        // Update UI to reflect the changes
+        UpdateUIFromTheme();
+        UpdatePreview();
+    }
+
+    // Keep the original method for the public API but modify it to affect the main theme
     public void ApplyPredefinedTheme(string themeName)
     {
         if (_theme == null) return;
@@ -496,10 +643,19 @@ public partial class ThemeUserControl : UserControl
                 break;
 
             default:
-                ResetToDefaults();
-                return;
+                // Reset main theme to defaults
+                _theme.FontFamily = new FontFamily("Consolas");
+                _theme.FontSize = 16.0;
+                _theme.Foreground = Brushes.LightGray;
+                _theme.Background = Brushes.Black;
+                _theme.SelectionColor = Color.FromArgb(80, 0, 120, 255);
+                _theme.CursorColor = Brushes.LightGray;
+                _theme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
+                break;
         }
 
+        // Update the preview theme to match and refresh binding
+        InitializePreviewTheme();
         UpdateUIFromTheme();
         UpdatePreview();
         Terminal?.RefreshTheme();

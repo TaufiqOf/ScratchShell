@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
@@ -28,6 +29,11 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private FullScreenWindow _FullScreen;
 
     public ITerminal Terminal { get; private set; }
+
+    private bool _lastSelectionState = false;
+    private bool _lastClipboardState = false;
+    private bool _cachedClipboardState = false;
+    private System.Windows.Threading.DispatcherTimer _clipboardTimer;
 
     public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
     {
@@ -67,59 +73,87 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
     private void SetupSelectionMonitoring()
     {
-        // Hook into mouse and keyboard events that can change selection
+        // Hook into terminal events if possible
         if (Terminal is GPTTerminalUserControl terminalControl)
         {
-            // Use a lower frequency timer to reduce performance impact
-            var selectionTimer = new System.Windows.Threading.DispatcherTimer
+            // Monitor mouse events that can change selection
+            terminalControl.MouseUp += (s, e) => 
             {
-                Interval = TimeSpan.FromMilliseconds(200) // Check every 200ms (reduced frequency)
+                // Delay slightly to allow selection to be finalized
+                Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
             };
-            selectionTimer.Tick += (s, e) => UpdateSelectionState();
-            selectionTimer.Start();
-            
-            // Also hook into control events that might change selection
-            terminalControl.MouseUp += (s, e) => UpdateSelectionState();
-            terminalControl.KeyUp += (s, e) => UpdateSelectionState();
-            terminalControl.GotFocus += (s, e) => UpdateSelectionState();
-            terminalControl.LostFocus += (s, e) => UpdateSelectionState();
+            terminalControl.KeyUp += (s, e) => 
+            {
+                // Some keys might clear selection
+                if (e.Key == Key.Escape || e.Key == Key.Delete)
+                {
+                    Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
+                }
+            };
         }
         
-        // Set up clipboard monitoring for paste command
-        var clipboardTimer = new System.Windows.Threading.DispatcherTimer
+        // Set up periodic clipboard monitoring (less frequently)
+        _clipboardTimer = new System.Windows.Threading.DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(500) // Check clipboard every 500ms
+            Interval = TimeSpan.FromSeconds(1) // Check clipboard every second
         };
-        clipboardTimer.Tick += (s, e) => UpdateSelectionState(); // This will also refresh paste state
-        clipboardTimer.Start();
+        _clipboardTimer.Tick += (s, e) => UpdateClipboardState();
+        _clipboardTimer.Start();
         
         // Initial state update
         UpdateSelectionState();
+        UpdateClipboardState();
+    }
+
+    private void UpdateClipboardState()
+    {
+        try
+        {
+            // Cache clipboard state to avoid expensive repeated calls
+            bool hasClipboard = Clipboard.ContainsText();
+            if (hasClipboard != _lastClipboardState)
+            {
+                _lastClipboardState = hasClipboard;
+                _cachedClipboardState = hasClipboard;
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+        catch (Exception)
+        {
+            // If clipboard access fails, assume no text
+            _cachedClipboardState = false;
+        }
     }
 
     private void UpdateSelectionState()
     {
         bool hasSelection = HasSelectedText();
         
-        // Update copy button and menu items through command manager
-        CommandManager.InvalidateRequerySuggested();
+        // Only invalidate commands if selection state actually changed
+        if (hasSelection != _lastSelectionState)
+        {
+            _lastSelectionState = hasSelection;
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        // Enable copy if terminal has selected text
-        e.CanExecute = Terminal != null && HasSelectedText();
+        // Use cached selection state - this must be fast and side-effect free
+        e.CanExecute = Terminal != null && _lastSelectionState;
     }
 
     private void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs e)
     {
         CopySelectedText();
+        // Update selection state after copy (selection might be cleared)
+        UpdateSelectionState();
     }
 
     private void PasteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
     {
-        // Enable paste if clipboard has text
-        e.CanExecute = Terminal != null && !Terminal.IsReadOnly && Clipboard.ContainsText();
+        // Use cached clipboard state to avoid expensive Clipboard.ContainsText() calls
+        e.CanExecute = Terminal != null && !Terminal.IsReadOnly && _cachedClipboardState;
     }
 
     private void PasteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -344,6 +378,13 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
     public void Dispose()
     {
+        // Stop clipboard monitoring timer
+        if (_clipboardTimer != null)
+        {
+            _clipboardTimer.Stop();
+            _clipboardTimer = null;
+        }
+        
         if (_sshClient is not null)
         {
             this._sshClient.Disconnect();

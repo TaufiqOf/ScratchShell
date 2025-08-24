@@ -5,202 +5,166 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    d:DesignHeight="200" d:DesignWidth="400">
-    
+    d:DesignHeight="200"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
+
     <UserControl.Resources>
-        <local:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+        <local:ColorToBrushConverter x:Key="ColorToBrushConverter" />
     </UserControl.Resources>
-    
-    <Border x:Name="MainBorder" 
-            BorderBrush="#404040" 
-            BorderThickness="1" 
-            CornerRadius="6"
-            Padding="12">
+
+    <Border
+        x:Name="MainBorder"
+        Padding="12"
+        Background="{Binding Theme.Background, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        BorderBrush="#404040"
+        BorderThickness="1"
+        CornerRadius="6">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            
-            <!-- Terminal Title Bar -->
-            <Border Grid.Row="0" 
-                    Background="#2D2D2D" 
-                    CornerRadius="4,4,0,0" 
-                    Padding="8,4"
-                    Margin="0,0,0,4">
+
+            <!--  Terminal Title Bar  -->
+            <Border
+                Grid.Row="0"
+                Margin="0,0,0,4"
+                Padding="8,4"
+                Background="#2D2D2D"
+                CornerRadius="4,4,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    
-                    <!-- Window Controls -->
+
+                    <!--  Window Controls  -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <Ellipse Width="12" Height="12" Fill="#FF5F56" Margin="0,0,4,0"/>
-                        <Ellipse Width="12" Height="12" Fill="#FFBD2E" Margin="0,0,4,0"/>
-                        <Ellipse Width="12" Height="12" Fill="#27CA3F"/>
+                        <Ellipse
+                            Width="12"
+                            Height="12"
+                            Margin="0,0,4,0"
+                            Fill="#FF5F56" />
+                        <Ellipse
+                            Width="12"
+                            Height="12"
+                            Margin="0,0,4,0"
+                            Fill="#FFBD2E" />
+                        <Ellipse
+                            Width="12"
+                            Height="12"
+                            Fill="#27CA3F" />
                     </StackPanel>
-                    
-                    <!-- Terminal Title -->
-                    <TextBlock Grid.Column="1" 
-                               Text="Terminal Preview" 
-                               FontSize="11" 
-                               Foreground="#CCCCCC"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+
+                    <!--  Terminal Title  -->
+                    <TextBlock
+                        Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="11"
+                        Foreground="#CCCCCC"
+                        Text="Terminal Preview" />
                 </Grid>
             </Border>
-            
-            <!-- Terminal Content -->
-            <ScrollViewer Grid.Row="1" 
-                         VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Auto"
-                         Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                <StackPanel x:Name="TerminalContent" Margin="4">
-                    
-                    <!-- Command Line 1: Basic text -->
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock x:Name="Prompt1" 
-                                   Text="user@terminal:~$ " 
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <TextBlock x:Name="Command1" 
-                                   Text="ls -la"
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+            <!--  Terminal Content  -->
+            <ScrollViewer
+                Grid.Row="1"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="TerminalContent" Background="{Binding Theme.Background, RelativeSource={RelativeSource AncestorType=UserControl}}">
+
+                    <!--  Command Line 1: Basic text "  -->
+                    <StackPanel Margin="0,2" Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="Prompt1"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="user@terminal:~$ " />
+                        <TextBlock
+                            x:Name="Command1"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="ls -la" />
                     </StackPanel>
-                    
-                    <!-- Output with different elements -->
-                    <TextBlock x:Name="Output1" 
-                               Text="total 24"
-                               FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               Margin="0,1"/>
-                    
-                    <!-- Command Line 2: With selection simulation -->
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock x:Name="Prompt2" 
-                                   Text="user@terminal:~$ " 
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <Border x:Name="SelectionDemo" 
-                                Background="{Binding SelectionColor, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource ColorToBrushConverter}}"
-                                CornerRadius="2" Padding="2,0">
-                            <TextBlock x:Name="SelectedText" 
-                                       Text="echo 'selected text'"
-                                       FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                       FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                    <!--  Output with different elements  -->
+                    <TextBlock
+                        x:Name="Output1"
+                        Margin="0,1"
+                        FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        Text="total 24" />
+
+                    <!--  Command Line 3: With cursor simulation  -->
+                    <StackPanel Margin="0,2" Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="Prompt3"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="user@terminal:~$ " />
+                        <TextBlock
+                            x:Name="Command3"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="cat file.txt" />
+                    </StackPanel>
+
+                    <!--  Copy highlight demonstration  -->
+                    <StackPanel Margin="0,2" Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="Prompt4"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="user@terminal:~$ " />
+                        <Border
+                            x:Name="CopyHighlightDemo"
+                            Padding="2,0"
+                            CornerRadius="2">
+                            <TextBlock
+                                x:Name="CopiedText"
+                                FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Text="ScratchShell" />
                         </Border>
                     </StackPanel>
-                    
-                    <!-- Command Line 3: With cursor simulation -->
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock x:Name="Prompt3" 
-                                   Text="user@terminal:~$ " 
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <TextBlock x:Name="Command3" 
-                                   Text="vim file.txt"
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <Border x:Name="CursorDemo" 
-                                Width="8" Height="16"
-                                Background="{Binding CursorColor, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                Margin="2,0,0,0">
+
+
+
+                    <!--  Current prompt line  -->
+                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                        <TextBlock
+                            x:Name="CurrentPrompt"
+                            FontFamily="{Binding Theme.FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            FontSize="{Binding Theme.FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Foreground="{Binding Theme.Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Text="user@terminal:~$ " />
+                        <Border
+                            x:Name="LiveCursor"
+                            Width="8"
+                            Height="16"
+                            Background="{Binding Theme.CursorColor, RelativeSource={RelativeSource AncestorType=UserControl}}">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Style.Triggers>
                                         <EventTrigger RoutedEvent="Loaded">
                                             <BeginStoryboard>
                                                 <Storyboard RepeatBehavior="Forever">
-                                                    <DoubleAnimation 
+                                                    <DoubleAnimation
+                                                        AutoReverse="True"
                                                         Storyboard.TargetProperty="Opacity"
-                                                        From="1" To="0" Duration="0:0:0.8"
-                                                        AutoReverse="True"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                        </Border>
-                    </StackPanel>
-                    
-                    <!-- Copy highlight demonstration -->
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock x:Name="Prompt4" 
-                                   Text="user@terminal:~$ " 
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <Border x:Name="CopyHighlightDemo" 
-                                Background="{Binding CopySelectionColor, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource ColorToBrushConverter}}"
-                                CornerRadius="2" Padding="2,0">
-                            <TextBlock x:Name="CopiedText" 
-                                       Text="copied content"
-                                       FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                       FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        </Border>
-                    </StackPanel>
-                    
-                    <!-- Sample output showing color variety -->
-                    <TextBlock x:Name="ColorSample" 
-                               Margin="0,4,0,2">
-                        <Run Text="[INFO] " Foreground="#4CAF50"/>
-                        <Run Text="Operation completed successfully" 
-                             FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                    </TextBlock>
-                    
-                    <TextBlock x:Name="ErrorSample" 
-                               Margin="0,1">
-                        <Run Text="[ERROR] " Foreground="#F44336"/>
-                        <Run Text="File not found" 
-                             FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                    </TextBlock>
-                    
-                    <TextBlock x:Name="WarningSample" 
-                               Margin="0,1">
-                        <Run Text="[WARN] " Foreground="#FF9800"/>
-                        <Run Text="Deprecated function used" 
-                             FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                    </TextBlock>
-                    
-                    <!-- Current prompt line -->
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock x:Name="CurrentPrompt" 
-                                   Text="user@terminal:~$ " 
-                                   FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        <Border x:Name="LiveCursor" 
-                                Width="8" Height="16"
-                                Background="{Binding CursorColor, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <EventTrigger RoutedEvent="Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard RepeatBehavior="Forever">
-                                                    <DoubleAnimation 
-                                                        Storyboard.TargetProperty="Opacity"
-                                                        From="1" To="0.3" Duration="0:0:1"
-                                                        AutoReverse="True"/>
+                                                        From="1"
+                                                        To="0.3"
+                                                        Duration="0:0:1" />
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </EventTrigger>
