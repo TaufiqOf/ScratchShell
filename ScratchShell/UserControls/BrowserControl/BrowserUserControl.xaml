@@ -30,7 +30,8 @@
                 Height="120"
                 Margin="5"
                 MouseLeftButtonDown="GridItem_MouseLeftButtonDown"
-                MouseRightButtonDown="GridItem_MouseRightButtonDown">
+                MouseRightButtonDown="GridItem_MouseRightButtonDown"
+                ToolTip="{Binding Name}">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="Transparent" />
@@ -50,7 +51,7 @@
                     <!--  Icon  -->
                     <ui:SymbolIcon
                         Grid.Row="0"
-                        Margin="0,10,0,5"
+                        Margin="0,5,0,5"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         FontSize="48"
@@ -61,7 +62,7 @@
                         <!--  Normal display mode  -->
                         <TextBlock
                             x:Name="GridDisplayTextBlock"
-                            MaxHeight="40"
+                            MaxHeight="70"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
@@ -112,28 +113,127 @@
             Background="{DynamicResource ApplicationBackgroundBrush}"
             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
             BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal">
-                <ui:Button
-                    x:Name="GridViewButton"
-                    Width="32"
-                    Height="32"
-                    Margin="2"
-                    Padding="4"
-                    Click="GridViewButton_Click"
-                    ToolTip="Grid View">
-                    <ui:SymbolIcon FontSize="16" Symbol="Grid24" />
-                </ui:Button>
-                <ui:Button
-                    x:Name="ListViewButton"
-                    Width="32"
-                    Height="32"
-                    Margin="2"
-                    Padding="4"
-                    Click="ListViewButton_Click"
-                    ToolTip="List View">
-                    <ui:SymbolIcon FontSize="16" Symbol="List24" />
-                </ui:Button>
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!--  View Mode Buttons  -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <ui:Button
+                        x:Name="GridViewButton"
+                        Width="32"
+                        Height="32"
+                        Margin="2"
+                        Padding="4"
+                        Click="GridViewButton_Click"
+                        ToolTip="Grid View">
+                        <ui:SymbolIcon FontSize="16" Symbol="Grid24" />
+                    </ui:Button>
+                    <ui:Button
+                        x:Name="ListViewButton"
+                        Width="32"
+                        Height="32"
+                        Margin="2"
+                        Padding="4"
+                        Click="ListViewButton_Click"
+                        ToolTip="List View">
+                        <ui:SymbolIcon FontSize="16" Symbol="List24" />
+                    </ui:Button>
+                </StackPanel>
+
+                <!--  Sorting Controls  -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="10,0,5,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="Sort by:" />
+
+                    <ui:DropDownButton
+                        x:Name="SortDropDown"
+                        Height="32"
+                        Margin="0,0,5,0"
+                        Padding="8,4"
+                        Click="SortDropDown_Click"
+                        Content="{Binding ElementName=SortDropDown, Path=Tag, FallbackValue='Name ↑'}"
+                        Icon="{ui:SymbolIcon Symbol=ArrowSort24}"
+                        ToolTip="Sort options">
+                        <ui:DropDownButton.Flyout>
+                            <ContextMenu>
+                                <ui:MenuItem
+                                    x:Name="SortByNameAsc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Name (A to Z)"
+                                    Icon="{ui:SymbolIcon Symbol=TextSortAscending20}"
+                                    Tag="Name:Ascending" />
+                                <ui:MenuItem
+                                    x:Name="SortByNameDesc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Name (Z to A)"
+                                    Icon="{ui:SymbolIcon Symbol=TextSortDescending20}"
+                                    Tag="Name:Descending" />
+                                <Separator />
+                                <ui:MenuItem
+                                    x:Name="SortBySizeAsc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Size (Smallest first)"
+                                    Icon="{ui:SymbolIcon Symbol=ArrowSortUp20}"
+                                    Tag="Size:Ascending" />
+                                <ui:MenuItem
+                                    x:Name="SortBySizeDesc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Size (Largest first)"
+                                    Icon="{ui:SymbolIcon Symbol=ArrowSortDown20}"
+                                    Tag="Size:Descending" />
+                                <Separator />
+                                <ui:MenuItem
+                                    x:Name="SortByTypeAsc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Type (A to Z)"
+                                    Icon="{ui:SymbolIcon Symbol=DocumentOnePageSparkle20}"
+                                    Tag="Type:Ascending" />
+                                <MenuItem
+                                    x:Name="SortByTypeDesc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Type (Z to A)"
+                                    Icon="{ui:SymbolIcon Symbol=DocumentOnePageSparkle20}"
+                                    Tag="Type:Descending" />
+                                <Separator />
+                                <ui:MenuItem
+                                    x:Name="SortByDateAsc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Date (Oldest first)"
+                                    Icon="{ui:SymbolIcon Symbol=CalendarLtr20}"
+                                    Tag="Date:Ascending" />
+                                <ui:MenuItem
+                                    x:Name="SortByDateDesc"
+                                    Click="SortMenuItem_Click"
+                                    Header="Date (Newest first)"
+                                    Icon="{ui:SymbolIcon Symbol=CalendarLtr20}"
+                                    Tag="Date:Descending" />
+                            </ContextMenu>
+                        </ui:DropDownButton.Flyout>
+                    </ui:DropDownButton>
+
+                    <ui:Button
+                        x:Name="SortDirectionButton"
+                        Width="32"
+                        Height="32"
+                        Margin="0"
+                        Padding="4"
+                        Click="SortDirectionButton_Click"
+                        ToolTip="Toggle sort direction">
+                        <ui:SymbolIcon
+                            x:Name="SortDirectionIcon"
+                            FontSize="16"
+                            Symbol="ArrowUp20" />
+                    </ui:Button>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!--  Main content area with progress overlay  -->

@@ -20,6 +20,7 @@ namespace ScratchShell.Services.Navigation
         private readonly ISftpLogger _logger;
         private readonly BrowserUserControl _browser;
         private readonly List<string> _navigationHistory = new();
+        private readonly IDirectoryCache directoryCache;
         
         private SftpClient? _sftpClient;
         private PathTextBoxAdapter? _pathTextBox;
@@ -235,8 +236,11 @@ namespace ScratchShell.Services.Navigation
 
         private async Task LoadDirectoryContentsAsync(string resolvedPath)
         {
+            // Collect all items first
+            var allItems = new List<BrowserItem>();
+            
             // Add parent folder entry
-            _browser.AddItem(new BrowserItem
+            allItems.Add(new BrowserItem
             {
                 Name = "..",
                 FullPath = $"{resolvedPath}/..",
@@ -250,15 +254,18 @@ namespace ScratchShell.Services.Navigation
             {
                 try
                 {
-                    _browser.AddItem(item);
+                    allItems.Add(item);
                     itemCount++;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error adding item {item?.Name}", ex);
+                    _logger.LogError($"Error processing item {item?.Name}", ex);
                 }
             }
 
+            // Add all items at once - this will automatically apply current sort
+            _browser.AddItems(allItems);
+            
             _logger.LogInfo($"Directory loaded: {itemCount} items found in {resolvedPath}");
         }
 

@@ -135,6 +135,20 @@ public partial class BrowserUserControl : UserControl
         SetupContextMenu();
         SetupEmptySpaceContextMenu();
         UpdateViewMode();
+        
+        // Initialize sort UI
+        InitializeSortUI();
+    }
+
+    /// <summary>
+    /// Initialize the sorting UI with default values
+    /// </summary>
+    private void InitializeSortUI()
+    {
+        _lastSortProperty = "Name";
+        _lastSortDirection = ListSortDirection.Ascending;
+        UpdateSortDropdownContent("Name", ListSortDirection.Ascending);
+        UpdateSortDirectionIcon(ListSortDirection.Ascending);
     }
 
     #region View Mode Management
@@ -585,7 +599,9 @@ public partial class BrowserUserControl : UserControl
         };
 
         System.Diagnostics.Debug.WriteLine($"[BrowserUserControl] Created new folder item with Name: {newFolder.Name}, IsNewItem: {newFolder.IsNewItem}");
-        Items.Add(newFolder);
+        
+        // Use AddItem which will maintain sort order
+        AddItem(newFolder);
 
         switch (_currentViewMode)
         {
@@ -830,21 +846,36 @@ public partial class BrowserUserControl : UserControl
         Items.Clear();
         foreach (var item in items)
             Items.Add(item);
+            
+        // Apply current sort order after loading items
+        RefreshSort();
     }
 
     public void AddItem(BrowserItem item)
     {
         Items.Add(item);
+        
+        // If we have a current sort applied, reapply it to maintain order
+        // This is less efficient but ensures correctness
+        if (!string.IsNullOrEmpty(_lastSortProperty))
+        {
+            RefreshSort();
+        }
     }
 
-    public void RemoveItem(BrowserItem item)
+    /// <summary>
+    /// Adds multiple items efficiently while maintaining sort order
+    /// </summary>
+    /// <param name="items">Items to add</param>
+    public void AddItems(IEnumerable<BrowserItem> items)
     {
-        Items.Remove(item);
-        if (_gridSelectedItems.Contains(item))
+        foreach (var item in items)
         {
-            _gridSelectedItems.Remove(item);
-            item.IsSelected = false;
+            Items.Add(item);
         }
+        
+        // Apply sort once after adding all items for better performance
+        RefreshSort();
     }
 
     public void Clear()
@@ -963,32 +994,117 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    // Sorting functionality
-    private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+    #region Sorting Functionality
+
+    /// <summary>
+    /// Current sort property name
+    /// </summary>
+    public string CurrentSortProperty => _lastSortProperty ?? "Name";
+
+    /// <summary>
+    /// Current sort direction
+    /// </summary>
+    public ListSortDirection CurrentSortDirection => _lastSortDirection;
+
+    /// <summary>
+    /// Event handler for sort menu item clicks
+    /// </summary>
+    private void SortMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (e.OriginalSource is GridViewColumnHeader header && header.Column != null)
+        var gettype = sender.GetType().Name;
+        if (sender is MenuItem menuItem && menuItem.Tag is string tagValue)
         {
-            string? propertyName = null;
-            var headerText = header.Content as string;
-            switch (headerText)
+            var parts = tagValue.Split(':');
+            if (parts.Length == 2)
             {
-                case "Name": propertyName = "Name"; break;
-                case "Date Modified": propertyName = "LastUpdated"; break;
-                case "Type": propertyName = "DisplayType"; break;
-                case "Size": propertyName = "Size"; break;
-            }
-            if (!string.IsNullOrEmpty(propertyName))
-            {
-                ApplySort(propertyName);
+                var property = parts[0];
+                var direction = Enum.Parse<ListSortDirection>(parts[1]);
+
+                ApplySortFromMenu(property, direction);
+                UpdateSortDropdownContent(property, direction);
+                UpdateSortDirectionIcon(direction);
             }
         }
     }
 
+    /// <summary>
+    /// Event handler for sort direction toggle button
+    /// </summary>
+    private void SortDirectionButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Toggle the current sort direction
+        var newDirection = _lastSortDirection == ListSortDirection.Ascending 
+            ? ListSortDirection.Descending 
+            : ListSortDirection.Ascending;
+
+        var currentProperty = _lastSortProperty ?? "Name";
+        ApplySortFromMenu(currentProperty, newDirection);
+        UpdateSortDropdownContent(currentProperty, newDirection);
+        UpdateSortDirectionIcon(newDirection);
+    }
+
+    /// <summary>
+    /// Applies sorting based on menu selection
+    /// </summary>
+    private void ApplySortFromMenu(string property, ListSortDirection direction)
+    {
+        _lastSortProperty = property;
+        _lastSortDirection = direction;
+
+        string sortProperty = property switch
+        {
+            "Name" => "Name",
+            "Size" => "Size", 
+            "Type" => "DisplayType",
+            "Date" => "LastUpdated",
+            _ => "Name"
+        };
+
+        PerformSort(sortProperty, direction);
+    }
+
+    /// <summary>
+    /// Updates the sort dropdown button content
+    /// </summary>
+    private void UpdateSortDropdownContent(string property, ListSortDirection direction)
+    {
+        var directionText = direction == ListSortDirection.Ascending ? "↑" : "↓";
+        var propertyText = property switch
+        {
+            "Name" => "Name",
+            "Size" => "Size",
+            "Type" => "Type", 
+            "Date" => "Date",
+            _ => "Name"
+        };
+        
+        SortDropDown.Tag = $"{propertyText} {directionText}";
+    }
+
+    /// <summary>
+    /// Updates the sort direction icon
+    /// </summary>
+    private void UpdateSortDirectionIcon(ListSortDirection direction)
+    {
+        SortDirectionIcon.Symbol = direction == ListSortDirection.Ascending 
+            ? SymbolRegular.ArrowUp20 
+            : SymbolRegular.ArrowDown20;
+            
+        SortDirectionButton.ToolTip = direction == ListSortDirection.Ascending
+            ? "Sort ascending (click to sort descending)"
+            : "Sort descending (click to sort ascending)";
+    }
+
+    /// <summary>
+    /// Enhanced ApplySort method that integrates with the new UI
+    /// </summary>
     private void ApplySort(string propertyName)
     {
         if (_lastSortProperty == propertyName)
         {
-            _lastSortDirection = _lastSortDirection == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+            _lastSortDirection = _lastSortDirection == ListSortDirection.Ascending 
+                ? ListSortDirection.Descending 
+                : ListSortDirection.Ascending;
         }
         else
         {
@@ -996,74 +1112,104 @@ public partial class BrowserUserControl : UserControl
         }
         _lastSortProperty = propertyName;
 
+        PerformSort(propertyName, _lastSortDirection);
+        
+        // Update UI to reflect the new sort
+        var displayProperty = propertyName switch
+        {
+            "Name" => "Name",
+            "LastUpdated" => "Date",
+            "DisplayType" => "Type",
+            "Size" => "Size",
+            _ => "Name"
+        };
+        
+        UpdateSortDropdownContent(displayProperty, _lastSortDirection);
+        UpdateSortDirectionIcon(_lastSortDirection);
+    }
+
+    /// <summary>
+    /// Core sorting logic extracted for reuse
+    /// </summary>
+    private void PerformSort(string propertyName, ListSortDirection direction)
+    {
         IOrderedEnumerable<BrowserItem> sorted;
+        
         switch (propertyName)
         {
             case "Name":
-                sorted = _lastSortDirection == ListSortDirection.Ascending
-                    ? Items.OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
-                    : Items.OrderByDescending(i => i.Name, StringComparer.CurrentCultureIgnoreCase);
+                sorted = direction == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+                    : Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenByDescending(i => i.Name, StringComparer.CurrentCultureIgnoreCase);
                 break;
 
             case "LastUpdated":
-                sorted = _lastSortDirection == ListSortDirection.Ascending
-                    ? Items.OrderBy(i => i.LastUpdated)
-                    : Items.OrderByDescending(i => i.LastUpdated);
+                sorted = direction == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenBy(i => i.LastUpdated)
+                    : Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenByDescending(i => i.LastUpdated);
                 break;
 
             case "DisplayType":
-                sorted = _lastSortDirection == ListSortDirection.Ascending
-                    ? Items.OrderBy(i => i.DisplayType)
-                    : Items.OrderByDescending(i => i.DisplayType);
+                sorted = direction == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenBy(i => i.DisplayType)
+                    : Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenByDescending(i => i.DisplayType);
                 break;
 
             case "Size":
-                sorted = _lastSortDirection == ListSortDirection.Ascending
-                    ? Items.OrderBy(i => i.Size)
-                    : Items.OrderByDescending(i => i.Size);
+                sorted = direction == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenBy(i => i.IsFolder ? 0 : i.Size)
+                    : Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenByDescending(i => i.IsFolder ? 0 : i.Size);
+                break;
+            case "Date":
+                sorted = direction == ListSortDirection.Ascending
+                    ? Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenBy(i=> i.LastUpdated)
+                    : Items.OrderBy(i => i.IsFolder ? 0 : 1).ThenByDescending(i=> i.LastUpdated);
                 break;
 
             default:
                 return;
         }
 
+        // Always keep parent directory (..) at the top
         var parent = Items.FirstOrDefault(i => i.Name == "..");
         var sortedList = sorted.ToList();
+        
         if (parent != null)
         {
             sortedList.Remove(parent);
             sortedList.Insert(0, parent);
         }
+
+        // Clear and rebuild the collection
         Items.Clear();
         foreach (var item in sortedList)
+        {
             Items.Add(item);
+        }
     }
 
-    private void BrowserList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    /// <summary>
+    /// Public method to set initial sort (useful for external callers)
+    /// </summary>
+    public void SetSort(string property, ListSortDirection direction)
     {
-        var depObj = (DependencyObject)e.OriginalSource;
-        while (depObj != null && depObj is not GridViewColumnHeader)
+        ApplySortFromMenu(property, direction);
+        UpdateSortDropdownContent(property, direction);
+        UpdateSortDirectionIcon(direction);
+    }
+
+    /// <summary>
+    /// Public method to refresh current sort (useful after adding new items)
+    /// </summary>
+    public void RefreshSort()
+    {
+        if (!string.IsNullOrEmpty(_lastSortProperty))
         {
-            depObj = VisualTreeHelper.GetParent(depObj);
-        }
-        if (depObj is GridViewColumnHeader header && header.Column != null)
-        {
-            string? propertyName = null;
-            var headerText = header.Content as string;
-            switch (headerText)
-            {
-                case "Name": propertyName = "Name"; break;
-                case "Date Modified": propertyName = "LastUpdated"; break;
-                case "Type": propertyName = "DisplayType"; break;
-                case "Size": propertyName = "Size"; break;
-            }
-            if (!string.IsNullOrEmpty(propertyName))
-            {
-                ApplySort(propertyName);
-                e.Handled = true;
-            }
+            PerformSort(_lastSortProperty, _lastSortDirection);
         }
     }
+
+    #endregion Sorting Functionality
 
     #region Progress Management
 
@@ -1240,4 +1386,63 @@ public partial class BrowserUserControl : UserControl
     }
 
     #endregion Drag and Drop Event Handlers
+
+    // Sorting functionality for ListView column headers
+    private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is GridViewColumnHeader header && header.Column != null)
+        {
+            string? propertyName = null;
+            var headerText = header.Content as string;
+            switch (headerText)
+            {
+                case "Name": propertyName = "Name"; break;
+                case "Date Modified": propertyName = "LastUpdated"; break;
+                case "Type": propertyName = "DisplayType"; break;
+                case "Size": propertyName = "Size"; break;
+            }
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ApplySort(propertyName);
+            }
+        }
+    }
+
+    private void BrowserList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var depObj = (DependencyObject)e.OriginalSource;
+        while (depObj != null && depObj is not GridViewColumnHeader)
+        {
+            depObj = VisualTreeHelper.GetParent(depObj);
+        }
+        if (depObj is GridViewColumnHeader header && header.Column != null)
+        {
+            string? propertyName = null;
+            var headerText = header.Content as string;
+            switch (headerText)
+            {
+                case "Name": propertyName = "Name"; break;
+                case "Date Modified": propertyName = "LastUpdated"; break;
+                case "Type": propertyName = "DisplayType"; break;
+                case "Size": propertyName = "Size"; break;
+            }
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ApplySort(propertyName);
+                e.Handled = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Event handler for sort dropdown button click
+    /// </summary>
+    private void SortDropDown_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Wpf.Ui.Controls.Button button && button.ContextMenu != null)
+        {
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.IsOpen = true;
+        }
+    }
 }
