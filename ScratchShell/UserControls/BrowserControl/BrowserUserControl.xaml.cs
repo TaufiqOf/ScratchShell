@@ -117,6 +117,7 @@ public partial class BrowserUserControl : UserControl
 
     public BrowserUserControl()
     {
+        
         InitializeComponent();
         BrowserList.ItemsSource = Items;
         BrowserGrid.ItemsSource = Items;

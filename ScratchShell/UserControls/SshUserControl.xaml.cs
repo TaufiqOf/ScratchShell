@@ -1,5 +1,7 @@
 ﻿using Renci.SshNet;
 using ScratchShell.Services;
+using ScratchShell.Services.Navigation;
+using ScratchShell.Services.Terminal;
 using ScratchShell.UserControls.GTPTerminalControl;
 using ScratchShell.View.Dialog;
 using ScratchShell.ViewModels.Models;
@@ -28,6 +30,11 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private bool _isInitialized = false;
     private FullScreenWindow _FullScreen;
 
+    // AutoComplete services
+    private ITerminalAutoCompleteService? _autoCompleteService;
+    private IPathCompletionService _pathCompletionService;
+    private string _currentWorkingDirectory = "~";
+
     public ITerminal Terminal { get; private set; }
 
     private bool _lastSelectionState = false;
@@ -45,6 +52,11 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         Terminal.InputLineSyntax = "";
         Terminal.CommandEntered += TerminalCommandEntered;
         Terminal.TerminalSizeChanged += TerminalSizeChanged;
+        Terminal.TabCompletionRequested += Terminal_TabCompletionRequested;
+        
+        // Initialize autocomplete services
+        _pathCompletionService = new PathCompletionService();
+        
         Loaded += ControlLoaded;
         SnippetControl.OnDeleteSnippet += SnippetControlOnDeleteSnippet;
         SnippetControl.OnEditSnippet += SnippetControlOnEditSnippet;
@@ -293,6 +305,9 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var pixelHeight = (uint)Terminal.Height;
             _shellStream = await Task.Run(()=> _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
 
+            // Initialize autocomplete service after SSH connection is established
+            _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
+
             StartReadLoop();
         }
         catch (Exception ex)
@@ -373,6 +388,43 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         catch (Exception ex)
         {
             Terminal.AddOutput("Error: " + ex.Message);
+        }
+    }
+
+    private async void Terminal_TabCompletionRequested(ITerminal obj, TabCompletionEventArgs args)
+    {
+        if (_autoCompleteService == null)
+        {
+            args.Handled = false;
+            return;
+        }
+
+        try
+        {
+            args.WorkingDirectory = _currentWorkingDirectory;
+            
+            var result = await _autoCompleteService.GetAutoCompleteAsync(
+                args.CurrentLine, 
+                args.CursorPosition, 
+                args.WorkingDirectory);
+
+            if (result.HasSuggestions)
+            {
+                Terminal.ShowAutoCompleteResults(result);
+                args.Handled = true;
+            }
+            else
+            {
+                Terminal.HideAutoComplete();
+                args.Handled = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't crash
+            System.Diagnostics.Debug.WriteLine($"AutoComplete error: {ex.Message}");
+            Terminal.HideAutoComplete();
+            args.Handled = false;
         }
     }
 

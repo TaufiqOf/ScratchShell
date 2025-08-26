@@ -337,6 +337,7 @@
             <Border
                 x:Name="ProgressOverlay"
                 Background="#80000000"
+                Opacity=".5"
                 Visibility="Collapsed">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:ProgressRing
@@ -366,6 +367,7 @@
             <Border
                 x:Name="DragDropOverlay"
                 Background="#80000080"
+                Opacity=".5"
                 Visibility="Collapsed">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ui:SymbolIcon

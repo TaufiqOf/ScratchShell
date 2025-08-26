@@ -1,4 +1,6 @@
-﻿using ScratchShell.UserControls.ThemeControl;
+using ScratchShell.UserControls.ThemeControl;
+using ScratchShell.Services.Terminal;
+using ScratchShell.Services.Navigation;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -8,7 +10,10 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using XtermSharp;
+using System.Linq;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -39,12 +44,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Selection state for copy/paste
     private bool _isSelecting = false;
+    private readonly List<Rectangle> _selectionHighlightRects = new();
 
     private (int row, int col)? _selectionStart = null;
     private (int row, int col)? _selectionEnd = null;
     private bool _isCopyHighlight = false;
     private SolidColorBrush _selectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 0, 120, 255));
     private System.Windows.Threading.DispatcherTimer? _copyHighlightTimer;
+
+    // AutoComplete fields
+    private ListBox? _autoCompleteListBox;
+    private Popup? _autoCompletePopup;
+    private bool _isAutoCompleteVisible = false;
 
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
@@ -55,6 +66,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         get => (TerminalTheme)GetValue(ThemeProperty);
         set => SetValue(ThemeProperty, value);
     }
+
+    // Interface properties
+    public string InputLineSyntax { get => string.Empty; set { } }
+    public bool IsReadOnly { get; set; }
+    public string Text => string.Empty;
+
+    // Events
+    public event ITerminal.TerminalCommandHandler CommandEntered;
+    public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
+    public event ITerminal.TabCompletionHandler TabCompletionRequested;
 
     public void RefreshTheme()
     {
@@ -206,15 +227,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _terminal = new Terminal(this, new TerminalOptions { Cols = _cols, Rows = _rows });
     }
 
-    public string InputLineSyntax
-    { get => string.Empty; set { } }
-    public bool IsReadOnly { get; set; }
-    public string Text => string.Empty;
-
-    public event ITerminal.TerminalCommandHandler CommandEntered;
-
-    public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
-
     public void AddOutput(string output)
     {
         if (_terminal == null) return;
@@ -266,6 +278,21 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int cursorCol = buffer.X;
         bool isNavKey = e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
                         e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown;
+        
+        // Handle Tab key for autocomplete
+        if (e.Key == Key.Tab)
+        {
+            e.Handled = true;
+            HandleTabCompletion();
+            return;
+        }
+
+        // Hide autocomplete on any other key
+        if (_isAutoCompleteVisible)
+        {
+            HideAutoComplete();
+        }
+
         // Block editing before/at prompt
         if (!isNavKey && cursorCol < promptEnd)
         {
@@ -306,7 +333,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             switch (e.Key)
             {
-                case Key.Tab: keyToSend = "\t"; break;
                 case Key.Delete: keyToSend = "\u001B[3~"; break;
                 case Key.Escape: keyToSend = "\u001B"; break;
                 case Key.Up: keyToSend = "\u001B[A"; break;
@@ -360,6 +386,24 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         e.Handled = true;
     }
 
+    private void HandleTabCompletion()
+    {
+        if (_terminal == null) return;
+
+        var currentLine = GetCurrentInputLine();
+        var cursorPosition = GetCursorPosition();
+        
+        // Fire the tab completion event to let the host handle it
+        var args = new TabCompletionEventArgs
+        {
+            CurrentLine = currentLine,
+            CursorPosition = cursorPosition,
+            WorkingDirectory = "~" // Default, will be updated by the host
+        };
+
+        TabCompletionRequested?.Invoke(this, args);
+    }
+
     private int GetPromptEndCol()
     {
         if (_terminal == null) return 0;
@@ -376,7 +420,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         return lastPrompt + 1; // position after prompt
     }
 
-    private string GetCurrentInputLine()
+    public string GetCurrentInputLine()
     {
         if (_terminal == null) return string.Empty;
         var buffer = _terminal.Buffer;
@@ -405,8 +449,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         TerminalCanvas.Focus();
         _isFocused = true; // Ensure focus state is updated when clicking on terminal
 
-
-
         if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
         {
             // Stop any ongoing copy highlight animation when starting a new selection
@@ -421,7 +463,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _selectionHighlightRects.Clear();
             _selectionStart = null;
             _selectionEnd = null;
-            //TerminalCanvas.CaptureMouse();
         }
         else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
         {
@@ -585,7 +626,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    private readonly List<Rectangle> _selectionHighlightRects = new();
 
     private void UpdateSelectionHighlightRect()
     {
@@ -1219,8 +1259,214 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    public void Focus()
+    public new void Focus()
     {
         TerminalCanvas.Focus();
+    }
+
+    // AutoComplete functionality implementation
+    public void ShowAutoCompleteResults(AutoCompleteResult result)
+    {
+        if (result == null || !result.HasSuggestions)
+        {
+            HideAutoComplete();
+            return;
+        }
+
+        CreateAutoCompletePopupIfNeeded();
+
+        if (_autoCompleteListBox != null && _autoCompletePopup != null)
+        {
+            // Populate the listbox with suggestions
+            _autoCompleteListBox.ItemsSource = result.Suggestions.Select(s => new AutoCompleteItem
+            {
+                Text = s.Text,
+                DisplayText = s.DisplayText,
+                Description = s.Description,
+                Type = s.Type
+            }).ToList();
+
+            // Position the popup near the cursor
+            var (cursorX, cursorY) = GetCursorScreenPosition();
+            _autoCompletePopup.HorizontalOffset = cursorX;
+            _autoCompletePopup.VerticalOffset = cursorY + _charHeight;
+
+            // Show the popup
+            _autoCompletePopup.IsOpen = true;
+            _isAutoCompleteVisible = true;
+
+            // Select first item
+            if (_autoCompleteListBox.Items.Count > 0)
+            {
+                _autoCompleteListBox.SelectedIndex = 0;
+            }
+        }
+    }
+
+    public void HideAutoComplete()
+    {
+        if (_autoCompletePopup != null)
+        {
+            _autoCompletePopup.IsOpen = false;
+        }
+        _isAutoCompleteVisible = false;
+    }
+
+    public int GetCursorPosition()
+    {
+        if (_terminal == null) return 0;
+        
+        var buffer = _terminal.Buffer;
+        var promptEnd = GetPromptEndCol();
+        var cursorCol = buffer.X;
+        
+        // Return cursor position relative to the start of user input
+        return Math.Max(0, cursorCol - promptEnd);
+    }
+
+    private void CreateAutoCompletePopupIfNeeded()
+    {
+        if (_autoCompletePopup != null) return;
+
+        _autoCompleteListBox = new ListBox
+        {
+            MaxHeight = 200,
+            MinWidth = 300,
+            Background = Brushes.White,
+            BorderBrush = Brushes.Gray,
+            BorderThickness = new Thickness(1)
+        };
+
+        // Create custom data template for autocomplete items
+        var dataTemplate = new DataTemplate();
+        var stackPanelFactory = new FrameworkElementFactory(typeof(StackPanel));
+        stackPanelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+
+        var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding("DisplayText"));
+        textBlockFactory.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+        textBlockFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 0, 10, 0));
+
+        var descriptionFactory = new FrameworkElementFactory(typeof(TextBlock));
+        descriptionFactory.SetBinding(TextBlock.TextProperty, new Binding("Description"));
+        descriptionFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Gray);
+        descriptionFactory.SetValue(TextBlock.FontSizeProperty, 11.0);
+
+        stackPanelFactory.AppendChild(textBlockFactory);
+        stackPanelFactory.AppendChild(descriptionFactory);
+        dataTemplate.VisualTree = stackPanelFactory;
+
+        _autoCompleteListBox.ItemTemplate = dataTemplate;
+
+        // Handle item selection
+        _autoCompleteListBox.PreviewKeyDown += AutoCompleteListBox_PreviewKeyDown;
+        _autoCompleteListBox.MouseDoubleClick += AutoCompleteListBox_MouseDoubleClick;
+
+        _autoCompletePopup = new Popup
+        {
+            Child = _autoCompleteListBox,
+            PlacementTarget = this,
+            Placement = PlacementMode.Relative,
+            StaysOpen = false
+        };
+
+        // Handle popup closing
+        _autoCompletePopup.Closed += (s, e) => _isAutoCompleteVisible = false;
+    }
+
+    private void AutoCompleteListBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter || e.Key == Key.Tab)
+        {
+            AcceptAutoCompleteSelection();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            HideAutoComplete();
+            e.Handled = true;
+        }
+    }
+
+    private void AutoCompleteListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        AcceptAutoCompleteSelection();
+    }
+
+    private void AcceptAutoCompleteSelection()
+    {
+        if (_autoCompleteListBox?.SelectedItem is AutoCompleteItem selectedItem)
+        {
+            // Replace the current word with the selected completion
+            var currentLine = GetCurrentInputLine();
+            var cursorPos = GetCursorPosition();
+            
+            // Find the word being completed
+            var words = currentLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length > 0)
+            {
+                var lastWord = words.Last();
+                var completionText = selectedItem.Text;
+                
+                // Replace the last word with the completion
+                var newText = string.Join(" ", words.Take(words.Length - 1)) + 
+                             (words.Length > 1 ? " " : "") + completionText;
+                
+                // Clear current input and replace with completed text
+                ClearCurrentInput();
+                AddInput(newText);
+            }
+        }
+        
+        HideAutoComplete();
+        Focus();
+    }
+
+    private void ClearCurrentInput()
+    {
+        if (_terminal == null) return;
+        
+        var buffer = _terminal.Buffer;
+        var promptEnd = GetPromptEndCol();
+        var line = buffer.Lines[buffer.Y + buffer.YBase];
+        
+        // Clear everything after the prompt
+        for (int i = promptEnd; i < line.Length; i++)
+        {
+            var cell = line[i];
+            cell.Code = 0;
+            line[i] = cell;
+        }
+        
+        // Move cursor to prompt end
+        _terminal.SetCursor(promptEnd, buffer.Y);
+        
+        // Redraw the line
+        RedrawTerminal(onlyRow: buffer.Y + buffer.YBase);
+    }
+
+    private (double x, double y) GetCursorScreenPosition()
+    {
+        if (_terminal == null) return (0, 0);
+        
+        var buffer = _terminal.Buffer;
+        var cursorCol = buffer.X;
+        var cursorRow = buffer.Y;
+        
+        var x = cursorCol * _charWidth;
+        var y = cursorRow * _charHeight;
+        
+        // Convert to screen coordinates
+        var point = TerminalCanvas.TranslatePoint(new Point(x, y), this);
+        return (point.X, point.Y);
+    }
+
+    // AutoComplete item class
+    private class AutoCompleteItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public string DisplayText { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public CompletionType Type { get; set; }
     }
 }
