@@ -25,27 +25,75 @@ namespace ScratchShell.Services.EventHandlers
     }
 
     /// <summary>
-    /// Adapter to make AutoSuggestBox work like a TextBox for navigation purposes
+    /// Adapter to make different path controls work uniformly for navigation purposes
     /// </summary>
     public class PathTextBoxAdapter
     {
-        private readonly Wpf.Ui.Controls.AutoSuggestBox _autoSuggestBox;
+        private readonly object _control;
 
         public PathTextBoxAdapter(Wpf.Ui.Controls.AutoSuggestBox autoSuggestBox)
         {
-            _autoSuggestBox = autoSuggestBox ?? throw new ArgumentNullException(nameof(autoSuggestBox));
+            _control = autoSuggestBox ?? throw new ArgumentNullException(nameof(autoSuggestBox));
+        }
+
+        public PathTextBoxAdapter(ScratchShell.UserControls.BreadcrumbAddressBar breadcrumbAddressBar)
+        {
+            _control = breadcrumbAddressBar ?? throw new ArgumentNullException(nameof(breadcrumbAddressBar));
         }
 
         public string Text
         {
-            get => _autoSuggestBox.Text ?? string.Empty;
-            set => _autoSuggestBox.Text = value;
+            get
+            {
+                return _control switch
+                {
+                    Wpf.Ui.Controls.AutoSuggestBox autoSuggest => autoSuggest.Text ?? string.Empty,
+                    ScratchShell.UserControls.BreadcrumbAddressBar breadcrumb => breadcrumb.CurrentPath,
+                    _ => string.Empty
+                };
+            }
+            set
+            {
+                switch (_control)
+                {
+                    case Wpf.Ui.Controls.AutoSuggestBox autoSuggest:
+                        autoSuggest.Text = value;
+                        break;
+                    case ScratchShell.UserControls.BreadcrumbAddressBar breadcrumb:
+                        breadcrumb.CurrentPath = value;
+                        break;
+                }
+            }
         }
 
         public bool IsEnabled
         {
-            get => _autoSuggestBox.IsEnabled;
-            set => _autoSuggestBox.IsEnabled = value;
+            get
+            {
+                return _control switch
+                {
+                    Wpf.Ui.Controls.AutoSuggestBox autoSuggest => autoSuggest.IsEnabled,
+                    ScratchShell.UserControls.BreadcrumbAddressBar breadcrumb => breadcrumb.IsEnabled,
+                    _ => false
+                };
+            }
+            set
+            {
+                switch (_control)
+                {
+                    case Wpf.Ui.Controls.AutoSuggestBox autoSuggest:
+                        autoSuggest.IsEnabled = value;
+                        break;
+                    case ScratchShell.UserControls.BreadcrumbAddressBar breadcrumb:
+                        breadcrumb.IsEnabled = value;
+                        break;
+                }
+            }
         }
+
+        /// <summary>
+        /// Gets the underlying control instance
+        /// </summary>
+        public object Control => _control;
     }
 }

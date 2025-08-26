@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:browsercontrol="clr-namespace:ScratchShell.UserControls.BrowserControl"
+    xmlns:local="clr-namespace:ScratchShell.UserControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -89,16 +90,12 @@
                     ToolTip="Up one level" />
 
                 <!--  Address bar  -->
-                <ui:AutoSuggestBox
-                    x:Name="PathTextBox"
+                <local:BreadcrumbAddressBar
+                    x:Name="PathAddressBar"
                     Grid.Column="4"
                     Margin="2"
                     HorizontalAlignment="Stretch"
-                    Icon="{ui:FontIcon FontFamily='Segoe Fluent Icons',
-                                       Glyph='&#xE8B7;'}"
-                    KeyDown="PathTextBox_KeyDown"
-                    PlaceholderText="Address"
-                    ToolTip="Address bar - Type a path or press Enter to navigate" />
+                    VerticalAlignment="Stretch" />
 
                 <!--  Create New Folder button  -->
                 <ui:Button

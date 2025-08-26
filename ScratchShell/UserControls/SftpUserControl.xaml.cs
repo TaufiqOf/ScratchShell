@@ -57,7 +57,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         _navigationManager = new SftpNavigationManager(_logger, Browser);
         _fileOperationHandler = new SftpFileOperationHandler(_logger, _contentDialogService, Browser);
         _eventHandler = new SftpEventHandler(_logger, _navigationManager, _fileOperationHandler);
-        _pathAdapter = new PathTextBoxAdapter(PathTextBox);
+        _pathAdapter = new PathTextBoxAdapter(PathAddressBar);
 
         // Show initial loading state immediately
         ShowInitialLoadingState();
@@ -90,7 +90,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         PasteButton.IsEnabled = false; // Will be enabled based on clipboard content
         OptionsButton.IsEnabled = isConnected;
         FullScreenButton.IsEnabled = isConnected;
-        PathTextBox.IsEnabled = isConnected;
+        PathAddressBar.IsEnabled = isConnected;
         
         // Update progress bar
         Progress.IsIndeterminate = !isConnected;
@@ -100,6 +100,18 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         this.Loaded += async (s, e) => await LoadControl();
         this.KeyDown += (s, e) => _eventHandler.HandleKeyDown(e, _navigationManager, _fileOperationHandler);
+        
+        // Setup breadcrumb address bar event
+        PathAddressBar.PathChanged += async (s, e) =>
+        {
+            await _eventHandler.SafeExecuteAsync(async () =>
+            {
+                if (!string.IsNullOrEmpty(e.NewPath))
+                {
+                    await _navigationManager.GoToFolderAsync(e.NewPath);
+                }
+            });
+        };
     }
 
     private void SetupBrowserEvents()
@@ -239,30 +251,15 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             await _navigationManager.NavigateUpAsync());
     }
 
-    private async void PathTextBox_KeyDown(object sender, KeyEventArgs e)
+    private async void PasteButton_Click(object sender, RoutedEventArgs e)
     {
-        if (e.Key == Key.Enter)
-        {
-            await _eventHandler.SafeExecuteAsync(async () =>
-            {
-                var targetPath = _pathAdapter.Text?.Trim();
-                if (!string.IsNullOrEmpty(targetPath))
-                {
-                    await _navigationManager.GoToFolderAsync(targetPath);
-                }
-            });
-        }
+        await _eventHandler.SafeExecuteAsync(async () =>
+            await _fileOperationHandler.HandlePasteAsync(_pathAdapter.Text));
     }
 
     private void CreateFolderButton_Click(object sender, RoutedEventArgs e)
     {
         _eventHandler.SafeExecute(() => Browser.StartNewFolderCreation());
-    }
-
-    private async void PasteButton_Click(object sender, RoutedEventArgs e)
-    {
-        await _eventHandler.SafeExecuteAsync(async () =>
-            await _fileOperationHandler.HandlePasteAsync(_pathAdapter.Text));
     }
 
     private void LogToggleButtonChecked(object sender, RoutedEventArgs e)
