@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ScratchShell.Services;
+using ScratchShell.Services.Navigation;
 using ScratchShell.UserControls.BrowserControl;
 
 namespace ScratchShell.Services.FileOperations
@@ -10,7 +11,7 @@ namespace ScratchShell.Services.FileOperations
     /// </summary>
     public interface ISftpFileOperationHandler : IDisposable
     {
-        void Initialize(ISftpFileOperationService? fileOperationService);
+        void Initialize(ISftpFileOperationService? fileOperationService, ISftpNavigationManager? navigationManager);
         
         Task HandleCutAsync(BrowserItem item);
         Task HandleCopyAsync(BrowserItem item);

@@ -8,7 +8,9 @@ using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using ScratchShell.Services;
 using ScratchShell.Services.EventHandlers;
+using ScratchShell.Services.Navigation;
 using ScratchShell.UserControls.BrowserControl;
+using ScratchShell.Views.Dialog;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 
@@ -21,20 +23,24 @@ namespace ScratchShell.Services.FileOperations
     {
         private readonly ISftpLogger _logger;
         private readonly IContentDialogService _contentDialogService;
+        private readonly BrowserUserControl _browser;
         private ISftpFileOperationService? _fileOperationService;
+        private ISftpNavigationManager? _navigationManager;
         private CancellationTokenSource? _currentOperationCancellation;
 
         public bool HasClipboardContent => _fileOperationService?.HasClipboardContent ?? false;
 
-        public SftpFileOperationHandler(ISftpLogger logger, IContentDialogService contentDialogService)
+        public SftpFileOperationHandler(ISftpLogger logger, IContentDialogService contentDialogService, BrowserUserControl browser)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _contentDialogService = contentDialogService ?? throw new ArgumentNullException(nameof(contentDialogService));
+            this._browser = browser;
         }
 
-        public void Initialize(ISftpFileOperationService? fileOperationService)
+        public void Initialize(ISftpFileOperationService? fileOperationService, ISftpNavigationManager? navigationManager)
         {
             _fileOperationService = fileOperationService;
+            _navigationManager = navigationManager;
             
             if (_fileOperationService != null)
             {
@@ -76,7 +82,6 @@ namespace ScratchShell.Services.FileOperations
                 _logger.LogWarning("Clipboard is empty");
                 return;
             }
-
             await ExecuteWithCancellationAsync(async (cancellationToken) =>
             {
                 var result = await _fileOperationService.PasteItemAsync(currentDirectory, cancellationToken);
@@ -120,6 +125,8 @@ namespace ScratchShell.Services.FileOperations
             catch (Exception ex)
             {
                 _logger.LogError("Error during upload operation", ex);
+                // Ensure directory refresh even if there's an error in the upload dialog or preparation
+                await RefreshDirectoryAsync();
             }
         }
 
@@ -141,6 +148,7 @@ namespace ScratchShell.Services.FileOperations
             catch (Exception ex)
             {
                 _logger.LogError($"Download operation failed for {item.Name}", ex);
+                // Download operations don't modify the remote file system, so no refresh needed
             }
         }
 
@@ -157,6 +165,7 @@ namespace ScratchShell.Services.FileOperations
             else
             {
                 _logger.LogInfo($"User cancelled deletion of: {item.Name}");
+                // No need to refresh if user cancelled
             }
         }
 
@@ -237,6 +246,7 @@ namespace ScratchShell.Services.FileOperations
             else
             {
                 _logger.LogInfo($"User cancelled deletion of {itemCount} items");
+                // No need to refresh if user cancelled
             }
         }
 
@@ -358,13 +368,31 @@ namespace ScratchShell.Services.FileOperations
             });
         }
 
+        /// <summary>
+        /// Helper method to refresh the directory listing
+        /// </summary>
+        private async Task RefreshDirectoryAsync()
+        {
+            try
+            {
+                if (_navigationManager != null)
+                {
+                    _logger.LogDebug("Refreshing directory listing");
+                    await _navigationManager.RefreshCurrentDirectoryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Failed to refresh directory", ex);
+            }
+        }
+
         private async Task<OperationResult> ExecuteWithCancellationAsync(Func<CancellationToken, Task<OperationResult>> operation)
         {
             try
             {
                 _currentOperationCancellation?.Dispose();
                 _currentOperationCancellation = new CancellationTokenSource();
-
                 var result = await operation(_currentOperationCancellation.Token);
 
                 if (!result.IsSuccess && !string.IsNullOrEmpty(result.ErrorMessage))
@@ -395,6 +423,9 @@ namespace ScratchShell.Services.FileOperations
             {
                 _currentOperationCancellation?.Dispose();
                 _currentOperationCancellation = null;
+                
+                // Always refresh the directory listing after any file operation
+                await RefreshDirectoryAsync();
             }
         }
 
@@ -422,21 +453,6 @@ namespace ScratchShell.Services.FileOperations
             {
                 _logger.LogError("Error disposing file operation handler", ex);
             }
-        }
-    }
-
-    /// <summary>
-    /// Simple message dialog implementation
-    /// </summary>
-    internal class MessageDialog : ContentDialog
-    {
-        public MessageDialog(IContentDialogService contentDialogService, string title, string content) 
-            : base(contentDialogService.GetDialogHost())
-        {
-            Title = title;
-            Content = content;
-            PrimaryButtonText = "Yes";
-            CloseButtonText = "No";
         }
     }
 }

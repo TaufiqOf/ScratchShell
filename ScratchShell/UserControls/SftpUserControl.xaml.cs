@@ -55,7 +55,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         _logger = new SftpLogger(UpdateTerminalText);
         _connectionManager = new SftpConnectionManager(_logger);
         _navigationManager = new SftpNavigationManager(_logger, Browser);
-        _fileOperationHandler = new SftpFileOperationHandler(_logger, _contentDialogService);
+        _fileOperationHandler = new SftpFileOperationHandler(_logger, _contentDialogService, Browser);
         _eventHandler = new SftpEventHandler(_logger, _navigationManager, _fileOperationHandler);
         _pathAdapter = new PathTextBoxAdapter(PathTextBox);
 
@@ -121,8 +121,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             
             // Update loading message for initialization
             Browser.ShowProgress(true, "Initializing file operations...");
-            _fileOperationHandler.Initialize(_connectionManager.FileOperationService);
-            
+            _fileOperationHandler.Initialize(_connectionManager.FileOperationService, _navigationManager);
+            _connectionManager.FileOperationService.ProgressChanged += FileOperationServiceProgressChanged;
             // Update loading message for navigation setup
             Browser.ShowProgress(true, "Setting up navigation...");
             _navigationManager.Initialize(_connectionManager.Client, _pathAdapter, GetNavigationButtons());
@@ -164,6 +164,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             SetUIConnectionState(false);
             Progress.IsIndeterminate = false;
         }
+    }
+
+    private void FileOperationServiceProgressChanged(bool arg1, string arg2, int? arg3, int? arg4)
+    {
+        Browser.ShowProgress(arg1, arg2, arg3, arg4);
     }
 
     private NavigationButtons GetNavigationButtons()
