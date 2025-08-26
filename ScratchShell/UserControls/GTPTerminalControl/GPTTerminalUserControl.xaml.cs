@@ -287,8 +287,49 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             return;
         }
 
-        // Hide autocomplete on any other key
-        if (_isAutoCompleteVisible)
+        // Handle Up/Down arrows when autocomplete is visible
+        if (_isAutoCompleteVisible && (e.Key == Key.Up || e.Key == Key.Down))
+        {
+            // Handle navigation directly to avoid focus issues
+            if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
+            {
+                int currentIndex = _autoCompleteListBox.SelectedIndex;
+                int newIndex;
+                
+                if (e.Key == Key.Up)
+                {
+                    newIndex = currentIndex > 0 ? currentIndex - 1 : _autoCompleteListBox.Items.Count - 1; // Wrap to bottom
+                }
+                else // Key.Down
+                {
+                    newIndex = currentIndex < _autoCompleteListBox.Items.Count - 1 ? currentIndex + 1 : 0; // Wrap to top
+                }
+                
+                _autoCompleteListBox.SelectedIndex = newIndex;
+                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
+            }
+            e.Handled = true;
+            return;
+        }
+
+        // Handle Escape to close autocomplete if visible
+        if (_isAutoCompleteVisible && e.Key == Key.Escape)
+        {
+            HideAutoComplete();
+            e.Handled = true;
+            return;
+        }
+
+        // Handle Enter to accept autocomplete selection if visible
+        if (_isAutoCompleteVisible && e.Key == Key.Enter)
+        {
+            AcceptAutoCompleteSelection();
+            e.Handled = true;
+            return;
+        }
+
+        // Hide autocomplete on any other key (except navigation keys when not in autocomplete mode)
+        if (_isAutoCompleteVisible && !isNavKey)
         {
             HideAutoComplete();
         }
@@ -1295,10 +1336,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _autoCompletePopup.IsOpen = true;
             _isAutoCompleteVisible = true;
 
-            // Select first item
+            // Select first item and ensure it's visible
             if (_autoCompleteListBox.Items.Count > 0)
             {
                 _autoCompleteListBox.SelectedIndex = 0;
+                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
             }
         }
     }
@@ -1337,6 +1379,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             BorderThickness = new Thickness(1)
         };
 
+        // Set keyboard navigation for better arrow key handling
+        KeyboardNavigation.SetDirectionalNavigation(_autoCompleteListBox, KeyboardNavigationMode.Cycle);
+
         // Create custom data template for autocomplete items
         var dataTemplate = new DataTemplate();
         var stackPanelFactory = new FrameworkElementFactory(typeof(StackPanel));
@@ -1367,7 +1412,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             Child = _autoCompleteListBox,
             PlacementTarget = this,
             Placement = PlacementMode.Relative,
-            StaysOpen = false
+            StaysOpen = false,
+            AllowsTransparency = true,
+            Focusable = false
         };
 
         // Handle popup closing
@@ -1384,6 +1431,30 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         else if (e.Key == Key.Escape)
         {
             HideAutoComplete();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Up)
+        {
+            // Navigate up in the autocomplete list
+            if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
+            {
+                int currentIndex = _autoCompleteListBox.SelectedIndex;
+                int newIndex = currentIndex > 0 ? currentIndex - 1 : _autoCompleteListBox.Items.Count - 1; // Wrap to bottom
+                _autoCompleteListBox.SelectedIndex = newIndex;
+                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Down)
+        {
+            // Navigate down in the autocomplete list
+            if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
+            {
+                int currentIndex = _autoCompleteListBox.SelectedIndex;
+                int newIndex = currentIndex < _autoCompleteListBox.Items.Count - 1 ? currentIndex + 1 : 0; // Wrap to top
+                _autoCompleteListBox.SelectedIndex = newIndex;
+                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
+            }
             e.Handled = true;
         }
     }
@@ -1413,7 +1484,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                              (words.Length > 1 ? " " : "") + completionText;
                 
                 // Clear current input and replace with completed text
-                ClearCurrentInput();
+                //ClearCurrentInput();
                 AddInput(newText);
             }
         }
