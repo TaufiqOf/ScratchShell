@@ -71,6 +71,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private int _currentInputLineAbsRow = -1; // absolute buffer row of current input line
     private int _currentPromptEndCol = 0; // absolute column index of the prompt end
 
+    // Added fields for echo suppression & selection alignment
+    private string? _lastSubmittedCommand = null; // remember last command to filter remote echo
+    private int _linePixelHeight = 0; // cached integer line pixel height used for selection rectangle
+
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
         new PropertyMetadata(new TerminalTheme(), OnThemeChanged));
@@ -193,6 +197,27 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public void AddOutput(string output)
     {
         if (_terminal == null) return;
+        // Remote echo suppression: if the first line of output exactly matches the last submitted command, remove it
+        if (!string.IsNullOrEmpty(_lastSubmittedCommand))
+        {
+            var span = output.AsSpan();
+            int newlineIdx = span.IndexOf('\n');
+            ReadOnlySpan<char> firstLine = newlineIdx >= 0 ? span.Slice(0, newlineIdx).TrimEnd('\r') : span.TrimEnd('\r');
+            if (firstLine.SequenceEqual(_lastSubmittedCommand.AsSpan()))
+            {
+                // Skip that first line and following newline
+                if (newlineIdx >= 0)
+                {
+                    output = "\n\r";
+                }
+                else
+                {
+                    output = string.Empty;
+                }
+                _lastSubmittedCommand = null; // consumed
+            }
+        }
+        if (output.Length == 0) return;
         if (output.Any(c => c == '\0'))
         {
             var bytes = Encoding.Unicode.GetBytes(output);
@@ -330,11 +355,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (e.Key == Key.Enter)
         {
             string inputLine = GetCurrentInputLine();
+            _lastSubmittedCommand = inputLine; // remember to filter remote echo
             CommandEntered?.Invoke(this, inputLine);
-            keyToSend = "\r";
-            // Reset tracking for next line
+            // Do not feed CR locally; remote side output will follow.
             _currentInputLineAbsRow = -1;
             _currentInputEndCol = 0;
+            e.Handled = true;
+            return; // keep prompt+command until remote output arrives
         }
         else if (e.Key == Key.Back)
         {
@@ -514,8 +541,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             if (_terminal != null)
             {
                 var pos = e.GetPosition(TerminalCanvas);
+                int lineHeightForCalc = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
                 int visualCol = (int)(pos.X / _charWidth);
-                int visualRow = (int)(pos.Y / _charHeight);
+                int visualRow = (int)(pos.Y / lineHeightForCalc); // use pixel line height for accurate mapping
                 var buffer = _terminal.Buffer;
                 int logicalRow = _renderStartRow + visualRow;
                 if (logicalRow < 0) logicalRow = 0;
@@ -627,8 +655,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             var pos = e.GetPosition(TerminalCanvas);
+            int lineHeightForCalc = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
             int col = (int)(pos.X / _charWidth);
-            int row = (int)(pos.Y / _charHeight) + _renderStartRow; // map visual to logical
+            int row = (int)(pos.Y / lineHeightForCalc) + _renderStartRow; // map visual to logical using consistent line height
             if (_isSelecting)
             {
                 _selectionEnd = (row, col);
@@ -668,6 +697,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
         int maxCol = _terminal.Cols - 1;
+        int lineHeight = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
 
         for (int row = startRow; row <= endRow; row++)
         {
@@ -681,14 +711,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             var rect = new Rectangle
             {
                 Width = (colEnd - colStart + 1) * _charWidth,
-                Height = _charHeight,
+                Height = lineHeight,
                 Fill = new SolidColorBrush(Theme.SelectionColor),
                 Opacity = 0.5,
                 IsHitTestVisible = false
             };
             TerminalCanvas.Children.Add(rect);
             Canvas.SetLeft(rect, colStart * _charWidth);
-            Canvas.SetTop(rect, visualRow * _charHeight);
+            Canvas.SetTop(rect, visualRow * lineHeight);
             _selectionHighlightRects.Add(rect);
         }
     }
@@ -878,6 +908,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             double ch = _charHeight;
             int linePixelHeight = (int)Math.Ceiling(ch);
             if (linePixelHeight <= 0) linePixelHeight = 1;
+            _linePixelHeight = linePixelHeight; // cache for selection overlay
             int pixelWidth = (int)Math.Ceiling(cols * cw);
             if (pixelWidth <= 0) pixelWidth = 1;
             int pixelHeight = linePixelHeight * renderRowCount;
