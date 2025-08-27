@@ -63,8 +63,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private bool _fullRedrawPending = true;
 
     // Virtualized rendering (only last N logical lines)
-    private const int MaxRenderedLines = 500;
+    private const int MaxRenderedLines = 100;
     private int _renderStartRow = 0; // first buffer row mapped to pixel row 0
+
+    // Track editable end including user-entered trailing spaces
+    private int _currentInputEndCol = 0; // absolute column index where user input ends (can include spaces)
+    private int _currentInputLineAbsRow = -1; // absolute buffer row of current input line
+    private int _currentPromptEndCol = 0; // absolute column index of the prompt end
 
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
@@ -237,8 +242,20 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (IsReadOnly || _terminal == null) return;
 
-        int promptEnd = GetPromptEndCol();
         var buffer = _terminal.Buffer;
+        int absRow = buffer.Y + buffer.YBase;
+        int promptEnd = GetPromptEndCol();
+        // Initialize tracking if new line
+        if (absRow != _currentInputLineAbsRow)
+        {
+            _currentInputLineAbsRow = absRow;
+            _currentPromptEndCol = promptEnd;
+            _currentInputEndCol = Math.Max(promptEnd, GetEditableEndCol(promptEnd));
+        }
+        var lineForEnd = buffer.Lines[absRow];
+        // Ensure tracked end not beyond line length
+        if (_currentInputEndCol > lineForEnd.Length) _currentInputEndCol = lineForEnd.Length;
+
         int cursorCol = buffer.X;
         bool isNavKey = e.Key is Key.Left or Key.Right or Key.Up or Key.Down or Key.Home or Key.End or Key.PageUp or Key.PageDown;
 
@@ -283,7 +300,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
         if (_isAutoCompleteVisible && !isNavKey) HideAutoComplete();
 
-        int editableEnd = GetEditableEndCol(promptEnd);
+        int editableEnd = _currentInputEndCol; // tracked editable end including spaces
 
         // Left bound block
         if (e.Key == Key.Left && cursorCol <= promptEnd)
@@ -315,10 +332,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             string inputLine = GetCurrentInputLine();
             CommandEntered?.Invoke(this, inputLine);
             keyToSend = "\r";
+            // Reset tracking for next line
+            _currentInputLineAbsRow = -1;
+            _currentInputEndCol = 0;
         }
         else if (e.Key == Key.Back)
         {
-            int editableEndForDelete = GetEditableEndCol(promptEnd);
+            int editableEndForDelete = _currentInputEndCol;
             if (cursorCol > promptEnd)
             {
                 var line = buffer.Lines[buffer.Y + buffer.YBase];
@@ -326,16 +346,20 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 for (int i = deletePos; i < editableEndForDelete - 1 && i + 1 < line.Length; i++)
                 {
                     var nextCell = line[i + 1];
-                    line[i] = nextCell; // shift left
+                    line[i] = nextCell; // shift left including spaces
                 }
-                int lastPos = editableEndForDelete - 1;
-                if (lastPos >= promptEnd && lastPos < line.Length)
+                // Blank out last cell of the edited region
+                int lastPos = Math.Min(editableEndForDelete - 1, line.Length - 1);
+                if (lastPos >= promptEnd)
                 {
-                    var blank = line[lastPos];
-                    blank.Code = 0;
-                    line[lastPos] = blank;
+                    var blank = line[lastPos]; blank.Code = 0; line[lastPos] = blank;
                 }
                 _terminal.SetCursor(deletePos, buffer.Y);
+                // Adjust tracked end if deleting at end
+                if (deletePos + 1 == _currentInputEndCol)
+                {
+                    _currentInputEndCol = Math.Max(promptEnd, _currentInputEndCol - 1);
+                }
                 int lastRow = buffer.Y + buffer.YBase;
                 if (!_fullRedrawPending) _dirtyLines.Add(lastRow);
                 RedrawTerminal(onlyRow: lastRow);
@@ -396,13 +420,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                                     string esc = "\u001B";
                                     string seq = c + remainder + esc + "[" + remainder.Length + "D";
                                     _terminal.Feed(seq);
+                                    // cursor stays at insert position +1; adjust end
+                                    _currentInputEndCol += 1;
                                     int lastRow2 = buffer.Y + buffer.YBase;
                                     if (!_fullRedrawPending) _dirtyLines.Add(lastRow2);
                                     RedrawTerminal(onlyRow: lastRow2);
                                     e.Handled = true; return;
                                 }
                             }
-                            keyToSend = c.ToString(); // append at end
+                            // At end: append and advance end
+                            keyToSend = c.ToString();
+                            _currentInputEndCol = Math.Max(_currentInputEndCol + 1, buffer.X + 1);
                         }
                     }
                     break;
@@ -472,14 +500,38 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         TerminalCanvas.Focus();
         _isFocused = true;
 
-        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
+        bool plainLeft = e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None;
+        if (plainLeft)
         {
             if (_isCopyHighlight) CleanupHighlightAnimations();
-            foreach (var rect in _selectionHighlightRects) TerminalCanvas.Children.Remove(rect);
+            // Clear any previous highlight BEFORE setting new selection
+            foreach (var rect in _selectionHighlightRects)
+                TerminalCanvas.Children.Remove(rect);
             _selectionHighlightRects.Clear();
-            _selectionStart = null; _selectionEnd = null;
+            _selectionStart = null;
+            _selectionEnd = null;
+
+            if (_terminal != null)
+            {
+                var pos = e.GetPosition(TerminalCanvas);
+                int visualCol = (int)(pos.X / _charWidth);
+                int visualRow = (int)(pos.Y / _charHeight);
+                var buffer = _terminal.Buffer;
+                int logicalRow = _renderStartRow + visualRow;
+                if (logicalRow < 0) logicalRow = 0;
+                if (logicalRow >= buffer.Lines.Length) logicalRow = buffer.Lines.Length - 1;
+                int maxCol = _terminal.Cols - 1;
+                int logicalCol = Math.Clamp(visualCol, 0, maxCol);
+                _selectionStart = (logicalRow, logicalCol);
+                _selectionEnd = (logicalRow, logicalCol);
+                _isSelecting = true;
+                UpdateSelectionHighlightRect();
+                TerminalCanvas.CaptureMouse();
+            }
+            e.Handled = true;
+            return;
         }
-        else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
+        if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
         {
             if (_selectionStart.HasValue && _selectionEnd.HasValue)
             {
@@ -596,7 +648,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (_isSelecting && e.ChangedButton == MouseButton.Left)
         {
             _isSelecting = false;
-            TerminalCanvas.ReleaseMouseCapture();
+            if (TerminalCanvas.IsMouseCaptured) TerminalCanvas.ReleaseMouseCapture();
             UpdateSelectionHighlightRect();
         }
     }
@@ -817,6 +869,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 return;
             }
 
+            int previousRenderStart = _renderStartRow;
             // Virtualization window
             _renderStartRow = totalRows > MaxRenderedLines ? totalRows - MaxRenderedLines : 0;
             int renderRowCount = totalRows - _renderStartRow;
@@ -918,6 +971,12 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             TerminalCanvas.Width = pixelWidth;
             TerminalCanvas.Height = renderRowCount * ch;
             if (Cursor != null) Cursor.Visibility = Visibility.Collapsed;
+
+            // If virtualization window moved, refresh selection highlight
+            if (previousRenderStart != _renderStartRow && HasSelection())
+            {
+                UpdateSelectionHighlightRect();
+            }
         }
         catch (Exception ex)
         {
@@ -1184,8 +1243,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (_terminal == null) return (0, 0);
         var buffer = _terminal.Buffer;
+        int absRow = buffer.Y + buffer.YBase;
+        int visualRow = absRow - _renderStartRow; // map to rendered row
         double x = buffer.X * _charWidth;
-        double y = (buffer.Y) * _charHeight; // buffer.Y is relative to current viewport
+        double y = visualRow * _charHeight;
         var pt = TerminalCanvas.TranslatePoint(new Point(x, y), this);
         return (pt.X, pt.Y);
     }
@@ -1193,6 +1254,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private int GetEditableEndCol(int promptEnd)
     {
         if (_terminal == null) return promptEnd;
+        if (_currentInputLineAbsRow == (_terminal.Buffer.Y + _terminal.Buffer.YBase) && _currentInputEndCol > 0)
+            return _currentInputEndCol; // use tracked value
         var buffer = _terminal.Buffer;
         var line = buffer.Lines[buffer.Y + buffer.YBase];
         int last = -1;
