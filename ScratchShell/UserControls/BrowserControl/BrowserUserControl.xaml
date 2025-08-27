@@ -196,7 +196,7 @@
                                     Header="Type (A to Z)"
                                     Icon="{ui:SymbolIcon Symbol=DocumentOnePageSparkle20}"
                                     Tag="Type:Ascending" />
-                                <MenuItem
+                                <ui:MenuItem
                                     x:Name="SortByTypeDesc"
                                     Click="SortMenuItem_Click"
                                     Header="Type (Z to A)"
