@@ -14,6 +14,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using XtermSharp;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -26,36 +27,44 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private double _charHeight = 16;
     private Typeface _typeface = new Typeface("Consolas");
 
-    private const double ExtraScrollPadding = 48; // Extra space in pixels for scrolling past last line
+    private const double ExtraScrollPadding = 48; // (kept for potential future use)
 
     private System.Windows.Threading.DispatcherTimer _resizeRedrawTimer;
     private Size _pendingResizeSize;
 
-    // Add a field to store the last rendered buffer snapshot
+    // Buffer snapshot for diff detection
     private string[]? _lastRenderedBufferLines;
 
-    // Add fields to track redraw state and queuing
+    // Redraw coordination
     private volatile bool _isRedrawing = false;
     private volatile bool _redrawRequested = false;
     private readonly object _redrawLock = new object();
 
-    // Add field to track focus state for cursor visibility
+    // Focus state for cursor inversion
     private bool _isFocused = false;
 
-    // Selection state for copy/paste
+    // Selection
     private bool _isSelecting = false;
     private readonly List<Rectangle> _selectionHighlightRects = new();
-
     private (int row, int col)? _selectionStart = null;
     private (int row, int col)? _selectionEnd = null;
     private bool _isCopyHighlight = false;
     private SolidColorBrush _selectionBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 0, 120, 255));
     private System.Windows.Threading.DispatcherTimer? _copyHighlightTimer;
 
-    // AutoComplete fields
+    // AutoComplete
     private ListBox? _autoCompleteListBox;
     private Popup? _autoCompletePopup;
     private bool _isAutoCompleteVisible = false;
+
+    // Incremental rendering
+    private WriteableBitmap? _surface;
+    private readonly HashSet<int> _dirtyLines = new();
+    private bool _fullRedrawPending = true;
+
+    // Virtualized rendering (only last N logical lines)
+    private const int MaxRenderedLines = 500;
+    private int _renderStartRow = 0; // first buffer row mapped to pixel row 0
 
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
@@ -67,7 +76,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         set => SetValue(ThemeProperty, value);
     }
 
-    // Interface properties
+    // ITerminal interface properties
     public string InputLineSyntax { get => string.Empty; set { } }
     public bool IsReadOnly { get; set; }
     public string Text => string.Empty;
@@ -77,10 +86,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public event ITerminal.TerminalSizeHandler TerminalSizeChanged;
     public event ITerminal.TabCompletionHandler TabCompletionRequested;
 
-    public void RefreshTheme()
-    {
-        ApplyThemeProperties();
-    }
+    public void RefreshTheme() => ApplyThemeProperties();
 
     private static void OnThemeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -96,11 +102,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Loaded += GPTTerminalUserControl_Loaded;
         Unloaded += GPTTerminalUserControl_Unloaded;
 
-        // Add focus event handlers to track when terminal gains/loses focus
-        GotFocus += GPTTerminalUserControl_GotFocus;
-        LostFocus += GPTTerminalUserControl_LostFocus;
+        GotFocus += (s, e) => { _isFocused = true; RedrawTerminal(); };
+        LostFocus += (s, e) => { _isFocused = false; RedrawTerminal(); };
 
-        // Initialize selection brush with theme color
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
 
         _resizeRedrawTimer = new System.Windows.Threading.DispatcherTimer
@@ -109,19 +113,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         };
         _resizeRedrawTimer.Tick += (s, e) =>
         {
-            // Stop the timer and check if it's still valid
-            if (_resizeRedrawTimer != null)
+            _resizeRedrawTimer.Stop();
+            if (_terminal != null)
             {
-                _resizeRedrawTimer.Stop();
-                if (_terminal != null)
-                {
-                    UpdateTerminalLayoutAndSize(_pendingResizeSize);
-                }
+                UpdateTerminalLayoutAndSize(_pendingResizeSize);
             }
-            // Do NOT restart the timer here - it should only be started when a resize actually occurs
         };
 
-        // Hook into SizeChanged event to properly trigger resize debouncing
         SizeChanged += OnControlSizeChanged;
     }
 
@@ -130,38 +128,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (e.NewSize.Width > 0 && e.NewSize.Height > 0)
         {
             _pendingResizeSize = e.NewSize;
-
-            // Restart the debounce timer - but only if it hasn't been disposed
-            if (_resizeRedrawTimer != null)
-            {
-                _resizeRedrawTimer.Stop();
-                _resizeRedrawTimer.Start();
-            }
+            _resizeRedrawTimer.Stop();
+            _resizeRedrawTimer.Start();
         }
-    }
-
-    private void GPTTerminalUserControl_GotFocus(object sender, RoutedEventArgs e)
-    {
-        _isFocused = true;
-        Debug.WriteLine("Terminal gained focus - cursor should be visible");
-        // Redraw to show cursor
-        RedrawTerminal();
-    }
-
-    private void GPTTerminalUserControl_LostFocus(object sender, RoutedEventArgs e)
-    {
-        _isFocused = false;
-        Debug.WriteLine("Terminal lost focus - cursor should be hidden");
-        // Redraw to hide cursor
-        RedrawTerminal();
     }
 
     private void GPTTerminalUserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        this.Focus();
-        this.Focusable = true;
-        this.IsTabStop = true;
-        _isFocused = true; // Set initial focus state
+        Focus();
+        Focusable = true;
+        IsTabStop = true;
+        _isFocused = true;
         if (_terminal == null)
         {
             InitializeTerminalEmulator();
@@ -171,32 +148,19 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void GPTTerminalUserControl_Unloaded(object sender, RoutedEventArgs e)
     {
-        // Clean up any running animations and timers
         CleanupHighlightAnimations();
-        
-        // Unsubscribe from events to prevent further callbacks
         SizeChanged -= OnControlSizeChanged;
-        
-        // Stop and clean up the resize timer
-        if (_resizeRedrawTimer != null)
-        {
-            _resizeRedrawTimer.Stop();
-            _resizeRedrawTimer = null;
-        }
+        _resizeRedrawTimer.Stop();
     }
 
     private void CleanupHighlightAnimations()
     {
-        // Stop copy highlight timer
         if (_copyHighlightTimer != null)
         {
             _copyHighlightTimer.Stop();
             _copyHighlightTimer = null;
         }
-
         _isCopyHighlight = false;
-
-        // Stop all animations on selection rectangles
         foreach (var rect in _selectionHighlightRects)
         {
             if (rect.Fill is SolidColorBrush brush)
@@ -208,18 +172,12 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void UpdateCharSize()
     {
-        var formattedText = new FormattedText(
-            "W@gy",
-            System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight,
-            new Typeface(Theme.FontFamily.Source),
-            Theme.FontSize,
-            Brushes.Black,
-            new NumberSubstitution(),
-            1.0);
-
-        _charWidth = formattedText.WidthIncludingTrailingWhitespace / formattedText.Text.Length;
-        _charHeight = formattedText.Height;
+#pragma warning disable CS0618
+        var ft = new FormattedText("W@gy", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+            new Typeface(Theme.FontFamily.Source), Theme.FontSize, Brushes.Black, new NumberSubstitution(), 1.0);
+#pragma warning restore CS0618
+        _charWidth = ft.WidthIncludingTrailingWhitespace / ft.Text.Length;
+        _charHeight = ft.Height;
     }
 
     private void InitializeTerminalEmulator()
@@ -236,20 +194,29 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             output = Encoding.UTF8.GetString(bytes);
         }
         var buffer = _terminal.Buffer;
-        int prevLineCount = buffer.Lines.Length;
         string[]? prevSnapshot = _lastRenderedBufferLines;
         _terminal.Feed(output);
+
         int newLineCount = buffer.Lines.Length;
-        // Compare current buffer lines to previous snapshot and redraw only changed lines
-        for (int row = 0; row < buffer.Lines.Length; row++)
+        bool sizeChanged = prevSnapshot == null || prevSnapshot.Length != newLineCount;
+        if (sizeChanged) _fullRedrawPending = true;
+
+        int cols = _terminal.Cols;
+        if (!_fullRedrawPending && prevSnapshot != null)
         {
-            string current = BufferLineToString(buffer.Lines[row], _terminal.Cols);
-            string? prev = (prevSnapshot != null && row < prevSnapshot.Length) ? prevSnapshot[row] : null;
-            if (prev == null || !current.Equals(prev))
+            for (int row = 0; row < buffer.Lines.Length; row++)
             {
-                RedrawTerminal(onlyRow: row);
+                string cur = BufferLineToString(buffer.Lines[row], cols);
+                string? prev = row < prevSnapshot.Length ? prevSnapshot[row] : null;
+                if (prev == null || !cur.Equals(prev)) _dirtyLines.Add(row);
+            }
+            if (_dirtyLines.Count > (int)(_terminal.Rows * 0.6))
+            {
+                _fullRedrawPending = true;
+                _dirtyLines.Clear();
             }
         }
+        RedrawTerminal();
         ScrollToBottom();
     }
 
@@ -257,17 +224,14 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (IsReadOnly || _terminal == null) return;
         _terminal.Feed(input);
-        // Redraw only the last line
         var buffer = _terminal.Buffer;
-        int lastRow = buffer.Y + buffer.YBase;
-        RedrawTerminal(onlyRow: lastRow);
+        int row = buffer.Y + buffer.YBase;
+        if (!_fullRedrawPending) _dirtyLines.Add(row);
+        RedrawTerminal(onlyRow: row);
         ScrollToBottom();
     }
 
-    private void ScrollToBottom()
-    {
-        TerminalScrollViewer.ScrollToEnd();
-    }
+    private void ScrollToBottom() => TerminalScrollViewer.ScrollToEnd();
 
     private void TerminalControl_KeyDown(object sender, KeyEventArgs e)
     {
@@ -276,10 +240,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int promptEnd = GetPromptEndCol();
         var buffer = _terminal.Buffer;
         int cursorCol = buffer.X;
-        bool isNavKey = e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down ||
-                        e.Key == Key.Home || e.Key == Key.End || e.Key == Key.PageUp || e.Key == Key.PageDown;
-        
-        // Handle Tab key for autocomplete
+        bool isNavKey = e.Key is Key.Left or Key.Right or Key.Up or Key.Down or Key.Home or Key.End or Key.PageUp or Key.PageDown;
+
         if (e.Key == Key.Tab)
         {
             e.Handled = true;
@@ -287,88 +249,98 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             return;
         }
 
-        // Handle Up/Down arrows when autocomplete is visible
         if (_isAutoCompleteVisible && (e.Key == Key.Up || e.Key == Key.Down))
         {
-            // Handle navigation directly to avoid focus issues
             if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
             {
-                int currentIndex = _autoCompleteListBox.SelectedIndex;
-                int newIndex;
-                
-                if (e.Key == Key.Up)
-                {
-                    newIndex = currentIndex > 0 ? currentIndex - 1 : _autoCompleteListBox.Items.Count - 1; // Wrap to bottom
-                }
-                else // Key.Down
-                {
-                    newIndex = currentIndex < _autoCompleteListBox.Items.Count - 1 ? currentIndex + 1 : 0; // Wrap to top
-                }
-                
-                _autoCompleteListBox.SelectedIndex = newIndex;
+                int idx = _autoCompleteListBox.SelectedIndex;
+                int newIdx = e.Key == Key.Up
+                    ? (idx > 0 ? idx - 1 : _autoCompleteListBox.Items.Count - 1)
+                    : (idx < _autoCompleteListBox.Items.Count - 1 ? idx + 1 : 0);
+                _autoCompleteListBox.SelectedIndex = newIdx;
                 _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
             }
             e.Handled = true;
             return;
         }
 
-        // Handle Escape to close autocomplete if visible
+        // Block Up/Down outside autocomplete (prevent leaving input area/history nav for now)
+        if ((e.Key == Key.Up || e.Key == Key.Down) && !_isAutoCompleteVisible)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (_isAutoCompleteVisible && e.Key == Key.Escape)
         {
             HideAutoComplete();
-            e.Handled = true;
-            return;
+            e.Handled = true; return;
         }
-
-        // Handle Enter to accept autocomplete selection if visible
         if (_isAutoCompleteVisible && e.Key == Key.Enter)
         {
             AcceptAutoCompleteSelection();
-            e.Handled = true;
-            return;
+            e.Handled = true; return;
         }
+        if (_isAutoCompleteVisible && !isNavKey) HideAutoComplete();
 
-        // Hide autocomplete on any other key (except navigation keys when not in autocomplete mode)
-        if (_isAutoCompleteVisible && !isNavKey)
+        int editableEnd = GetEditableEndCol(promptEnd);
+
+        // Left bound block
+        if (e.Key == Key.Left && cursorCol <= promptEnd)
         {
-            HideAutoComplete();
+            e.Handled = true; return;
         }
-
-        // Block editing before/at prompt
+        // Right bound block
+        if (e.Key == Key.Right && cursorCol >= editableEnd)
+        {
+            e.Handled = true; return;
+        }
+        // Home -> prompt start
+        if (e.Key == Key.Home)
+        {
+            _terminal.SetCursor(promptEnd, buffer.Y);
+            if (!_fullRedrawPending) _dirtyLines.Add(buffer.Y + buffer.YBase);
+            RedrawTerminal(onlyRow: buffer.Y + buffer.YBase);
+            e.Handled = true; return;
+        }
+        // Disallow typing before prompt
         if (!isNavKey && cursorCol < promptEnd)
         {
-            e.Handled = true;
-            return;
+            e.Handled = true; return;
         }
+
         string keyToSend = string.Empty;
         if (e.Key == Key.Enter)
         {
-            // Extract the current input line from the buffer
             string inputLine = GetCurrentInputLine();
             CommandEntered?.Invoke(this, inputLine);
             keyToSend = "\r";
         }
         else if (e.Key == Key.Back)
         {
-            // Only allow backspace if cursor is after prompt
+            int editableEndForDelete = GetEditableEndCol(promptEnd);
             if (cursorCol > promptEnd)
             {
-                // Move cursor left
-                _terminal.SetCursor(cursorCol - 1, buffer.Y);
-                // Clear character at new cursor position
                 var line = buffer.Lines[buffer.Y + buffer.YBase];
-                if (cursorCol - 1 < line.Length)
+                int deletePos = cursorCol - 1;
+                for (int i = deletePos; i < editableEndForDelete - 1 && i + 1 < line.Length; i++)
                 {
-                    var cell = line[cursorCol - 1];
-                    cell.Code = 0; // or ' '
-                    line[cursorCol - 1] = cell;
+                    var nextCell = line[i + 1];
+                    line[i] = nextCell; // shift left
                 }
-                // Redraw only the last line
+                int lastPos = editableEndForDelete - 1;
+                if (lastPos >= promptEnd && lastPos < line.Length)
+                {
+                    var blank = line[lastPos];
+                    blank.Code = 0;
+                    line[lastPos] = blank;
+                }
+                _terminal.SetCursor(deletePos, buffer.Y);
                 int lastRow = buffer.Y + buffer.YBase;
+                if (!_fullRedrawPending) _dirtyLines.Add(lastRow);
                 RedrawTerminal(onlyRow: lastRow);
             }
-            e.Handled = true;
-            return;
+            e.Handled = true; return;
         }
         else
         {
@@ -376,11 +348,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             {
                 case Key.Delete: keyToSend = "\u001B[3~"; break;
                 case Key.Escape: keyToSend = "\u001B"; break;
-                case Key.Up: keyToSend = "\u001B[A"; break;
-                case Key.Down: keyToSend = "\u001B[B"; break;
-                case Key.Right: keyToSend = "\u001B[C"; break;
+                case Key.Right: keyToSend = "\u001B[C"; break; // allowed only if < editableEnd
                 case Key.Left: keyToSend = "\u001B[D"; break;
-                case Key.Home: keyToSend = "\u001B[H"; break;
                 case Key.End: keyToSend = "\u001B[F"; break;
                 case Key.PageUp: keyToSend = "\u001B[5~"; break;
                 case Key.PageDown: keyToSend = "\u001B[6~"; break;
@@ -400,8 +369,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.C)
                     {
                         CommandEntered?.Invoke(this, "\u0003");
-                        e.Handled = true;
-                        return;
+                        e.Handled = true; return;
                     }
                     else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key >= Key.A && e.Key <= Key.Z)
                     {
@@ -412,16 +380,40 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     {
                         var c = KeyToChar(e.Key, Keyboard.Modifiers);
                         if (c != null)
-                            keyToSend = c.ToString();
+                        {
+                            if (cursorCol < editableEnd) // insertion (shift remainder right)
+                            {
+                                var line = buffer.Lines[buffer.Y + buffer.YBase];
+                                var remSb = new StringBuilder();
+                                for (int col = cursorCol; col < editableEnd && col < line.Length; col++)
+                                {
+                                    var cell = line[col];
+                                    remSb.Append(cell.Code != 0 ? (char)cell.Code : ' ');
+                                }
+                                string remainder = remSb.ToString();
+                                if (remainder.Length > 0)
+                                {
+                                    string esc = "\u001B";
+                                    string seq = c + remainder + esc + "[" + remainder.Length + "D";
+                                    _terminal.Feed(seq);
+                                    int lastRow2 = buffer.Y + buffer.YBase;
+                                    if (!_fullRedrawPending) _dirtyLines.Add(lastRow2);
+                                    RedrawTerminal(onlyRow: lastRow2);
+                                    e.Handled = true; return;
+                                }
+                            }
+                            keyToSend = c.ToString(); // append at end
+                        }
                     }
                     break;
             }
         }
+
         if (!string.IsNullOrEmpty(keyToSend))
         {
             _terminal.Feed(keyToSend);
-            // Redraw only the last line
             int lastRow = buffer.Y + buffer.YBase;
+            if (!_fullRedrawPending) _dirtyLines.Add(lastRow);
             RedrawTerminal(onlyRow: lastRow);
         }
         e.Handled = true;
@@ -430,18 +422,12 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void HandleTabCompletion()
     {
         if (_terminal == null) return;
-
-        var currentLine = GetCurrentInputLine();
-        var cursorPosition = GetCursorPosition();
-        
-        // Fire the tab completion event to let the host handle it
         var args = new TabCompletionEventArgs
         {
-            CurrentLine = currentLine,
-            CursorPosition = cursorPosition,
-            WorkingDirectory = "~" // Default, will be updated by the host
+            CurrentLine = GetCurrentInputLine(),
+            CursorPosition = GetCursorPosition(),
+            WorkingDirectory = "~"
         };
-
         TabCompletionRequested?.Invoke(this, args);
     }
 
@@ -455,10 +441,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             var cell = line[i];
             char c = cell.Code == 0 ? ' ' : (char)cell.Code;
-            if (c == '$' || c == '#')
-                lastPrompt = i;
+            if (c == '$' || c == '#') lastPrompt = i;
         }
-        return lastPrompt + 1; // position after prompt
+        return lastPrompt + 1;
     }
 
     public string GetCurrentInputLine()
@@ -474,40 +459,28 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             sb.Append(c);
         }
         var text = sb.ToString().TrimEnd();
-        // Find last $ or # and return everything after it
         int promptIdx = Math.Max(text.LastIndexOf('$'), text.LastIndexOf('#'));
         if (promptIdx >= 0)
         {
-            // Return everything after the prompt character (could be empty string if nothing follows)
-            return promptIdx + 1 < text.Length ? text.Substring(promptIdx + 1).Trim() : string.Empty;
+            return promptIdx + 1 < text.Length ? text[(promptIdx + 1)..].Trim() : string.Empty;
         }
-        // If no prompt character found, assume the entire line is user input
         return text;
     }
 
     private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e)
     {
         TerminalCanvas.Focus();
-        _isFocused = true; // Ensure focus state is updated when clicking on terminal
+        _isFocused = true;
 
         if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.None)
         {
-            // Stop any ongoing copy highlight animation when starting a new selection
-            if (_isCopyHighlight)
-            {
-                CleanupHighlightAnimations();
-            }
-
-            // Clear previous selection rectangles
-            foreach (var rect in _selectionHighlightRects)
-                TerminalCanvas.Children.Remove(rect);
+            if (_isCopyHighlight) CleanupHighlightAnimations();
+            foreach (var rect in _selectionHighlightRects) TerminalCanvas.Children.Remove(rect);
             _selectionHighlightRects.Clear();
-            _selectionStart = null;
-            _selectionEnd = null;
+            _selectionStart = null; _selectionEnd = null;
         }
         else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            // Ctrl+Left Click: Copy selection
             if (_selectionStart.HasValue && _selectionEnd.HasValue)
             {
                 string selectedText = GetSelectedText();
@@ -521,11 +494,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
         else if (e.ChangedButton == MouseButton.Left && Keyboard.Modifiers == ModifierKeys.Alt)
         {
-            // Alt+Left Click: Paste clipboard at input area
             if (Clipboard.ContainsText())
             {
-                string pasteText = Clipboard.GetText();
-                PasteAtInputArea(pasteText);
+                PasteAtInputArea(Clipboard.GetText());
             }
             e.Handled = true;
         }
@@ -533,105 +504,69 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void StartCopyHighlightTransition()
     {
-        // Stop any existing copy highlight timer
         if (_copyHighlightTimer != null)
         {
             _copyHighlightTimer.Stop();
             _copyHighlightTimer = null;
         }
-
         _isCopyHighlight = true;
-
-        // First, ensure we have selection rectangles to animate
         if (_selectionHighlightRects.Count == 0)
         {
-            _isCopyHighlight = false;
-            return;
+            _isCopyHighlight = false; return;
         }
-
-        // Get colors from theme
         var defaultSelectionColor = Theme.SelectionColor;
         var copySelectionColor = Theme.CopySelectionColor;
-
-        // Create animations for each selection rectangle
-        var animationsToGreen = new List<ColorAnimation>();
         var animationsToDefault = new List<ColorAnimation>();
-
         foreach (var rect in _selectionHighlightRects)
         {
             if (rect.Fill is SolidColorBrush brush)
             {
-                // Animation to copy color
-                var animToGreen = new ColorAnimation
+                var animToCopy = new ColorAnimation
                 {
                     From = defaultSelectionColor,
                     To = copySelectionColor,
-                    Duration = TimeSpan.FromMilliseconds(400),
-                    AutoReverse = false
+                    Duration = TimeSpan.FromMilliseconds(400)
                 };
-                animationsToGreen.Add(animToGreen);
-
-                // Animation back to default
-                var animToDefault = new ColorAnimation
+                var animBack = new ColorAnimation
                 {
                     From = copySelectionColor,
                     To = defaultSelectionColor,
-                    Duration = TimeSpan.FromMilliseconds(600),
-                    AutoReverse = false
+                    Duration = TimeSpan.FromMilliseconds(600)
                 };
-                animationsToDefault.Add(animToDefault);
-
-                // Start the copy color animation
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, animToGreen);
+                animationsToDefault.Add(animBack);
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, animToCopy);
             }
         }
-
-        // Set up timer to trigger the fade back animation after holding copy color
-        _copyHighlightTimer = new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(1600) // 400ms to copy color + 1200ms hold
-        };
-
+        _copyHighlightTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1600) };
         _copyHighlightTimer.Tick += (s, e) =>
         {
             _copyHighlightTimer.Stop();
             _copyHighlightTimer = null;
-
-            // Start fade back animations
             for (int i = 0; i < _selectionHighlightRects.Count && i < animationsToDefault.Count; i++)
             {
                 var rect = _selectionHighlightRects[i];
-                var animBack = animationsToDefault[i];
-
                 if (rect.Fill is SolidColorBrush brush)
                 {
-                    // Set up completion handler for the last animation
+                    var back = animationsToDefault[i];
                     if (i == _selectionHighlightRects.Count - 1)
                     {
-                        animBack.Completed += (s3, e3) =>
+                        back.Completed += (s2, e2) =>
                         {
                             _isCopyHighlight = false;
-                            // Ensure all rectangles have the default color from theme
-                            Dispatcher.Invoke(() =>
+                            foreach (var r in _selectionHighlightRects)
                             {
-                                foreach (var r in _selectionHighlightRects)
+                                if (r.Fill is SolidColorBrush b)
                                 {
-                                    if (r.Fill is SolidColorBrush b)
-                                    {
-                                        b.Color = Theme.SelectionColor;
-                                        // Stop any ongoing animations
-                                        b.BeginAnimation(SolidColorBrush.ColorProperty, null);
-                                    }
+                                    b.Color = Theme.SelectionColor;
+                                    b.BeginAnimation(SolidColorBrush.ColorProperty, null);
                                 }
-                            });
+                            }
                         };
                     }
-
-                    brush.BeginAnimation(SolidColorBrush.ColorProperty, animBack);
+                    brush.BeginAnimation(SolidColorBrush.ColorProperty, back);
                 }
             }
         };
-
         _copyHighlightTimer.Start();
     }
 
@@ -641,8 +576,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             var pos = e.GetPosition(TerminalCanvas);
             int col = (int)(pos.X / _charWidth);
-            int row = (int)(pos.Y / _charHeight);
-            if (_isSelecting && e.LeftButton == MouseButtonState.Pressed)
+            int row = (int)(pos.Y / _charHeight) + _renderStartRow; // map visual to logical
+            if (_isSelecting)
             {
                 _selectionEnd = (row, col);
                 UpdateSelectionHighlightRect();
@@ -662,36 +597,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         {
             _isSelecting = false;
             TerminalCanvas.ReleaseMouseCapture();
-            // Finalize selection highlight
             UpdateSelectionHighlightRect();
         }
     }
 
-
     private void UpdateSelectionHighlightRect()
     {
-        // Don't interfere with copy highlight transition
-        if (_isCopyHighlight)
-        {
-            return;
-        }
-
-        // Clear existing selection rectangles
-        foreach (var rect in _selectionHighlightRects)
-        {
-            TerminalCanvas.Children.Remove(rect);
-        }
+        if (_isCopyHighlight) return;
+        foreach (var r in _selectionHighlightRects) TerminalCanvas.Children.Remove(r);
         _selectionHighlightRects.Clear();
-
-        // Stop any copy highlight timer that might be running
-        if (_copyHighlightTimer != null)
-        {
-            _copyHighlightTimer.Stop();
-            _copyHighlightTimer = null;
-        }
-
-        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null)
-            return;
+        if (_copyHighlightTimer != null) { _copyHighlightTimer.Stop(); _copyHighlightTimer = null; }
+        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null) return;
 
         var (row1, col1) = _selectionStart.Value;
         var (row2, col2) = _selectionEnd.Value;
@@ -699,78 +615,29 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int endRow = Math.Max(row1, row2);
         int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
-
         int maxCol = _terminal.Cols - 1;
 
         for (int row = startRow; row <= endRow; row++)
         {
+            if (row < _renderStartRow) continue; // not rendered
+            int visualRow = row - _renderStartRow;
             int colStart = (row == startRow) ? startCol : 0;
             int colEnd = (row == endRow) ? endCol : maxCol;
-            colStart = Math.Max(0, Math.Min(colStart, maxCol));
-            colEnd = Math.Max(0, Math.Min(colEnd, maxCol));
+            colStart = Math.Clamp(colStart, 0, maxCol);
+            colEnd = Math.Clamp(colEnd, 0, maxCol);
             if (colEnd < colStart) continue;
-
             var rect = new Rectangle
             {
                 Width = (colEnd - colStart + 1) * _charWidth,
                 Height = _charHeight,
-                Fill = new SolidColorBrush(Theme.SelectionColor), // Use theme color
+                Fill = new SolidColorBrush(Theme.SelectionColor),
                 Opacity = 0.5,
                 IsHitTestVisible = false
             };
             TerminalCanvas.Children.Add(rect);
             Canvas.SetLeft(rect, colStart * _charWidth);
-            Canvas.SetTop(rect, row * _charHeight);
+            Canvas.SetTop(rect, visualRow * _charHeight);
             _selectionHighlightRects.Add(rect);
-        }
-    }
-
-    private void DrawSelection()
-    {
-        if (!_selectionStart.HasValue || !_selectionEnd.HasValue || _terminal == null) return;
-        // If the canvas was just cleared (after RedrawTerminal), skip removal
-        bool hasSelectionRects = false;
-        for (int i = 0; i < TerminalCanvas.Children.Count; i++)
-        {
-            if (TerminalCanvas.Children[i] is Rectangle rect && rect.Tag as string == "SelectionRect")
-            {
-                hasSelectionRects = true;
-                break;
-            }
-        }
-        if (hasSelectionRects)
-        {
-            for (int i = TerminalCanvas.Children.Count - 1; i >= 0; i--)
-            {
-                if (TerminalCanvas.Children[i] is Rectangle rect && rect.Tag as string == "SelectionRect")
-                    TerminalCanvas.Children.RemoveAt(i);
-            }
-        }
-        var (row1, col1) = _selectionStart.Value;
-        var (row2, col2) = _selectionEnd.Value;
-        int startRow = Math.Min(row1, row2);
-        int endRow = Math.Max(row1, row2);
-        int startCol = Math.Min(col1, col2);
-        int endCol = Math.Max(col1, col2);
-        int maxCol = _terminal.Cols - 1;
-        for (int row = startRow; row <= endRow; row++)
-        {
-            int colStart = (row == startRow) ? startCol : 0;
-            int colEnd = (row == endRow) ? endCol : maxCol;
-            colStart = Math.Max(0, Math.Min(colStart, maxCol));
-            colEnd = Math.Max(0, Math.Min(colEnd, maxCol));
-            if (colEnd < colStart) continue;
-            var rect = new Rectangle
-            {
-                Width = (colEnd - colStart + 1) * _charWidth,
-                Height = _charHeight,
-                Fill = _selectionBrush,
-                IsHitTestVisible = false,
-                Tag = "SelectionRect"
-            };
-            Canvas.SetLeft(rect, colStart * _charWidth);
-            Canvas.SetTop(rect, row * _charHeight);
-            TerminalCanvas.Children.Add(rect);
         }
     }
 
@@ -787,20 +654,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         var sb = new StringBuilder();
         for (int row = startRow; row <= endRow; row++)
         {
+            if (row < 0 || row >= buffer.Lines.Length) continue;
+            var line = buffer.Lines[row];
             int colStart = (row == startRow) ? startCol : 0;
-            int colEnd = (row == endRow) ? endCol : _cols - 1;
-            if (row >= 0 && row < buffer.Lines.Length)
+            int colEnd = (row == endRow) ? endCol : _terminal.Cols - 1;
+            var lineSb = new StringBuilder();
+            for (int c = colStart; c <= colEnd && c < line.Length; c++)
             {
-                var line = buffer.Lines[row];
-                var lineSb = new StringBuilder();
-                for (int col = colStart; col <= colEnd && col < line.Length; col++)
-                {
-                    var cell = line[col];
-                    char c = cell.Code != 0 ? (char)cell.Code : ' ';
-                    lineSb.Append(c);
-                }
-                sb.Append(lineSb.ToString().TrimEnd());
+                var cell = line[c];
+                lineSb.Append(cell.Code != 0 ? (char)cell.Code : ' ');
             }
+            sb.Append(lineSb.ToString().TrimEnd());
             if (row < endRow) sb.AppendLine();
         }
         return sb.ToString();
@@ -809,12 +673,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void PasteAtInputArea(string text)
     {
         if (_terminal == null || IsReadOnly) return;
-        // Insert at current cursor position in input area (last line)
         var buffer = _terminal.Buffer;
         int row = buffer.Y + buffer.YBase;
         int col = buffer.X;
         var line = buffer.Lines[row];
-        // Insert text at cursor
         foreach (char c in text)
         {
             if (col < line.Length)
@@ -826,58 +688,28 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             col++;
         }
         buffer.X = col;
+        if (!_fullRedrawPending) _dirtyLines.Add(row);
         RedrawTerminal(onlyRow: row);
     }
 
-    // Change ApplyThemeProperties to public so ThemeUserControl can call it
     public void ApplyThemeProperties()
     {
         _typeface = new Typeface(Theme.FontFamily.Source);
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
         if (TerminalGrid != null)
             TerminalGrid.Background = Theme.Background;
-
-        // Update char size and redraw
         UpdateCharSize();
+        _fullRedrawPending = true;
+        _dirtyLines.Clear();
         RedrawTerminal();
-
-        // Clear old selection highlights and selection state to apply new theme colors
-        ClearSelectionHighlightRects();
         _selectionStart = null;
         _selectionEnd = null;
     }
 
-    // Helper to clear selection highlight rectangles from RootGrid
-    private void ClearSelectionHighlightRects()
-    {
-        // Stop any ongoing copy highlight animation
-        if (_copyHighlightTimer != null)
-        {
-            _copyHighlightTimer.Stop();
-            _copyHighlightTimer = null;
-        }
-        _isCopyHighlight = false;
-
-        // Clear all selection rectangles and stop their animations
-        foreach (var rect in _selectionHighlightRects)
-        {
-            if (rect.Fill is SolidColorBrush brush)
-            {
-                // Stop any ongoing animations
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
-            }
-            TerminalCanvas.Children.Remove(rect);
-        }
-        _selectionHighlightRects.Clear();
-    }
-
-    // Cache last used control size to avoid unnecessary buffer resize on font change
     private Size _lastLayoutSize = Size.Empty;
-
     private int _lastCols = -1;
     private int _lastRows = -1;
 
-    // Helper to update char size, canvas size, and terminal size (used for both resize and theme change)
     private void UpdateTerminalLayoutAndSize(Size? newSize = null)
     {
         UpdateCharSize();
@@ -886,17 +718,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int rows = Math.Max(2, (int)(size.Height / _charHeight));
         TerminalCanvas.Width = cols * _charWidth;
         TerminalCanvas.Height = rows * _charHeight;
-        // Only resize terminal if control pixel size has changed
         if (_terminal != null && (size != _lastLayoutSize || cols != _lastCols || rows != _lastRows))
         {
             _terminal.Resize(cols, rows);
             _lastLayoutSize = size;
             _lastCols = cols;
             _lastRows = rows;
+            _fullRedrawPending = true;
+            _dirtyLines.Clear();
         }
         TerminalSizeChanged?.Invoke(this, size);
         RedrawTerminal();
-        UpdateSelectionHighlightRect(); // Ensure selection area updates with resize
+        UpdateSelectionHighlightRect();
     }
 
     private static Brush[] AnsiForeground = new Brush[] {
@@ -928,276 +761,197 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     }
 
     private static bool IsBold(int attr) => ((attr >> 18) & 1) != 0;
-
     private static bool IsUnderline(int attr) => ((attr >> 18) & 4) != 0;
-
     private static bool IsInverse(int attr) => ((attr >> 18) & 0x40) != 0;
 
-    // Helper to get a string representation of a buffer line
     private static string BufferLineToString(dynamic line, int cols)
     {
         var sb = new StringBuilder(cols);
         for (int i = 0; i < cols; i++)
         {
-            char ch = ' ';
             if (i < line.Length)
             {
                 var cell = line[i];
-                ch = cell.Code != 0 ? (char)cell.Code : ' ';
+                char ch = cell.Code != 0 ? (char)cell.Code : ' ';
+                sb.Append(ch);
             }
-            sb.Append(ch);
+            else sb.Append(' ');
         }
         return sb.ToString();
     }
 
-    // Redraws the terminal. If onlyRow is provided, only redraw that row.
     private void RedrawTerminal(int? onlyRow = null)
     {
-        Debug.WriteLine($"RedrawTerminal called. onlyRow={onlyRow}");
         if (_terminal == null) return;
+        if (onlyRow.HasValue && !_fullRedrawPending) _dirtyLines.Add(onlyRow.Value);
+        else if (!onlyRow.HasValue && _dirtyLines.Count == 0 && !_fullRedrawPending) _fullRedrawPending = true;
 
         lock (_redrawLock)
         {
-            // If already redrawing, just set the flag and return
             if (_isRedrawing)
             {
                 _redrawRequested = true;
-                Debug.WriteLine("RedrawTerminal: Already redrawing, queuing request");
                 return;
             }
-
-            // Mark that we're starting a redraw
             _isRedrawing = true;
             _redrawRequested = false;
         }
-
-        // Perform the actual redraw
-        PerformRedraw(onlyRow);
+        PerformRedraw();
     }
 
-    private void PerformRedraw(int? onlyRow = null)
+    private void PerformRedraw()
     {
-        var buffer = _terminal.Buffer;
-
-        if (onlyRow.HasValue)
+        try
         {
-            onlyRow = null;
-        }
-
-        int cols = _terminal.Cols;
-        int rows = buffer.Lines.Length;
-        double charWidth = _charWidth;
-        double charHeight = _charHeight;
-        bool isFocused = _isFocused; // Capture focus state
-
-        // Extract and freeze all DependencyObject values on the UI thread
-        var theme = Theme;
-        var typeface = _typeface;
-        var fgBrush = (theme.Foreground as SolidColorBrush)?.CloneCurrentValue() ?? Brushes.LightGray.CloneCurrentValue();
-        var bgBrush = (theme.Background as SolidColorBrush)?.CloneCurrentValue() ?? Brushes.Black.CloneCurrentValue();
-        fgBrush.Freeze();
-        bgBrush.Freeze();
-
-        // Extract and freeze cursor color on UI thread
-        Brush cursorBrush;
-        if (theme.CursorColor != null)
-        {
-            cursorBrush = (theme.CursorColor as SolidColorBrush)?.CloneCurrentValue() ?? fgBrush;
-            if (cursorBrush != fgBrush)
-                cursorBrush.Freeze();
-        }
-        else
-        {
-            cursorBrush = fgBrush;
-        }
-
-        var fontSize = theme.FontSize;
-        var fontFamily = theme.FontFamily.Source; // Use string name
-
-        int pixelWidth = (int)Math.Ceiling(cols * charWidth);
-        int pixelHeight = (int)Math.Ceiling(rows * charHeight);
-        Debug.WriteLine($"Bitmap size: {pixelWidth}x{pixelHeight}");
-
-        Task.Run(() =>
-        {
-            try
+            if (_terminal == null)
             {
+                CompleteRedraw();
+                return;
+            }
+            var buffer = _terminal.Buffer;
+            int cols = _terminal.Cols;
+            int totalRows = buffer.Lines.Length;
+            if (totalRows <= 0)
+            {
+                CompleteRedraw();
+                return;
+            }
+
+            // Virtualization window
+            _renderStartRow = totalRows > MaxRenderedLines ? totalRows - MaxRenderedLines : 0;
+            int renderRowCount = totalRows - _renderStartRow;
+
+            double cw = _charWidth;
+            double ch = _charHeight;
+            int linePixelHeight = (int)Math.Ceiling(ch);
+            if (linePixelHeight <= 0) linePixelHeight = 1;
+            int pixelWidth = (int)Math.Ceiling(cols * cw);
+            if (pixelWidth <= 0) pixelWidth = 1;
+            int pixelHeight = linePixelHeight * renderRowCount;
+
+            bool allocate = _surface == null || _surface.PixelWidth != pixelWidth || _surface.PixelHeight != pixelHeight;
+            if (allocate)
+            {
+                _surface = new WriteableBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32, null);
+                _fullRedrawPending = true;
+                _dirtyLines.Clear();
+            }
+
+            IEnumerable<int> linesToDraw = _fullRedrawPending
+                ? Enumerable.Range(_renderStartRow, renderRowCount)
+                : _dirtyLines.Where(r => r >= _renderStartRow).OrderBy(r => r).ToArray();
+
+            if (!linesToDraw.Any()) { CompleteRedraw(); return; }
+
+            var theme = Theme;
+            var fgDefault = theme.Foreground as SolidColorBrush ?? Brushes.LightGray;
+            var bgDefault = theme.Background as SolidColorBrush ?? Brushes.Black;
+            var cursorBrush = (theme.CursorColor as SolidColorBrush) ?? fgDefault;
+
+            if (_lastRenderedBufferLines == null || _lastRenderedBufferLines.Length != totalRows)
+            {
+                _lastRenderedBufferLines = new string[totalRows];
+            }
+
+            foreach (var row in linesToDraw)
+            {
+                if (row < 0 || row >= buffer.Lines.Length) continue;
+                int visualRow = row - _renderStartRow;
+                if (visualRow < 0 || visualRow >= renderRowCount) continue;
+                int destY = visualRow * linePixelHeight;
+                if (destY + linePixelHeight > _surface.PixelHeight) continue;
+                var line = buffer.Lines[row];
                 var dv = new DrawingVisual();
                 using (var dc = dv.RenderOpen())
                 {
-                    // Fill background
-                    dc.DrawRectangle(bgBrush, null, new Rect(0, 0, pixelWidth, pixelHeight));
-                    for (int row = 0; row < rows; row++)
+                    dc.DrawRectangle(bgDefault, null, new Rect(0, 0, pixelWidth, linePixelHeight));
+                    for (int col = 0; col < cols; col++)
                     {
-                        var line = buffer.Lines[row];
-                        for (int col = 0; col < cols; col++)
+                        char chChar = ' ';
+                        int attr = XtermSharp.CharData.DefaultAttr;
+                        if (col < line.Length)
                         {
-                            char ch = ' ';
-                            int attr = XtermSharp.CharData.DefaultAttr;
-                            if (col < line.Length)
-                            {
-                                var cell = line[col];
-                                ch = cell.Code != 0 ? (char)cell.Code : ' ';
-                                attr = cell.Attribute;
-                            }
-                            bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
-                            bool inverse = IsInverse(attr) ^ isCursor;
-                            Brush fg;
-                            Brush bg;
-                            if (attr == XtermSharp.CharData.DefaultAttr)
-                            {
-                                fg = fgBrush;
-                                bg = bgBrush;
-                            }
-                            else
-                            {
-                                fg = GetAnsiForeground(attr, inverse);
-                                bg = bgBrush;
-                            }
-                            FontWeight weight = IsBold(attr) ? FontWeights.Bold : FontWeights.Normal;
-                            TextDecorationCollection deco = IsUnderline(attr) ? TextDecorations.Underline : null;
-                            // Draw background for each cell
-                            dc.DrawRectangle(bg, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
-                            // Draw character
-                            var ft = new FormattedText(
-                                ch.ToString(),
-                                System.Globalization.CultureInfo.CurrentCulture,
+                            var cell = line[col];
+                            chChar = cell.Code != 0 ? (char)cell.Code : ' ';
+                            attr = cell.Attribute;
+                        }
+                        bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
+                        bool inverse = IsInverse(attr) ^ (isCursor && _isFocused);
+                        Brush fg = attr == XtermSharp.CharData.DefaultAttr ? fgDefault : GetAnsiForeground(attr, inverse);
+                        Brush bg = bgDefault;
+                        dc.DrawRectangle(bg, null, new Rect(col * cw, 0, cw, linePixelHeight));
+#pragma warning disable CS0618
+                        var ft = new FormattedText(chChar.ToString(), System.Globalization.CultureInfo.CurrentCulture,
+                            FlowDirection.LeftToRight,
+                            new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal),
+                            theme.FontSize, fg, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+#pragma warning restore CS0618
+                        dc.DrawText(ft, new Point(col * cw, 0));
+                        if (isCursor && _isFocused)
+                        {
+                            dc.DrawRectangle(cursorBrush, null, new Rect(col * cw, 0, cw, linePixelHeight));
+#pragma warning disable CS0618
+                            var ftC = new FormattedText(chChar.ToString(), System.Globalization.CultureInfo.CurrentCulture,
                                 FlowDirection.LeftToRight,
-                                new Typeface(new FontFamily(fontFamily), FontStyles.Normal, weight, FontStretches.Normal),
-                                fontSize,
-                                fg,
-                                VisualTreeHelper.GetDpi(this).PixelsPerDip
-                            );
-                            dc.DrawText(ft, new Point(col * charWidth, row * charHeight));
-                            // Draw cursor overlay only when terminal is focused
-                            if (isCursor && isFocused)
-                            {
-                                // Use the pre-extracted cursor brush
-                                dc.DrawRectangle(cursorBrush, null, new Rect(col * charWidth, row * charHeight, charWidth, charHeight));
-                                var ftCursor = new FormattedText(
-                                    ch.ToString(),
-                                    System.Globalization.CultureInfo.CurrentCulture,
-                                    FlowDirection.LeftToRight,
-                                    new Typeface(new FontFamily(fontFamily), FontStyles.Normal, weight, FontStretches.Normal),
-                                    fontSize,
-                                    bg, // Use background color for cursor text to create inverse effect
-                                    VisualTreeHelper.GetDpi(this).PixelsPerDip
-                                );
-                                dc.DrawText(ftCursor, new Point(col * charWidth, row * charHeight));
-                            }
+                                new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal),
+                                theme.FontSize, bgDefault, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+#pragma warning restore CS0618
+                            dc.DrawText(ftC, new Point(col * cw, 0));
                         }
                     }
                 }
-                var bmp = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32);
-                bmp.Render(dv);
-
-                BitmapImage loadedImg = null;
-                try
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        var encoder = new PngBitmapEncoder();
-                        encoder.Frames.Add(BitmapFrame.Create(bmp));
-                        encoder.Save(ms);
-                        ms.Seek(0, SeekOrigin.Begin);
-                        loadedImg = new BitmapImage();
-                        loadedImg.BeginInit();
-                        loadedImg.CacheOption = BitmapCacheOption.OnLoad;
-                        loadedImg.StreamSource = ms;
-                        loadedImg.EndInit();
-                        loadedImg.Freeze();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Exception creating in-memory PNG: {ex}");
-                }
-
-                Dispatcher.Invoke(() =>
-                {
-                    try
-                    {
-                        TerminalBitmapImage.Source = loadedImg;
-                        TerminalBitmapImage.Width = pixelWidth;
-                        TerminalBitmapImage.Height = pixelHeight;
-                        TerminalCanvas.Width = pixelWidth;
-                        TerminalCanvas.Height = pixelHeight;
-                        if (Cursor != null)
-                            Cursor.Visibility = Visibility.Collapsed;
-                        TerminalCanvas.Width = _terminal.Cols * _charWidth;
-                        double contentHeight = buffer.Lines.Length * _charHeight;
-                        double visibleHeight = _terminal.Rows * _charHeight;
-                        double canvasHeight = Math.Max(contentHeight, visibleHeight);
-                        TerminalCanvas.Height = canvasHeight;
-                    }
-                    finally
-                    {
-                        // Mark redraw as complete and check if another is needed
-                        CompleteRedraw();
-                    }
-                });
+                var lineBmp = new RenderTargetBitmap(pixelWidth, linePixelHeight, 96, 96, PixelFormats.Pbgra32);
+                lineBmp.Render(dv);
+                int stride = pixelWidth * 4;
+                var pixels = new byte[stride * linePixelHeight];
+                lineBmp.CopyPixels(pixels, stride, 0);
+                _surface!.WritePixels(new Int32Rect(0, destY, pixelWidth, linePixelHeight), pixels, stride, 0);
+                _lastRenderedBufferLines[row] = BufferLineToString(line, cols);
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Exception in RedrawTerminal Task: {ex}");
-                // Even on exception, mark redraw as complete
-                Dispatcher.Invoke(() => CompleteRedraw());
-            }
-        });
 
-        _lastRenderedBufferLines = new string[buffer.Lines.Length];
-        for (int row = 0; row < buffer.Lines.Length; row++)
+            _dirtyLines.Clear();
+            _fullRedrawPending = false;
+
+            TerminalBitmapImage.Source = _surface;
+            TerminalBitmapImage.Width = pixelWidth;
+            TerminalBitmapImage.Height = pixelHeight;
+            TerminalCanvas.Width = pixelWidth;
+            TerminalCanvas.Height = renderRowCount * ch;
+            if (Cursor != null) Cursor.Visibility = Visibility.Collapsed;
+        }
+        catch (Exception ex)
         {
-            _lastRenderedBufferLines[row] = BufferLineToString(buffer.Lines[row], _terminal.Cols);
+            Debug.WriteLine($"Incremental redraw exception: {ex}");
+        }
+        finally
+        {
+            CompleteRedraw();
         }
     }
 
     private void CompleteRedraw()
     {
-        bool shouldRedrawAgain = false;
-
+        bool again = false;
         lock (_redrawLock)
         {
             _isRedrawing = false;
-            shouldRedrawAgain = _redrawRequested;
+            again = _redrawRequested;
             _redrawRequested = false;
         }
-
-        // If another redraw was requested while this one was running, start it now
-        if (shouldRedrawAgain)
-        {
-            Debug.WriteLine("RedrawTerminal: Starting queued redraw");
-            RedrawTerminal();
-        }
-    }
-
-    private void SaveLoadedImageToFile(BitmapImage image, string filePath)
-    {
-        if (image == null)
-            throw new InvalidOperationException("No image has been rendered yet.");
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(image));
-        using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-        {
-            encoder.Save(fs);
-        }
+        if (again) RedrawTerminal();
     }
 
     private static char? KeyToChar(Key key, ModifierKeys modifiers)
     {
-        // Letters
         if (key >= Key.A && key <= Key.Z)
         {
             char c = (char)('a' + (key - Key.A));
-            if ((modifiers & ModifierKeys.Shift) != 0)
-                c = char.ToUpper(c);
+            if ((modifiers & ModifierKeys.Shift) != 0) c = char.ToUpper(c);
             return c;
         }
-        // Digits
         if (key >= Key.D0 && key <= Key.D9)
         {
             char c = (char)('0' + (key - Key.D0));
-            // Handle shifted digits for symbols
             if ((modifiers & ModifierKeys.Shift) != 0)
             {
                 string shifted = ")!@#$%^&*(";
@@ -1205,107 +959,74 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             }
             return c;
         }
-        // Space
         if (key == Key.Space) return ' ';
-        // Oem keys for punctuation and symbols
         if (key >= Key.Oem1 && key <= Key.OemBackslash)
         {
             bool shift = (modifiers & ModifierKeys.Shift) != 0;
-            switch (key)
+            return key switch
             {
-                case Key.Oem1: return shift ? ':' : ';';
-                case Key.OemPlus: return shift ? '+' : '=';
-                case Key.OemComma: return shift ? '<' : ',';
-                case Key.OemMinus: return shift ? '_' : '-';
-                case Key.OemPeriod: return shift ? '>' : '.';
-                case Key.Oem2: return shift ? '?' : '/';
-                case Key.Oem3: return shift ? '~' : '`';
-                case Key.Oem4: return shift ? '{' : '[';
-                case Key.Oem5: return shift ? '|' : '\\';
-                case Key.Oem6: return shift ? '}' : ']';
-                case Key.Oem7: return shift ? '"' : '\'';
-                    // Add more Oem keys if needed
-            }
+                Key.Oem1 => shift ? ':' : ';',
+                Key.OemPlus => shift ? '+' : '=',
+                Key.OemComma => shift ? '<' : ',',
+                Key.OemMinus => shift ? '_' : '-',
+                Key.OemPeriod => shift ? '>' : '.',
+                Key.Oem2 => shift ? '?' : '/',
+                Key.Oem3 => shift ? '~' : '`',
+                Key.Oem4 => shift ? '{' : '[',
+                Key.Oem5 => shift ? '|' : '\\',
+                Key.Oem6 => shift ? '}' : ']',
+                Key.Oem7 => shift ? '"' : '\'',
+                _ => (char?)null
+            };
         }
         return null;
     }
 
-    // ITerminalDelegate implementation (minimal)
-    public void ShowCursor(Terminal terminal)
-    { }
-
-    public void SetTerminalTitle(Terminal terminal, string title)
-    { }
-
-    public void SetTerminalIconTitle(Terminal terminal, string title)
-    { }
-
-    void ITerminalDelegate.SizeChanged(Terminal terminal)
-    { }
-
-    public void Send(byte[] data)
-    { }
-
-    public string WindowCommand(Terminal terminal, XtermSharp.WindowManipulationCommand cmd, params int[] args) => string.Empty;
-
+    // ITerminalDelegate minimal implementations
+    public void ShowCursor(Terminal terminal) { }
+    public void SetTerminalTitle(Terminal terminal, string title) { }
+    public void SetTerminalIconTitle(Terminal terminal, string title) { }
+    void ITerminalDelegate.SizeChanged(Terminal terminal) { }
+    public void Send(byte[] data) { }
+    public string WindowCommand(Terminal terminal, WindowManipulationCommand cmd, params int[] args) => string.Empty;
     public bool IsProcessTrusted() => true;
 
-    // Public methods for copy/paste operations
-    public bool HasSelection()
-    {
-        return _selectionStart.HasValue && _selectionEnd.HasValue;
-    }
+    // Public ITerminal copy/paste API
+    public bool HasSelection() => _selectionStart.HasValue && _selectionEnd.HasValue;
 
     public void CopySelection()
     {
         if (HasSelection())
         {
-            string selectedText = GetSelectedText();
-            if (!string.IsNullOrEmpty(selectedText))
+            var text = GetSelectedText();
+            if (!string.IsNullOrEmpty(text))
             {
-                Clipboard.SetText(selectedText);
+                Clipboard.SetText(text);
                 StartCopyHighlightTransition();
             }
         }
     }
 
-    public void PasteText(string text)
-    {
-        if (!string.IsNullOrEmpty(text) && !IsReadOnly)
-        {
-            PasteAtInputArea(text);
-        }
-    }
+    public void PasteText(string text) => PasteAtInputArea(text);
 
     public void PasteFromClipboard()
     {
-        if (Clipboard.ContainsText() && !IsReadOnly)
-        {
-            string clipboardText = Clipboard.GetText();
-            PasteAtInputArea(clipboardText);
-        }
+        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText());
     }
 
     public void SelectAll()
     {
-        if (_terminal != null)
-        {
-            var buffer = _terminal.Buffer;
-            if (buffer.Lines.Length > 0)
-            {
-                _selectionStart = (0, 0);
-                _selectionEnd = (buffer.Lines.Length - 1, _terminal.Cols - 1);
-                UpdateSelectionHighlightRect();
-            }
-        }
+        if (_terminal == null) return;
+        var buffer = _terminal.Buffer;
+        if (buffer.Lines.Length == 0) return;
+        _selectionStart = (0, 0);
+        _selectionEnd = (buffer.Lines.Length - 1, _terminal.Cols - 1);
+        UpdateSelectionHighlightRect();
     }
 
-    public new void Focus()
-    {
-        TerminalCanvas.Focus();
-    }
+    public new void Focus() => TerminalCanvas.Focus();
 
-    // AutoComplete functionality implementation
+    // AutoComplete
     public void ShowAutoCompleteResults(AutoCompleteResult result)
     {
         if (result == null || !result.HasSuggestions)
@@ -1313,12 +1034,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             HideAutoComplete();
             return;
         }
-
         CreateAutoCompletePopupIfNeeded();
-
         if (_autoCompleteListBox != null && _autoCompletePopup != null)
         {
-            // Populate the listbox with suggestions
             _autoCompleteListBox.ItemsSource = result.Suggestions.Select(s => new AutoCompleteItem
             {
                 Text = s.Text,
@@ -1327,16 +1045,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 Type = s.Type
             }).ToList();
 
-            // Position the popup near the cursor
-            var (cursorX, cursorY) = GetCursorScreenPosition();
-            _autoCompletePopup.HorizontalOffset = cursorX;
-            _autoCompletePopup.VerticalOffset = cursorY + _charHeight;
-
-            // Show the popup
+            var (cx, cy) = GetCursorScreenPosition();
+            _autoCompletePopup.HorizontalOffset = cx;
+            _autoCompletePopup.VerticalOffset = cy + _charHeight;
             _autoCompletePopup.IsOpen = true;
             _isAutoCompleteVisible = true;
-
-            // Select first item and ensure it's visible
             if (_autoCompleteListBox.Items.Count > 0)
             {
                 _autoCompleteListBox.SelectedIndex = 0;
@@ -1347,29 +1060,21 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     public void HideAutoComplete()
     {
-        if (_autoCompletePopup != null)
-        {
-            _autoCompletePopup.IsOpen = false;
-        }
+        if (_autoCompletePopup != null) _autoCompletePopup.IsOpen = false;
         _isAutoCompleteVisible = false;
     }
 
     public int GetCursorPosition()
     {
         if (_terminal == null) return 0;
-        
         var buffer = _terminal.Buffer;
-        var promptEnd = GetPromptEndCol();
-        var cursorCol = buffer.X;
-        
-        // Return cursor position relative to the start of user input
-        return Math.Max(0, cursorCol - promptEnd);
+        int promptEnd = GetPromptEndCol();
+        return Math.Max(0, buffer.X - promptEnd);
     }
 
     private void CreateAutoCompletePopupIfNeeded()
     {
         if (_autoCompletePopup != null) return;
-
         _autoCompleteListBox = new ListBox
         {
             MaxHeight = 200,
@@ -1378,35 +1083,24 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             BorderBrush = Brushes.Gray,
             BorderThickness = new Thickness(1)
         };
-
-        // Set keyboard navigation for better arrow key handling
         KeyboardNavigation.SetDirectionalNavigation(_autoCompleteListBox, KeyboardNavigationMode.Cycle);
-
-        // Create custom data template for autocomplete items
         var dataTemplate = new DataTemplate();
-        var stackPanelFactory = new FrameworkElementFactory(typeof(StackPanel));
-        stackPanelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
-
-        var textBlockFactory = new FrameworkElementFactory(typeof(TextBlock));
-        textBlockFactory.SetBinding(TextBlock.TextProperty, new Binding("DisplayText"));
-        textBlockFactory.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
-        textBlockFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 0, 10, 0));
-
-        var descriptionFactory = new FrameworkElementFactory(typeof(TextBlock));
-        descriptionFactory.SetBinding(TextBlock.TextProperty, new Binding("Description"));
-        descriptionFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Gray);
-        descriptionFactory.SetValue(TextBlock.FontSizeProperty, 11.0);
-
-        stackPanelFactory.AppendChild(textBlockFactory);
-        stackPanelFactory.AppendChild(descriptionFactory);
-        dataTemplate.VisualTree = stackPanelFactory;
-
+        var spFactory = new FrameworkElementFactory(typeof(StackPanel));
+        spFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+        var textFactory = new FrameworkElementFactory(typeof(TextBlock));
+        textFactory.SetBinding(TextBlock.TextProperty, new Binding("DisplayText"));
+        textFactory.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+        textFactory.SetValue(TextBlock.MarginProperty, new Thickness(0, 0, 10, 0));
+        var descFactory = new FrameworkElementFactory(typeof(TextBlock));
+        descFactory.SetBinding(TextBlock.TextProperty, new Binding("Description"));
+        descFactory.SetValue(TextBlock.ForegroundProperty, Brushes.Gray);
+        descFactory.SetValue(TextBlock.FontSizeProperty, 11.0);
+        spFactory.AppendChild(textFactory);
+        spFactory.AppendChild(descFactory);
+        dataTemplate.VisualTree = spFactory;
         _autoCompleteListBox.ItemTemplate = dataTemplate;
-
-        // Handle item selection
         _autoCompleteListBox.PreviewKeyDown += AutoCompleteListBox_PreviewKeyDown;
-        _autoCompleteListBox.MouseDoubleClick += AutoCompleteListBox_MouseDoubleClick;
-
+        _autoCompleteListBox.MouseDoubleClick += (s, e) => AcceptAutoCompleteSelection();
         _autoCompletePopup = new Popup
         {
             Child = _autoCompleteListBox,
@@ -1416,8 +1110,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             AllowsTransparency = true,
             Focusable = false
         };
-
-        // Handle popup closing
         _autoCompletePopup.Closed += (s, e) => _isAutoCompleteVisible = false;
     }
 
@@ -1435,60 +1127,41 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
         else if (e.Key == Key.Up)
         {
-            // Navigate up in the autocomplete list
             if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
             {
-                int currentIndex = _autoCompleteListBox.SelectedIndex;
-                int newIndex = currentIndex > 0 ? currentIndex - 1 : _autoCompleteListBox.Items.Count - 1; // Wrap to bottom
-                _autoCompleteListBox.SelectedIndex = newIndex;
+                int idx = _autoCompleteListBox.SelectedIndex;
+                int newIdx = idx > 0 ? idx - 1 : _autoCompleteListBox.Items.Count - 1;
+                _autoCompleteListBox.SelectedIndex = newIdx;
                 _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
             }
             e.Handled = true;
         }
         else if (e.Key == Key.Down)
         {
-            // Navigate down in the autocomplete list
             if (_autoCompleteListBox != null && _autoCompleteListBox.Items.Count > 0)
             {
-                int currentIndex = _autoCompleteListBox.SelectedIndex;
-                int newIndex = currentIndex < _autoCompleteListBox.Items.Count - 1 ? currentIndex + 1 : 0; // Wrap to top
-                _autoCompleteListBox.SelectedIndex = newIndex;
+                int idx = _autoCompleteListBox.SelectedIndex;
+                int newIdx = idx < _autoCompleteListBox.Items.Count - 1 ? idx + 1 : 0;
+                _autoCompleteListBox.SelectedIndex = newIdx;
                 _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
             }
             e.Handled = true;
         }
     }
 
-    private void AutoCompleteListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        AcceptAutoCompleteSelection();
-    }
-
     private void AcceptAutoCompleteSelection()
     {
-        if (_autoCompleteListBox?.SelectedItem is AutoCompleteItem selectedItem)
+        if (_autoCompleteListBox?.SelectedItem is AutoCompleteItem item)
         {
-            // Replace the current word with the selected completion
-            var currentLine = GetCurrentInputLine();
-            var cursorPos = GetCursorPosition();
-            
-            // Find the word being completed
-            var words = currentLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length > 0)
+            string current = GetCurrentInputLine();
+            var words = current.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            if (words.Count > 0)
             {
-                var lastWord = words.Last();
-                var completionText = selectedItem.Text;
-                
-                // Replace the last word with the completion
-                var newText = string.Join(" ", words.Take(words.Length - 1)) + 
-                             (words.Length > 1 ? " " : "") + completionText;
-                
-                // Clear current input and replace with completed text
-                //ClearCurrentInput();
-                AddInput(newText);
+                words[^1] = item.Text;
+                string newLine = string.Join(" ", words);
+                AddInput(newLine);
             }
         }
-        
         HideAutoComplete();
         Focus();
     }
@@ -1496,43 +1169,42 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void ClearCurrentInput()
     {
         if (_terminal == null) return;
-        
         var buffer = _terminal.Buffer;
-        var promptEnd = GetPromptEndCol();
+        int promptEnd = GetPromptEndCol();
         var line = buffer.Lines[buffer.Y + buffer.YBase];
-        
-        // Clear everything after the prompt
         for (int i = promptEnd; i < line.Length; i++)
         {
-            var cell = line[i];
-            cell.Code = 0;
-            line[i] = cell;
+            var cell = line[i]; cell.Code = 0; line[i] = cell;
         }
-        
-        // Move cursor to prompt end
         _terminal.SetCursor(promptEnd, buffer.Y);
-        
-        // Redraw the line
         RedrawTerminal(onlyRow: buffer.Y + buffer.YBase);
     }
 
     private (double x, double y) GetCursorScreenPosition()
     {
         if (_terminal == null) return (0, 0);
-        
         var buffer = _terminal.Buffer;
-        var cursorCol = buffer.X;
-        var cursorRow = buffer.Y;
-        
-        var x = cursorCol * _charWidth;
-        var y = cursorRow * _charHeight;
-        
-        // Convert to screen coordinates
-        var point = TerminalCanvas.TranslatePoint(new Point(x, y), this);
-        return (point.X, point.Y);
+        double x = buffer.X * _charWidth;
+        double y = (buffer.Y) * _charHeight; // buffer.Y is relative to current viewport
+        var pt = TerminalCanvas.TranslatePoint(new Point(x, y), this);
+        return (pt.X, pt.Y);
     }
 
-    // AutoComplete item class
+    private int GetEditableEndCol(int promptEnd)
+    {
+        if (_terminal == null) return promptEnd;
+        var buffer = _terminal.Buffer;
+        var line = buffer.Lines[buffer.Y + buffer.YBase];
+        int last = -1;
+        for (int i = promptEnd; i < line.Length; i++)
+        {
+            var cell = line[i];
+            char c = cell.Code == 0 ? ' ' : (char)cell.Code;
+            if (c != ' ') last = i;
+        }
+        return Math.Max(promptEnd, last + 1);
+    }
+
     private class AutoCompleteItem
     {
         public string Text { get; set; } = string.Empty;
