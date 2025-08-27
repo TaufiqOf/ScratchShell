@@ -16,6 +16,8 @@ namespace ScratchShell.Services.Connection
         bool IsConnected { get; }
         
         Task ConnectAsync(ServerViewModel server);
+        Task ReconnectAsync();
         Task DisconnectAsync();
+        bool IsConnectionAlive();
     }
 }

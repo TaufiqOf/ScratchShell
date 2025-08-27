@@ -41,7 +41,10 @@ internal static class SessionService
 
     internal static void RemoveSession(TabItemViewModel tabViewModel)
     {
-        Sessions.Remove(tabViewModel);
-        tabViewModel.Dispose();
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            Sessions.Remove(tabViewModel);
+            tabViewModel.Dispose();
+        });
     }
 }

@@ -17,6 +17,7 @@ namespace ScratchShell.Services.Connection
         private readonly ISftpLogger _logger;
         private SftpClient? _sftpClient;
         private ISftpFileOperationService? _fileOperationService;
+        private ServerViewModel? _lastConnectedServer;
 
         public SftpClient? Client => _sftpClient;
         public ISftpFileOperationService? FileOperationService => _fileOperationService;
@@ -38,6 +39,8 @@ namespace ScratchShell.Services.Connection
 
                 _fileOperationService = new SftpFileOperationService(_sftpClient);
                 SetupFileOperationServiceEvents();
+
+                _lastConnectedServer = server; // Store for reconnection
 
                 _logger.LogInfo($"Successfully connected to {server.Name} at {server.Host}:{server.Port}");
                 _logger.LogInfo($"Working directory: {_sftpClient.WorkingDirectory}");
@@ -74,6 +77,22 @@ namespace ScratchShell.Services.Connection
             }
         }
 
+        public async Task ReconnectAsync()
+        {
+            if (_lastConnectedServer == null)
+            {
+                throw new InvalidOperationException("No previous connection information available for reconnection");
+            }
+
+            _logger.LogInfo($"Attempting to reconnect to {_lastConnectedServer.Name}");
+            
+            // Dispose of existing connection
+            await DisconnectAsync();
+            
+            // Create new connection
+            await ConnectAsync(_lastConnectedServer);
+        }
+
         public async Task DisconnectAsync()
         {
             try
@@ -87,6 +106,26 @@ namespace ScratchShell.Services.Connection
             catch (Exception ex)
             {
                 _logger.LogError("Error disconnecting SFTP client", ex);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the connection is still alive and working
+        /// </summary>
+        public bool IsConnectionAlive()
+        {
+            try
+            {
+                if (_sftpClient == null || !_sftpClient.IsConnected)
+                    return false;
+
+                // Try to perform a simple operation to verify connection
+                _ = _sftpClient.WorkingDirectory;
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
