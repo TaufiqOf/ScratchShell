@@ -206,12 +206,10 @@ public partial class BrowserUserControl : UserControl
                     item.IsSelected = true;
                 }
             }
-            else if (Keyboard.Modifiers == ModifierKeys.Shift && _lastClickedGridItem != null)
+            else if (Keyboard.Modifiers == ModifierKeys.Shift && _lastClickedGridItem != null && _gridSelectedItems.Any())
             {
-                // Range selection - simplified for now
-                ClearGridSelection();
-                _gridSelectedItems.Add(item);
-                item.IsSelected = true;
+                // Proper range selection between last anchor and current item
+                SelectGridRange(_lastClickedGridItem, item);
             }
             else
             {
@@ -230,13 +228,41 @@ public partial class BrowserUserControl : UserControl
     {
         if (sender is Border border && border.DataContext is BrowserItem item)
         {
-            // Select the item if not already selected
-            if (!_gridSelectedItems.Contains(item))
+            bool shift = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+            bool control = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
+            if (shift && _lastClickedGridItem != null && _gridSelectedItems.Any())
             {
-                ClearGridSelection();
-                _gridSelectedItems.Add(item);
-                item.IsSelected = true;
+                // Shift + Right click extends selection range
+                SelectGridRange(_lastClickedGridItem, item);
             }
+            else if (control)
+            {
+                // Ctrl + right click toggle
+                if (_gridSelectedItems.Contains(item))
+                {
+                    _gridSelectedItems.Remove(item);
+                    item.IsSelected = false;
+                }
+                else
+                {
+                    _gridSelectedItems.Add(item);
+                    item.IsSelected = true;
+                }
+            }
+            else
+            {
+                // Normal right-click behavior: select item (clearing others) if not already part of selection
+                if (!_gridSelectedItems.Contains(item))
+                {
+                    ClearGridSelection();
+                    _gridSelectedItems.Add(item);
+                    item.IsSelected = true;
+                }
+            }
+
+            _lastClickedGridItem = item;
+            SelectionChanged?.Invoke(GetSelectedItemCount());
 
             if (item.Name == "..")
             {
@@ -1444,6 +1470,64 @@ public partial class BrowserUserControl : UserControl
         {
             button.ContextMenu.PlacementTarget = button;
             button.ContextMenu.IsOpen = true;
+        }
+    }
+
+    private void GridScrollViewer_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_currentViewMode != BrowserViewMode.Grid) return;
+        // Determine if click was on an item by hit testing BrowserGrid children
+        var pos = e.GetPosition(BrowserGrid);
+        var hit = VisualTreeHelper.HitTest(BrowserGrid, pos);
+        if (hit == null)
+        {
+            emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+            emptySpaceContextMenu.IsOpen = true;
+            e.Handled = true;
+            return;
+        }
+        // Walk up to see if inside a Border with BrowserItem
+        var dp = hit.VisualHit as DependencyObject;
+        bool onItem = false;
+        while (dp != null)
+        {
+            if (dp is Border b && b.DataContext is BrowserItem)
+            {
+                onItem = true; break;
+            }
+            dp = VisualTreeHelper.GetParent(dp);
+        }
+        if (!onItem)
+        {
+            emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+            emptySpaceContextMenu.IsOpen = true;
+            e.Handled = true;
+        }
+    }
+
+    private void SelectGridRange(BrowserItem anchor, BrowserItem current)
+    {
+        int anchorIndex = Items.IndexOf(anchor);
+        int currentIndex = Items.IndexOf(current);
+        if (anchorIndex == -1 || currentIndex == -1)
+        {
+            return; // Safety
+        }
+
+        int start = Math.Min(anchorIndex, currentIndex);
+        int end = Math.Max(anchorIndex, currentIndex);
+
+        // Rebuild selection
+        ClearGridSelection();
+        for (int i = start; i <= end; i++)
+        {
+            var it = Items[i];
+            if (it.Name == "..") continue; // Skip parent directory if present
+            if (!_gridSelectedItems.Contains(it))
+            {
+                _gridSelectedItems.Add(it);
+                it.IsSelected = true;
+            }
         }
     }
 }

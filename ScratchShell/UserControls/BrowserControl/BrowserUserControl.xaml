@@ -316,7 +316,9 @@
                 x:Name="GridScrollViewer"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto"
-                Visibility="Collapsed">
+                Visibility="Collapsed"
+                Background="Transparent"
+                MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp">
                 <ItemsControl
                     x:Name="BrowserGrid"
                     Focusable="True"
