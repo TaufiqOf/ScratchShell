@@ -1,6 +1,8 @@
 ﻿using Renci.SshNet;
 using System.IO;
 using System.Threading;
+using System.IO.Compression; // Added for zip archive support
+using System.Windows; // For dispatcher marshaling to UI thread
 
 namespace ScratchShell.Services;
 
@@ -66,6 +68,32 @@ public class SftpFileOperationService : ISftpFileOperationService
     public SftpFileOperationService(SftpClient sftpClient)
     {
         _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
+    }
+
+    private void RaiseProgress(bool show, string message, int? current = null, int? total = null)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(() => ProgressChanged?.Invoke(show, message, current, total));
+        }
+        else
+        {
+            ProgressChanged?.Invoke(show, message, current, total);
+        }
+    }
+
+    private void RaiseLog(string message)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            dispatcher.Invoke(() => LogRequested?.Invoke(message));
+        }
+        else
+        {
+            LogRequested?.Invoke(message);
+        }
     }
 
     public async Task<OperationResult> CreateFolderAsync(string folderName, string currentPath, CancellationToken cancellationToken = default)
@@ -181,88 +209,32 @@ public class SftpFileOperationService : ISftpFileOperationService
     {
         try
         {
-            ProgressChanged?.Invoke(true, $"⬆️ Preparing upload of {localFilePaths.Length} item(s)...", null, localFilePaths.Length);
-            remoteDirectory = ResolveSftpPath(remoteDirectory);
-
-            LogRequested?.Invoke($"📤 Starting batch upload of {localFilePaths.Length} item(s)");
-            LogRequested?.Invoke($"📍 Upload destination: {remoteDirectory}");
-
-            var successCount = 0;
-            var failCount = 0;
-            var errors = new List<string>();
-            var currentIndex = 0;
-
-            foreach (var localPath in localFilePaths)
+            if (localFilePaths == null || localFilePaths.Length == 0)
             {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    currentIndex++;
-
-                    var itemName = Path.GetFileName(localPath);
-                    
-                    if (Directory.Exists(localPath))
-                    {
-                        // Upload folder recursively
-                        ProgressChanged?.Invoke(true, $"⬆️ Uploading folder '{itemName}' ({currentIndex} of {localFilePaths.Length})", currentIndex, localFilePaths.Length);
-                        LogRequested?.Invoke($"📁 Uploading folder: {itemName}");
-                        var remoteFolderPath = $"{remoteDirectory}/{itemName}";
-                        await UploadDirectoryRecursive(localPath, remoteFolderPath, cancellationToken);
-                        LogRequested?.Invoke($"✅ Successfully uploaded folder: {itemName}");
-                    }
-                    else if (File.Exists(localPath))
-                    {
-                        // Upload single file
-                        var fileInfo = new FileInfo(localPath);
-                        ProgressChanged?.Invoke(true, $"⬆️ Uploading file '{itemName}' ({currentIndex} of {localFilePaths.Length})", currentIndex, localFilePaths.Length);
-                        LogRequested?.Invoke($"📄 Uploading file: {itemName} ({fileInfo.Length:N0} bytes)");
-                        
-                        var remoteFilePath = $"{remoteDirectory}/{itemName}";
-                        
-                        using var fs = new FileStream(localPath, FileMode.Open, FileAccess.Read);
-                        await Task.Run(() => _sftpClient.UploadFile(fs, remoteFilePath), cancellationToken);
-                        
-                        LogRequested?.Invoke($"✅ Successfully uploaded file: {itemName}");
-                    }
-                    else
-                    {
-                        failCount++;
-                        var errorMsg = $"Item not found: {itemName}";
-                        errors.Add(errorMsg);
-                        LogRequested?.Invoke($"❌ {errorMsg}");
-                        continue;
-                    }
-
-                    successCount++;
-                }
-                catch (OperationCanceledException)
-                {
-                    LogRequested?.Invoke($"🚫 Batch upload operation cancelled by user");
-                    return OperationResult.Failure("Operation was cancelled by user");
-                }
-                catch (Exception ex)
-                {
-                    failCount++;
-                    var itemName = Path.GetFileName(localPath);
-                    var errorMsg = $"Failed to upload {itemName}: {ex.Message}";
-                    errors.Add(errorMsg);
-                    LogRequested?.Invoke($"❌ {errorMsg}");
-                }
+                LogRequested?.Invoke("❌ No files provided for upload");
+                return OperationResult.Failure("No files provided");
             }
 
-            var summary = $"Upload completed: {successCount} successful, {failCount} failed";
-            LogRequested?.Invoke($"📊 {summary}");
-
-            if (failCount > 0)
+            // If more than one item, or any item is a folder, create a zip archive and upload/extract remotely
+            bool needsArchive = localFilePaths.Length > 1 || localFilePaths.Any(p => Directory.Exists(p));
+            if (needsArchive)
             {
-                return OperationResult.Failure($"{summary}. Errors: {string.Join("; ", errors)}");
+                return await UploadAsArchiveAsync(localFilePaths, remoteDirectory, cancellationToken);
             }
 
-            return OperationResult.Success();
+            // Fallback to single file path logic (should rarely land here because caller may use UploadFileAsync)
+            if (localFilePaths.Length == 1 && File.Exists(localFilePaths[0]))
+            {
+                var singlePath = localFilePaths[0];
+                var remotePath = ResolveSftpPath(Path.Combine(remoteDirectory, Path.GetFileName(singlePath)).Replace('\\', '/'));
+                return await UploadFileAsync(singlePath, remotePath, cancellationToken);
+            }
+
+            return OperationResult.Failure("Unsupported upload selection");
         }
         catch (OperationCanceledException)
         {
-            LogRequested?.Invoke($"🚫 Batch upload operation cancelled by user");
+            LogRequested?.Invoke("🚫 Batch upload operation cancelled by user");
             return OperationResult.Failure("Operation was cancelled by user");
         }
         catch (Exception ex)
@@ -276,53 +248,217 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    private async Task UploadDirectoryRecursive(string localDirectoryPath, string remoteDirectoryPath, CancellationToken cancellationToken = default)
+    private async Task<OperationResult> UploadAsArchiveAsync(string[] localFilePaths, string remoteDirectory, CancellationToken cancellationToken)
     {
-        var directoryName = Path.GetFileName(localDirectoryPath);
-        ProgressChanged?.Invoke(true, $"⬆️ Uploading folder {directoryName}...", null, null);
+        string resolvedRemoteDir = ResolveSftpPath(remoteDirectory);
+        string archiveBaseName = GenerateArchiveName(localFilePaths);
+        string tempZipPath = Path.Combine(Path.GetTempPath(), archiveBaseName + ".zip");
+        string remoteZipPath = resolvedRemoteDir.TrimEnd('/') + "/" + archiveBaseName + ".zip";
 
-        LogRequested?.Invoke($"📁 Creating remote directory: {directoryName}");
-        cancellationToken.ThrowIfCancellationRequested();
+        // Pre-count total files and folders for user-friendly progress text
+        (int totalFiles, int totalFolders) = CountItems(localFilePaths, cancellationToken);
 
-        // Create the remote directory
-        await Task.Run(() => _sftpClient.CreateDirectory(remoteDirectoryPath), cancellationToken);
-
-        // Get all files and subdirectories
-        var files = Directory.GetFiles(localDirectoryPath);
-        var subdirectories = Directory.GetDirectories(localDirectoryPath);
-
-        // Upload all files
-        foreach (var filePath in files)
+        try
         {
+            RaiseProgress(true, "🗜️ Creating upload archive...");
+            RaiseLog($"🗜️ Creating temporary archive: {tempZipPath}");
+            RaiseLog($"📊 Items to copy: {totalFiles} file(s), {totalFolders} folder(s)");
+
+            if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+
+            // Offload CPU-bound archive creation to background thread to keep UI responsive
+            await Task.Run(() =>
+            {
+                using var zipStream = new FileStream(tempZipPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+                using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true);
+
+                int index = 0;
+                foreach (var path in localFilePaths)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    index++;
+                    var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                    RaiseProgress(true, $"🗜️ Adding '{name}' to archive ({index} of {localFilePaths.Length})", index, localFilePaths.Length);
+                    if (Directory.Exists(path))
+                    {
+                        AddDirectoryToArchive(archive, path, name, cancellationToken);
+                    }
+                    else if (File.Exists(path))
+                    {
+                        AddFileToArchive(archive, path, name, cancellationToken);
+                    }
+                    else
+                    {
+                        RaiseLog($"⚠️ Skipping missing item: {path}");
+                    }
+                }
+            }, cancellationToken);
+
             cancellationToken.ThrowIfCancellationRequested();
 
-            var fileName = Path.GetFileName(filePath);
-            var remoteFilePath = $"{remoteDirectoryPath}/{fileName}";
-            var fileInfo = new FileInfo(filePath);
+            // Upload the archive (describe real intent to user)
+            RaiseProgress(true, $"⬆️ Copying {totalFiles} file(s) and {totalFolders} folder(s)...");
+            var fileInfo = new FileInfo(tempZipPath);
+            RaiseLog($"📦 Archive size: {fileInfo.Length:N0} bytes (compressed)");
+            using (var local = new FileStream(tempZipPath, FileMode.Open, FileAccess.Read))
+            {
+                await Task.Run(() => _sftpClient.UploadFile(local, remoteZipPath), cancellationToken);
+            }
+            RaiseLog($"✅ Uploaded archive to {remoteZipPath}");
 
-            ProgressChanged?.Invoke(true, $"⬆️ Uploading file {fileName}...", null, null);
-            LogRequested?.Invoke($"📄 Uploading file: {fileName} ({fileInfo.Length:N0} bytes)");
+            // Extract remotely using SSH (assumes 'unzip' installed).
+            RaiseProgress(true, "📦 Extracting items on server...");
+            bool extractionSucceeded = false;
+            await Task.Run(() =>
+            {
+                using (var ssh = new SshClient(_sftpClient.ConnectionInfo))
+                {
+                    ssh.Connect();
+                    string remoteFileName = Path.GetFileName(remoteZipPath);
+                    string extractCmd = $"cd '{resolvedRemoteDir}' && (unzip -oq '{remoteFileName}' || (command -v busybox >/dev/null 2>&1 && busybox unzip -oq '{remoteFileName}') || echo 'UNZIP_FAILED')";
+                    var cmd = ssh.CreateCommand(extractCmd);
+                    var result = cmd.Execute();
+                    extractionSucceeded = cmd.ExitStatus == 0 && !result.Contains("UNZIP_FAILED");
+                    if (!extractionSucceeded)
+                    {
+                        RaiseLog($"❌ Remote unzip failed (exit {cmd.ExitStatus}). Output: {result} Error: {cmd.Error}");
+                    }
 
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            await Task.Run(() => _sftpClient.UploadFile(fs, remoteFilePath), cancellationToken);
+                    // Always attempt to remove remote archive now per new requirement
+                    var cleanup = ssh.CreateCommand($"cd '{resolvedRemoteDir}' && rm -f '{remoteFileName}'");
+                    cleanup.Execute();
+                    if (cleanup.ExitStatus == 0)
+                        RaiseLog("🧹 Removed remote archive file");
+                    else
+                        RaiseLog($"⚠️ Failed to remove remote archive: {cleanup.Error}");
+                    ssh.Disconnect();
+                }
+            }, cancellationToken);
+            if (!extractionSucceeded)
+            {
+                return OperationResult.Failure("Remote extraction failed");
+            }
 
-            LogRequested?.Invoke($"✅ Uploaded file: {fileName}");
+            RaiseProgress(true, "✅ Copy complete");
+            return OperationResult.Success();
         }
-
-        // Recursively upload all subdirectories
-        foreach (var subdirectoryPath in subdirectories)
+        catch (OperationCanceledException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var subdirectoryName = Path.GetFileName(subdirectoryPath);
-            var remoteSubdirectoryPath = $"{remoteDirectoryPath}/{subdirectoryName}";
-
-            LogRequested?.Invoke($"📁 Processing subdirectory: {subdirectoryName}");
-            await UploadDirectoryRecursive(subdirectoryPath, remoteSubdirectoryPath, cancellationToken);
+            RaiseLog("🚫 Upload operation cancelled by user");
+            try
+            {
+                if (_sftpClient.Exists(remoteZipPath))
+                {
+                    _sftpClient.DeleteFile(remoteZipPath);
+                    RaiseLog("🧹 Removed partially uploaded remote archive");
+                }
+            }
+            catch { }
+            return OperationResult.Failure("Operation was cancelled by user");
         }
-
-        LogRequested?.Invoke($"✅ Completed uploading folder: {directoryName}");
+        catch (Exception ex)
+        {
+            RaiseLog($"❌ Archive upload failed: {ex.Message}");
+            try
+            {
+                if (_sftpClient.Exists(remoteZipPath))
+                {
+                    _sftpClient.DeleteFile(remoteZipPath);
+                    RaiseLog("🧹 Removed remote archive after failure");
+                }
+            }
+            catch { }
+            return OperationResult.Failure(ex.Message);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+            }
+            catch { }
+            RaiseProgress(false, "");
+        }
     }
+
+    private (int files, int folders) CountItems(IEnumerable<string> paths, CancellationToken token)
+    {
+        int fileCount = 0;
+        int folderCount = 0;
+        foreach (var path in paths)
+        {
+            token.ThrowIfCancellationRequested();
+            if (File.Exists(path))
+            {
+                fileCount++;
+            }
+            else if (Directory.Exists(path))
+            {
+                folderCount++;
+                try
+                {
+                    // Count all sub-files and sub-folders
+                    foreach (var _ in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                    {
+                        token.ThrowIfCancellationRequested();
+                        fileCount++;
+                    }
+                    foreach (var _ in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                    {
+                        token.ThrowIfCancellationRequested();
+                        folderCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    RaiseLog($"⚠️ Counting failed for '{path}': {ex.Message}");
+                }
+            }
+        }
+        return (fileCount, folderCount);
+    }
+
+    // === Helper methods for archive creation (reintroduced) ===
+    private string GenerateArchiveName(string[] paths)
+    {
+        var first = Path.GetFileName(paths[0].TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(first)) first = "archive";
+        string safe = new string(first.Where(c => char.IsLetterOrDigit(c) || c == '_' || c == '-').ToArray());
+        if (string.IsNullOrEmpty(safe)) safe = "archive";
+        var stamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        return safe + "_" + stamp;
+    }
+
+    private void AddDirectoryToArchive(ZipArchive archive, string directoryPath, string rootName, CancellationToken token)
+    {
+        foreach (var file in Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories))
+        {
+            token.ThrowIfCancellationRequested();
+            var relative = Path.GetRelativePath(directoryPath, file);
+            var entryName = Path.Combine(rootName, relative).Replace('\\', '/');
+            AddFileToArchive(archive, file, entryName, token);
+        }
+        // Add empty directories explicitly so hierarchy preserved
+        foreach (var dir in Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories))
+        {
+            token.ThrowIfCancellationRequested();
+            if (!Directory.EnumerateFileSystemEntries(dir).Any())
+            {
+                var relativeDir = Path.GetRelativePath(directoryPath, dir).Replace('\\', '/') + '/';
+                archive.CreateEntry(Path.Combine(rootName, relativeDir).Replace('\\', '/'));
+            }
+        }
+    }
+
+    private void AddFileToArchive(ZipArchive archive, string filePath, string entryName, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+        using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var entryStream = entry.Open();
+        fs.CopyTo(entryStream);
+    }
+    // === End helper methods ===
 
     public async Task<OperationResult> PasteItemAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
@@ -674,13 +810,12 @@ public class SftpFileOperationService : ISftpFileOperationService
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Check if the item is a file or directory
             var item = await Task.Run(() => _sftpClient.Get(resolvedPath), cancellationToken);
 
             if (item.IsDirectory)
             {
-                LogRequested?.Invoke($"📁 Deleting directory recursively: {Path.GetFileName(resolvedPath)}");
-                await DeleteDirectoryRecursive(resolvedPath, cancellationToken);
+                LogRequested?.Invoke($"📁 Deleting directory with rm -rf: {Path.GetFileName(resolvedPath)}");
+                await FastDeleteDirectory(resolvedPath, cancellationToken);
             }
             else
             {
@@ -707,6 +842,46 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
+    private async Task FastDeleteDirectory(string directoryPath, CancellationToken cancellationToken = default)
+    {
+        var folderName = Path.GetFileName(directoryPath);
+        ProgressChanged?.Invoke(true, $"🗑️ Deleting folder {folderName}...", null, null);
+        LogRequested?.Invoke($"🗑️ Using fast delete (rm -rf) for directory: {directoryPath}");
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Basic safety checks - never allow deleting root or empty paths
+        if (string.IsNullOrWhiteSpace(directoryPath) || directoryPath == "/" || directoryPath == "~")
+        {
+            throw new InvalidOperationException("Refusing to delete root or empty directory path.");
+        }
+
+        // Ensure path is resolved for ~ expansion
+        var resolvedPath = ResolveSftpPath(directoryPath);
+        if (string.IsNullOrWhiteSpace(resolvedPath) || resolvedPath == "/")
+        {
+            throw new InvalidOperationException("Resolved path is unsafe for deletion.");
+        }
+
+        // Escape quotes in path
+        var safePath = resolvedPath.Replace("\"", "\\\"");
+
+        await Task.Run(() =>
+        {
+            using var ssh = new SshClient(_sftpClient.ConnectionInfo);
+            ssh.Connect();
+            var cmd = ssh.CreateCommand($"rm -rf -- \"{safePath}\"");
+            var result = cmd.Execute();
+            if (cmd.ExitStatus != 0)
+            {
+                throw new Exception($"rm -rf failed (exit {cmd.ExitStatus}): {cmd.Error}");
+            }
+            ssh.Disconnect();
+        }, cancellationToken);
+
+        LogRequested?.Invoke($"✅ Deleted directory using rm -rf: {resolvedPath}");
+    }
+
     public async Task<OperationResult> DeleteMultiItemsAsync(List<string> itemPaths, CancellationToken cancellationToken = default)
     {
         try
@@ -719,64 +894,16 @@ public class SftpFileOperationService : ISftpFileOperationService
                 return OperationResult.Failure("No items provided");
             }
 
-            var successCount = 0;
-            var failCount = 0;
-            var errors = new List<string>();
-            var currentIndex = 0;
-
-            LogRequested?.Invoke($"🗑️ Starting delete operation for {itemPaths.Count} item(s)");
-
-            foreach (var itemPath in itemPaths)
+            // Use optimized bulk rm -rf strategy
+            LogRequested?.Invoke("⚡ Performing bulk delete with single rm -rf command");
+            var bulkResult = await BulkFastDeleteAsync(itemPaths, cancellationToken);
+            if (!bulkResult.IsSuccess)
             {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    currentIndex++;
-
-                    var fileName = Path.GetFileName(itemPath);
-                    var resolvedPath = ResolveSftpPath(itemPath);
-
-                    ProgressChanged?.Invoke(true, $"🗑️ Deleting '{fileName}' ({currentIndex} of {itemPaths.Count})", currentIndex, itemPaths.Count);
-
-                    LogRequested?.Invoke($"🗑️ Deleting {fileName}");
-                    var item = await Task.Run(() => _sftpClient.Get(resolvedPath), cancellationToken);
-                    // Check if source is a directory
-
-                    if (item.IsDirectory)
-                    {
-                        await DeleteDirectoryRecursive(resolvedPath, cancellationToken);
-                    }
-                    else
-                    {
-                        await Task.Run(() => _sftpClient.DeleteFile(resolvedPath), cancellationToken);
-                    }
-
-                    successCount++;
-                    LogRequested?.Invoke($"✅ Successfully deleted {fileName}");
-                }
-                catch (OperationCanceledException)
-                {
-                    LogRequested?.Invoke($"🚫 Multi-delete operation cancelled by user");
-                    return OperationResult.Failure("Operation was cancelled by user");
-                }
-                catch (Exception ex)
-                {
-                    failCount++;
-                    var fileName = Path.GetFileName(itemPath);
-                    var errorMsg = $"Failed to delete {fileName}: {ex.Message}";
-                    errors.Add(errorMsg);
-                    LogRequested?.Invoke($"❌ {errorMsg}");
-                }
+                // Fallback (optional) – for now just report failure
+                return bulkResult;
             }
 
-            var summary = $"Delete operation completed: {successCount} successful, {failCount} failed";
-            LogRequested?.Invoke($"📊 {summary}");
-
-            if (failCount > 0)
-            {
-                return OperationResult.Failure($"{summary}. Errors: {string.Join("; ", errors)}");
-            }
-
+            LogRequested?.Invoke("✅ Bulk delete completed successfully");
             return OperationResult.Success();
         }
         catch (OperationCanceledException)
@@ -792,6 +919,61 @@ public class SftpFileOperationService : ISftpFileOperationService
         finally
         {
             ProgressChanged?.Invoke(false, "", null, null);
+        }
+    }
+
+    private async Task<OperationResult> BulkFastDeleteAsync(List<string> itemPaths, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Resolve and validate paths
+            var resolved = new List<string>();
+            foreach (var raw in itemPaths)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var path = ResolveSftpPath(raw);
+                if (string.IsNullOrWhiteSpace(path) || path == "/" || path == "~")
+                {
+                    var msg = $"Refusing to delete unsafe path: '{raw}' -> '{path}'";
+                    LogRequested?.Invoke("❌ " + msg);
+                    return OperationResult.Failure(msg);
+                }
+                resolved.Add(path);
+            }
+
+            // Build rm -rf command
+            // Escape any double quotes in paths
+            var escapedArgs = resolved.Select(p => $"\"{p.Replace("\"", "\\\"")}\"");
+            var command = "rm -rf -- " + string.Join(' ', escapedArgs);
+
+            LogRequested?.Invoke("🗑️ Executing: " + command);
+            ProgressChanged?.Invoke(true, $"🗑️ Deleting {resolved.Count} items...", null, resolved.Count);
+
+            await Task.Run(() =>
+            {
+                using var ssh = new SshClient(_sftpClient.ConnectionInfo);
+                ssh.Connect();
+                var cmd = ssh.CreateCommand(command);
+                var result = cmd.Execute();
+                if (cmd.ExitStatus != 0)
+                {
+                    throw new Exception($"rm -rf failed (exit {cmd.ExitStatus}): {cmd.Error} {result}");
+                }
+                ssh.Disconnect();
+            }, cancellationToken);
+
+            LogRequested?.Invoke($"✅ rm -rf removed {resolved.Count} item(s)");
+            return OperationResult.Success();
+        }
+        catch (OperationCanceledException)
+        {
+            LogRequested?.Invoke("🚫 Bulk delete cancelled by user");
+            return OperationResult.Failure("Operation was cancelled by user");
+        }
+        catch (Exception ex)
+        {
+            LogRequested?.Invoke($"❌ Bulk delete failed: {ex.Message}");
+            return OperationResult.Failure(ex.Message);
         }
     }
 

@@ -35,6 +35,9 @@ namespace ScratchShell.Services.FileOperations
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _contentDialogService = contentDialogService ?? throw new ArgumentNullException(nameof(contentDialogService));
             this._browser = browser;
+
+            // Subscribe to browser cancel requests so user can abort long operations
+            _browser.CancelRequested += OnBrowserCancelRequested;
         }
 
         public void Initialize(ISftpFileOperationService? fileOperationService, ISftpNavigationManager? navigationManager)
@@ -46,6 +49,26 @@ namespace ScratchShell.Services.FileOperations
             {
                 _fileOperationService.LogRequested += _logger.LogInfo;
                 _fileOperationService.ClipboardStateChanged += OnClipboardStateChanged;
+            }
+        }
+
+        private void OnBrowserCancelRequested()
+        {
+            try
+            {
+                if (_currentOperationCancellation != null && !_currentOperationCancellation.IsCancellationRequested)
+                {
+                    _logger.LogInfo("Cancellation requested by user - attempting to cancel current operation");
+                    _currentOperationCancellation.Cancel();
+                }
+                else
+                {
+                    _logger.LogDebug("Cancel requested but no active cancellable operation");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error while processing cancellation request", ex);
             }
         }
 
@@ -439,6 +462,7 @@ namespace ScratchShell.Services.FileOperations
         {
             try
             {
+                _browser.CancelRequested -= OnBrowserCancelRequested;
                 _currentOperationCancellation?.Cancel();
                 _currentOperationCancellation?.Dispose();
                 _currentOperationCancellation = null;

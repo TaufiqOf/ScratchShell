@@ -12,6 +12,7 @@ using ScratchShell.Services.Connection;
 using ScratchShell.Services.Navigation;
 using ScratchShell.Services.FileOperations;
 using ScratchShell.Services;
+using System; // Added for Action/Func
 
 namespace ScratchShell.UserControls;
 
@@ -155,6 +156,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (_connectionManager.FileOperationService != null)
             {
                 _connectionManager.FileOperationService.ProgressChanged += FileOperationServiceProgressChanged;
+                SubscribeFileOperationClipboardEvents();
             }
 
             // Reinitialize navigation with new connection
@@ -285,6 +287,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Browser.ShowProgress(true, "Initializing file operations...");
             _fileOperationHandler.Initialize(_connectionManager.FileOperationService, _navigationManager);
             _connectionManager.FileOperationService.ProgressChanged += FileOperationServiceProgressChanged;
+            SubscribeFileOperationClipboardEvents();
             
             // Update loading message for navigation setup
             Browser.ShowProgress(true, "Setting up navigation...");
@@ -356,7 +359,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private void EnableUIAfterConnection()
     {
         SetUIConnectionState(true);
-        Browser.UpdateEmptySpaceContextMenu(false);
+        UpdateClipboardUIState(); // Ensure paste reflects current clipboard
         _logger.LogInfo("User interface enabled - ready for file operations");
     }
 
@@ -377,6 +380,29 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             System.Diagnostics.Debug.WriteLine($"Terminal update error: {ex.Message}");
         }
+    }
+
+    // === Clipboard UI integration ===
+    private void SubscribeFileOperationClipboardEvents()
+    {
+        var svc = _connectionManager.FileOperationService;
+        if (svc == null) return;
+        svc.ClipboardStateChanged -= FileOperationClipboardStateChanged; // prevent duplicates
+        svc.ClipboardStateChanged += FileOperationClipboardStateChanged;
+        UpdateClipboardUIState();
+    }
+
+    private void FileOperationClipboardStateChanged()
+    {
+        Dispatcher.Invoke(UpdateClipboardUIState);
+    }
+
+    private void UpdateClipboardUIState()
+    {
+        var hasClipboard = _connectionManager.FileOperationService?.HasClipboardContent == true;
+        PasteButton.IsEnabled = hasClipboard && _connectionManager.IsConnected;
+        // Update empty space context menu so Paste appears when right-clicking background
+        Browser.UpdateEmptySpaceContextMenu(hasClipboard);
     }
 
     #region UI Event Handlers
@@ -514,6 +540,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         try
         {
+            var svc = _connectionManager.FileOperationService;
+            if (svc != null)
+            {
+                svc.ClipboardStateChanged -= FileOperationClipboardStateChanged;
+            }
             _logger?.LogInfo("Starting cleanup and disconnection");
             _connectionMonitorTimer?.Stop();
             _connectionMonitorTimer = null;
