@@ -1,6 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Spanish localization resources -->
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -47,348 +105,938 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
-  <resheader name="version"><value>2.0</value></resheader>
-  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ContextMenu_Cut" xml:space="preserve">
+    <value>Cortar</value>
+    <comment>Context menu item: Cut</comment>
+  </data>
+  <data name="ContextMenu_Copy" xml:space="preserve">
+    <value>Copiar</value>
+    <comment>Context menu item: Copy</comment>
+  </data>
+  <data name="ContextMenu_Paste" xml:space="preserve">
+    <value>Pegar</value>
+    <comment>Context menu item: Paste</comment>
+  </data>
+  <data name="ContextMenu_Rename" xml:space="preserve">
+    <value>Renombrar</value>
+    <comment>Context menu item: Rename</comment>
+  </data>
+  <data name="ContextMenu_Upload" xml:space="preserve">
+    <value>Subir</value>
+    <comment>Context menu item: Upload</comment>
+  </data>
+  <data name="ContextMenu_Download" xml:space="preserve">
+    <value>Descargar</value>
+    <comment>Context menu item: Download</comment>
+  </data>
+  <data name="ContextMenu_NewFolder" xml:space="preserve">
+    <value>Nueva carpeta</value>
+    <comment>Context menu item: Create new folder</comment>
+  </data>
+  <data name="General_NotApplicable" xml:space="preserve">
+    <value>N/D</value>
+    <comment>Generic not applicable abbreviation</comment>
+  </data>
+  <data name="General_Folder" xml:space="preserve">
+    <value>Carpeta</value>
+    <comment>Generic folder type label</comment>
+  </data>
+  <data name="General_File" xml:space="preserve">
+    <value>Archivo</value>
+    <comment>Generic file type fallback label</comment>
+  </data>
+  <data name="General_Save" xml:space="preserve">
+    <value>Guardar</value>
+    <comment>Generic save button text</comment>
+  </data>
+  <data name="General_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+    <comment>Generic cancel button text</comment>
+  </data>
+  <data name="General_Close" xml:space="preserve">
+    <value>Cerrar</value>
+    <comment>Generic close button text</comment>
+  </data>
+  <data name="General_Login" xml:space="preserve">
+    <value>Iniciar sesión</value>
+    <comment>Generic login button text</comment>
+  </data>
+  <data name="General_Register" xml:space="preserve">
+    <value>Registrarse</value>
+    <comment>Generic register button text</comment>
+  </data>
+  <data name="General_Export" xml:space="preserve">
+    <value>Exportar</value>
+    <comment>Generic export button text</comment>
+  </data>
+  <data name="General_Import" xml:space="preserve">
+    <value>Importar</value>
+    <comment>Generic import button text</comment>
+  </data>
+  <data name="General_Sync" xml:space="preserve">
+    <value>Sincronizar</value>
+    <comment>Generic sync button text</comment>
+  </data>
+  <data name="General_Logout" xml:space="preserve">
+    <value>Cerrar sesión</value>
+    <comment>Generic logout button text</comment>
+  </data>
+  <data name="General_Edit" xml:space="preserve">
+    <value>Editar</value>
+    <comment>Generic edit action</comment>
+  </data>
+  <data name="General_Delete" xml:space="preserve">
+    <value>Eliminar</value>
+    <comment>Generic delete action</comment>
+  </data>
+  <data name="General_OK" xml:space="preserve">
+    <value>Aceptar</value>
+    <comment>Generic OK button text</comment>
+  </data>
+  <data name="General_Error" xml:space="preserve">
+    <value>Error</value>
+    <comment>Generic error title</comment>
+  </data>
+  <data name="General_Cancelled" xml:space="preserve">
+    <value>Cancelado</value>
+    <comment>Generic cancelled status</comment>
+  </data>
+  <data name="General_Yes" xml:space="preserve">
+    <value>Sí</value>
+    <comment>Generic yes button text</comment>
+  </data>
+  <data name="General_No" xml:space="preserve">
+    <value>No</value>
+    <comment>Generic no button text</comment>
+  </data>
+  <data name="Connection_EstablishingConnection" xml:space="preserve">
+    <value>Estableciendo conexión con {0}...</value>
+    <comment>Connection status</comment>
+  </data>
+  <data name="Connection_ConnectingTo" xml:space="preserve">
+    <value>Conectando a {0}...</value>
+  </data>
+  <data name="Connection_InitializingFileOps" xml:space="preserve">
+    <value>Inicializando operaciones de archivos...</value>
+  </data>
+  <data name="Connection_SettingUpNavigation" xml:space="preserve">
+    <value>Configurando navegación...</value>
+  </data>
+  <data name="Connection_LoadingHomeDirectory" xml:space="preserve">
+    <value>Cargando directorio principal...</value>
+  </data>
+  <data name="Connection_Failed" xml:space="preserve">
+    <value>Conexión fallida</value>
+  </data>
+  <data name="Connection_Lost" xml:space="preserve">
+    <value>Conexión perdida - intentando reconectar...</value>
+  </data>
+  <data name="Connection_Reconnecting" xml:space="preserve">
+    <value>Reconectando a {0}...</value>
+  </data>
+  <data name="Connection_FailedTo" xml:space="preserve">
+    <value>Error al conectar con {0}:{1}</value>
+  </data>
+  <data name="Connection_AttemptingTo" xml:space="preserve">
+    <value>Intentando conectar a {0} ({1}:{2})</value>
+  </data>
+  <data name="Connection_SuccessfullyConnected" xml:space="preserve">
+    <value>Conexión e inicialización correctas para {0}</value>
+  </data>
+  <data name="Connection_SuccessfullyReconnected" xml:space="preserve">
+    <value>Reconectado correctamente a {0}</value>
+  </data>
+  <data name="Connection_HealthCheckFailed" xml:space="preserve">
+    <value>La verificación de la conexión falló - parece haberse perdido</value>
+  </data>
+  <data name="Connection_ReconnectionFailed" xml:space="preserve">
+    <value>Reconexión fallida: {0}</value>
+  </data>
+  <data name="Operation_Timeout" xml:space="preserve">
+    <value>Tiempo de espera de la operación: {0}</value>
+  </data>
+  <data name="Operation_NetworkError" xml:space="preserve">
+    <value>Error de red: {0}</value>
+  </data>
+  <data name="Operation_SSHConnectionError" xml:space="preserve">
+    <value>Error de conexión SSH: {0}</value>
+  </data>
+  <data name="Operation_ConnectionError" xml:space="preserve">
+    <value>Error de conexión: {0}</value>
+  </data>
+  <data name="Operation_HealthCheckError" xml:space="preserve">
+    <value>Error durante la verificación de la conexión</value>
+  </data>
+  <data name="Operation_ConnectionTimeoutDetected" xml:space="preserve">
+    <value>Tiempo de espera de la conexión detectado: {0}</value>
+  </data>
+  <data name="Operation_LogPanelOpened" xml:space="preserve">
+    <value>Panel de registro de operaciones abierto</value>
+  </data>
+  <data name="Operation_LogPanelClosed" xml:space="preserve">
+    <value>Panel de registro de operaciones cerrado</value>
+  </data>
+  <data name="Operation_EnteringFullscreen" xml:space="preserve">
+    <value>Entrando en modo pantalla completa</value>
+  </data>
+  <data name="Operation_ExitingFullscreen" xml:space="preserve">
+    <value>Saliendo del modo pantalla completa</value>
+  </data>
+  <data name="Operation_UIEnabled" xml:space="preserve">
+    <value>Interfaz habilitada - lista para operaciones de archivos</value>
+  </data>
+  <data name="Operation_StartingCleanup" xml:space="preserve">
+    <value>Iniciando limpieza y desconexión</value>
+  </data>
+  <data name="Operation_CleanupCompleted" xml:space="preserve">
+    <value>Limpieza completada correctamente</value>
+  </data>
+  <data name="Operation_ClosingCurrentTab" xml:space="preserve">
+    <value>Cerrando pestaña actual por fallo de conexión</value>
+  </data>
+  <data name="Navigation_NavigatingToParent" xml:space="preserve">
+    <value>Navegando al directorio padre: {0}</value>
+  </data>
+  <data name="Navigation_NavigatingToFolder" xml:space="preserve">
+    <value>Navegando a la carpeta: {0}</value>
+  </data>
+  <data name="Navigation_OpeningFile" xml:space="preserve">
+    <value>Abriendo archivo: {0}</value>
+  </data>
+  <data name="Navigation_MultiSelectOperation" xml:space="preserve">
+    <value>Operación múltiple solicitada para {0} elemento(s)</value>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailed" xml:space="preserve">
+    <value>Operación múltiple fallida: No hay elementos seleccionados</value>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailedValid" xml:space="preserve">
+    <value>Operación múltiple fallida: No hay elementos válidos seleccionados</value>
+  </data>
+  <data name="Navigation_ErrorGettingParentPath" xml:space="preserve">
+    <value>Error obteniendo la ruta padre de {0}</value>
+  </data>
+  <data name="CloudSync_UserNotAuthenticated" xml:space="preserve">
+    <value>Usuario no autenticado</value>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailable" xml:space="preserve">
+    <value>Claves de cifrado en la nube no disponibles. Reingrese su contraseña para habilitar la sincronización.</value>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailableLogin" xml:space="preserve">
+    <value>Claves de cifrado en la nube no disponibles. Inicie sesión de nuevo para habilitar la sincronización.</value>
+  </data>
+  <data name="CloudSync_SyncConflictDetected" xml:space="preserve">
+    <value>Conflicto de sincronización detectado</value>
+  </data>
+  <data name="CloudSync_SettingsSyncedToCloud" xml:space="preserve">
+    <value>Configuraciones sincronizadas con la nube correctamente</value>
+  </data>
+  <data name="CloudSync_SyncFailed" xml:space="preserve">
+    <value>Sincronización fallida</value>
+  </data>
+  <data name="CloudSync_SyncFailedWithStatus" xml:space="preserve">
+    <value>Sincronización fallida: {0}</value>
+  </data>
+  <data name="CloudSync_SyncError" xml:space="preserve">
+    <value>Error de sincronización: {0}</value>
+  </data>
+  <data name="CloudSync_NoCloudSettingsFound" xml:space="preserve">
+    <value>No se encontraron configuraciones en la nube</value>
+  </data>
+  <data name="CloudSync_LocalChangesDetected" xml:space="preserve">
+    <value>Cambios locales detectados. Resuelva los conflictos primero.</value>
+  </data>
+  <data name="CloudSync_SettingsDownloadedFromCloud" xml:space="preserve">
+    <value>Configuraciones descargadas de la nube correctamente</value>
+  </data>
+  <data name="CloudSync_FailedToGetCloudSettings" xml:space="preserve">
+    <value>Error al obtener configuraciones de la nube</value>
+  </data>
+  <data name="CloudSync_DownloadFailed" xml:space="preserve">
+    <value>Descarga fallida: {0}</value>
+  </data>
+  <data name="CloudSync_DownloadError" xml:space="preserve">
+    <value>Error de descarga: {0}</value>
+  </data>
+  <data name="CloudSync_CustomSettingsNotProvided" xml:space="preserve">
+    <value>No se proporcionaron configuraciones personalizadas</value>
+  </data>
+  <data name="CloudSync_InvalidResolutionOption" xml:space="preserve">
+    <value>Opción de resolución inválida</value>
+  </data>
+  <data name="CloudSync_ConflictResolutionError" xml:space="preserve">
+    <value>Error al resolver conflicto: {0}</value>
+  </data>
+  <data name="CloudSync_CloudSettingsDeletedSuccessfully" xml:space="preserve">
+    <value>Configuraciones en la nube eliminadas correctamente</value>
+  </data>
+  <data name="CloudSync_DeleteFailed" xml:space="preserve">
+    <value>Error al eliminar: {0}</value>
+  </data>
+  <data name="CloudSync_DeleteError" xml:space="preserve">
+    <value>Error de eliminación: {0}</value>
+  </data>
+  <data name="UI_Username" xml:space="preserve">
+    <value>Usuario</value>
+    <comment>Username label</comment>
+  </data>
+  <data name="UI_Password" xml:space="preserve">
+    <value>Contraseña</value>
+    <comment>Password label</comment>
+  </data>
+  <data name="UI_Search" xml:space="preserve">
+    <value>Buscar...</value>
+    <comment>Search placeholder text</comment>
+  </data>
+  <data name="UI_SelectAll" xml:space="preserve">
+    <value>Seleccionar todo</value>
+    <comment>Select All checkbox text</comment>
+  </data>
+  <data name="Server_Name" xml:space="preserve">
+    <value>Nombre del servidor</value>
+  </data>
+  <data name="Server_Host" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="Server_Port" xml:space="preserve">
+    <value>Puerto</value>
+  </data>
+  <data name="Server_Protocol" xml:space="preserve">
+    <value>Protocolo</value>
+  </data>
+  <data name="Server_Title" xml:space="preserve">
+    <value>Servidor</value>
+  </data>
+  <data name="Server_PublicKey" xml:space="preserve">
+    <value>Clave pública</value>
+  </data>
+  <data name="Server_PrivateKey" xml:space="preserve">
+    <value>Clave privada</value>
+  </data>
+  <data name="Server_KeyFilePassword" xml:space="preserve">
+    <value>Contraseña del archivo de clave</value>
+  </data>
+  <data name="Server_UseKeyFileAuth" xml:space="preserve">
+    <value>Usar autenticación con archivo de claves</value>
+  </data>
+  <data name="Server_ValidationSummary" xml:space="preserve">
+    <value>Corrija los siguientes errores:</value>
+  </data>
+  <data name="Server_Actions" xml:space="preserve">
+    <value>Acciones del servidor</value>
+  </data>
+  <data name="Snippet_DeleteConfirmTitle" xml:space="preserve">
+    <value>¿Eliminar este fragmento?</value>
+  </data>
+  <data name="Snippet_DeleteConfirmMessage" xml:space="preserve">
+    <value>¿Seguro que desea eliminar {0}?</value>
+  </data>
+  <data name="Snippet_SystemSnippets" xml:space="preserve">
+    <value>Fragmentos del sistema ({0})</value>
+  </data>
+  <data name="Snippet_UserSnippets" xml:space="preserve">
+    <value>Fragmentos del usuario ({0})</value>
+  </data>
+  <data name="FileOp_UploadFile" xml:space="preserve">
+    <value>Subir archivo</value>
+  </data>
+  <data name="FileOp_DownloadFile" xml:space="preserve">
+    <value>Descargar archivo</value>
+  </data>
+  <data name="FileOp_SelectDestinationFolder" xml:space="preserve">
+    <value>Seleccione carpeta de destino para {0}</value>
+  </data>
+  <data name="FileOp_DeleteConfirmTitle" xml:space="preserve">
+    <value>¿Eliminar {0}?</value>
+  </data>
+  <data name="FileOp_DeleteConfirmMessage" xml:space="preserve">
+    <value>¿Está seguro que desea eliminar '{0}'?
 
-  <!-- Context Menu -->
-  <data name="ContextMenu_Cut" xml:space="preserve"><value>Cortar</value><comment>Context menu item: Cut</comment></data>
-  <data name="ContextMenu_Copy" xml:space="preserve"><value>Copiar</value><comment>Context menu item: Copy</comment></data>
-  <data name="ContextMenu_Paste" xml:space="preserve"><value>Pegar</value><comment>Context menu item: Paste</comment></data>
-  <data name="ContextMenu_Rename" xml:space="preserve"><value>Renombrar</value><comment>Context menu item: Rename</comment></data>
-  <data name="ContextMenu_Upload" xml:space="preserve"><value>Subir</value><comment>Context menu item: Upload</comment></data>
-  <data name="ContextMenu_Download" xml:space="preserve"><value>Descargar</value><comment>Context menu item: Download</comment></data>
-  <data name="ContextMenu_NewFolder" xml:space="preserve"><value>Nueva carpeta</value><comment>Context menu item: Create new folder</comment></data>
-  <data name="ContextMenu_SelectAll" xml:space="preserve"><value>Seleccionar todo</value><comment>Context menu item: Select All</comment></data>
+Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmTitle" xml:space="preserve">
+    <value>¿Eliminar {0} elementos?</value>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessage" xml:space="preserve">
+    <value>¿Está seguro que desea eliminar los siguientes {0} elemento(s)?
 
-  <!-- General -->
-  <data name="General_NotApplicable" xml:space="preserve"><value>N/D</value><comment>Generic not applicable abbreviation</comment></data>
-  <data name="General_Folder" xml:space="preserve"><value>Carpeta</value><comment>Generic folder type label</comment></data>
-  <data name="General_File" xml:space="preserve"><value>Archivo</value><comment>Generic file type fallback label</comment></data>
-  <data name="General_Save" xml:space="preserve"><value>Guardar</value><comment>Generic save button text</comment></data>
-  <data name="General_Cancel" xml:space="preserve"><value>Cancelar</value><comment>Generic cancel button text</comment></data>
-  <data name="General_Close" xml:space="preserve"><value>Cerrar</value><comment>Generic close button text</comment></data>
-  <data name="General_Login" xml:space="preserve"><value>Iniciar sesión</value><comment>Generic login button text</comment></data>
-  <data name="General_Register" xml:space="preserve"><value>Registrarse</value><comment>Generic register button text</comment></data>
-  <data name="General_Export" xml:space="preserve"><value>Exportar</value><comment>Generic export button text</comment></data>
-  <data name="General_Import" xml:space="preserve"><value>Importar</value><comment>Generic import button text</comment></data>
-  <data name="General_Sync" xml:space="preserve"><value>Sincronizar</value><comment>Generic sync button text</comment></data>
-  <data name="General_Logout" xml:space="preserve"><value>Cerrar sesión</value><comment>Generic logout button text</comment></data>
-  <data name="General_Edit" xml:space="preserve"><value>Editar</value><comment>Generic edit action</comment></data>
-  <data name="General_Delete" xml:space="preserve"><value>Eliminar</value><comment>Generic delete action</comment></data>
-  <data name="General_OK" xml:space="preserve"><value>Aceptar</value><comment>Generic OK button text</comment></data>
-  <data name="General_Error" xml:space="preserve"><value>Error</value><comment>Generic error title</comment></data>
-  <data name="General_Cancelled" xml:space="preserve"><value>Cancelado</value><comment>Generic cancelled status</comment></data>
-  <data name="General_Yes" xml:space="preserve"><value>Sí</value><comment>Generic yes button text</comment></data>
-  <data name="General_No" xml:space="preserve"><value>No</value><comment>Generic no button text</comment></data>
+{1}
 
-  <!-- Navigation Menu Items (added missing) -->
-  <data name="Navigation_Home" xml:space="preserve"><value>Inicio</value><comment>Navigation menu item: Home</comment></data>
-  <data name="Navigation_Session" xml:space="preserve"><value>Sesión</value><comment>Navigation menu item: Session</comment></data>
-  <data name="Navigation_Settings" xml:space="preserve"><value>Ajustes</value><comment>Navigation menu item: Settings</comment></data>
+Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessageMany" xml:space="preserve">
+    <value>¿Está seguro que desea eliminar {0} elementos seleccionados?
 
-  <!-- Connection / Status -->
-  <data name="Connection_EstablishingConnection" xml:space="preserve"><value>Estableciendo conexión con {0}...</value><comment>Connection status</comment></data>
-  <data name="Connection_ConnectingTo" xml:space="preserve"><value>Conectando a {0}...</value></data>
-  <data name="Connection_InitializingFileOps" xml:space="preserve"><value>Inicializando operaciones de archivos...</value></data>
-  <data name="Connection_SettingUpNavigation" xml:space="preserve"><value>Configurando navegación...</value></data>
-  <data name="Connection_LoadingHomeDirectory" xml:space="preserve"><value>Cargando directorio principal...</value></data>
-  <data name="Connection_Failed" xml:space="preserve"><value>Conexión fallida</value></data>
-  <data name="Connection_Lost" xml:space="preserve"><value>Conexión perdida - intentando reconectar...</value></data>
-  <data name="Connection_Reconnecting" xml:space="preserve"><value>Reconectando a {0}...</value></data>
-  <data name="Connection_FailedTo" xml:space="preserve"><value>Error al conectar con {0}:{1}</value></data>
-  <data name="Connection_AttemptingTo" xml:space="preserve"><value>Intentando conectar a {0} ({1}:{2})</value></data>
-  <data name="Connection_SuccessfullyConnected" xml:space="preserve"><value>Conexión e inicialización correctas para {0}</value></data>
-  <data name="Connection_SuccessfullyReconnected" xml:space="preserve"><value>Reconectado correctamente a {0}</value></data>
-  <data name="Connection_HealthCheckFailed" xml:space="preserve"><value>La verificación de la conexión falló - parece haberse perdido</value></data>
-  <data name="Connection_ReconnectionFailed" xml:space="preserve"><value>Reconexión fallida: {0}</value></data>
-  <data name="Connection_HandleTimeoutError" xml:space="preserve"><value>Error al manejar el tiempo de espera de la conexión</value></data>
-  <data name="Connection_ErrorClosingTab" xml:space="preserve"><value>Error al cerrar la pestaña actual</value></data>
-  <data name="Connection_ErrorDuringControlLoad" xml:space="preserve"><value>Error durante la carga del control</value></data>
+{1}... y {2} más
 
-  <!-- Operations -->
-  <data name="Operation_Timeout" xml:space="preserve"><value>Tiempo de espera de la operación: {0}</value></data>
-  <data name="Operation_NetworkError" xml:space="preserve"><value>Error de red: {0}</value></data>
-  <data name="Operation_SSHConnectionError" xml:space="preserve"><value>Error de conexión SSH: {0}</value></data>
-  <data name="Operation_ConnectionError" xml:space="preserve"><value>Error de conexión: {0}</value></data>
-  <data name="Operation_HealthCheckError" xml:space="preserve"><value>Error durante la verificación de la conexión</value></data>
-  <data name="Operation_ConnectionTimeoutDetected" xml:space="preserve"><value>Tiempo de espera de la conexión detectado: {0}</value></data>
-  <data name="Operation_LogPanelOpened" xml:space="preserve"><value>Panel de registro de operaciones abierto</value></data>
-  <data name="Operation_LogPanelClosed" xml:space="preserve"><value>Panel de registro de operaciones cerrado</value></data>
-  <data name="Operation_EnteringFullscreen" xml:space="preserve"><value>Entrando en modo pantalla completa</value></data>
-  <data name="Operation_ExitingFullscreen" xml:space="preserve"><value>Saliendo del modo pantalla completa</value></data>
-  <data name="Operation_UIEnabled" xml:space="preserve"><value>Interfaz habilitada - lista para operaciones de archivos</value></data>
-  <data name="Operation_StartingCleanup" xml:space="preserve"><value>Iniciando limpieza y desconexión</value></data>
-  <data name="Operation_CleanupCompleted" xml:space="preserve"><value>Limpieza completada correctamente</value></data>
-  <data name="Operation_ClosingCurrentTab" xml:space="preserve"><value>Cerrando pestaña actual por fallo de conexión</value></data>
-  <data name="Operation_InProgress" xml:space="preserve"><value>Operación en progreso...</value></data>
-  <data name="Operation_Cancelling" xml:space="preserve"><value>Cancelando operación...</value></data>
-
-  <!-- Navigation (dynamic) -->
-  <data name="Navigation_NavigatingToParent" xml:space="preserve"><value>Navegando al directorio padre: {0}</value></data>
-  <data name="Navigation_NavigatingToFolder" xml:space="preserve"><value>Navegando a la carpeta: {0}</value></data>
-  <data name="Navigation_OpeningFile" xml:space="preserve"><value>Abriendo archivo: {0}</value></data>
-  <data name="Navigation_MultiSelectOperation" xml:space="preserve"><value>Operación múltiple solicitada para {0} elemento(s)</value></data>
-  <data name="Navigation_MultiSelectOperationFailed" xml:space="preserve"><value>Operación múltiple fallida: No hay elementos seleccionados</value></data>
-  <data name="Navigation_MultiSelectOperationFailedValid" xml:space="preserve"><value>Operación múltiple fallida: No hay elementos válidos seleccionados</value></data>
-  <data name="Navigation_ErrorGettingParentPath" xml:space="preserve"><value>Error obteniendo la ruta padre de {0}</value></data>
-
-  <!-- Cloud Sync -->
-  <data name="CloudSync_UserNotAuthenticated" xml:space="preserve"><value>Usuario no autenticado</value></data>
-  <data name="CloudSync_EncryptionKeysNotAvailable" xml:space="preserve"><value>Claves de cifrado en la nube no disponibles. Reingrese su contraseña para habilitar la sincronización.</value></data>
-  <data name="CloudSync_EncryptionKeysNotAvailableLogin" xml:space="preserve"><value>Claves de cifrado en la nube no disponibles. Inicie sesión de nuevo para habilitar la sincronización.</value></data>
-  <data name="CloudSync_SyncConflictDetected" xml:space="preserve"><value>Conflicto de sincronización detectado</value></data>
-  <data name="CloudSync_SettingsSyncedToCloud" xml:space="preserve"><value>Configuraciones sincronizadas con la nube correctamente</value></data>
-  <data name="CloudSync_SyncFailed" xml:space="preserve"><value>Sincronización fallida</value></data>
-  <data name="CloudSync_SyncFailedWithStatus" xml:space="preserve"><value>Sincronización fallida: {0}</value></data>
-  <data name="CloudSync_SyncError" xml:space="preserve"><value>Error de sincronización: {0}</value></data>
-  <data name="CloudSync_NoCloudSettingsFound" xml:space="preserve"><value>No se encontraron configuraciones en la nube</value></data>
-  <data name="CloudSync_LocalChangesDetected" xml:space="preserve"><value>Cambios locales detectados. Resuelva los conflictos primero.</value></data>
-  <data name="CloudSync_SettingsDownloadedFromCloud" xml:space="preserve"><value>Configuraciones descargadas de la nube correctamente</value></data>
-  <data name="CloudSync_FailedToGetCloudSettings" xml:space="preserve"><value>Error al obtener configuraciones de la nube</value></data>
-  <data name="CloudSync_DownloadFailed" xml:space="preserve"><value>Descarga fallida: {0}</value></data>
-  <data name="CloudSync_DownloadError" xml:space="preserve"><value>Error de descarga: {0}</value></data>
-  <data name="CloudSync_CustomSettingsNotProvided" xml:space="preserve"><value>No se proporcionaron configuraciones personalizadas</value></data>
-  <data name="CloudSync_InvalidResolutionOption" xml:space="preserve"><value>Opción de resolución inválida</value></data>
-  <data name="CloudSync_ConflictResolutionError" xml:space="preserve"><value>Error al resolver conflicto: {0}</value></data>
-  <data name="CloudSync_CloudSettingsDeletedSuccessfully" xml:space="preserve"><value>Configuraciones en la nube eliminadas correctamente</value></data>
-  <data name="CloudSync_DeleteFailed" xml:space="preserve"><value>Error al eliminar: {0}</value></data>
-  <data name="CloudSync_DeleteError" xml:space="preserve"><value>Error de eliminación: {0}</value></data>
-
-  <!-- UI Basic -->
-  <data name="UI_Username" xml:space="preserve"><value>Usuario</value><comment>Username label</comment></data>
-  <data name="UI_Password" xml:space="preserve"><value>Contraseña</value><comment>Password label</comment></data>
-  <data name="UI_Search" xml:space="preserve"><value>Buscar...</value><comment>Search placeholder text</comment></data>
-  <data name="UI_SelectAll" xml:space="preserve"><value>Seleccionar todo</value><comment>Select All checkbox text</comment></data>
-  <data name="UI_OperationLog" xml:space="preserve"><value>Registro de operaciones</value><comment>Label for the operations log panel</comment></data>
-
-  <!-- Server Dialog -->
-  <data name="Server_Name" xml:space="preserve"><value>Nombre del servidor</value></data>
-  <data name="Server_Host" xml:space="preserve"><value>Host</value></data>
-  <data name="Server_Port" xml:space="preserve"><value>Puerto</value></data>
-  <data name="Server_Protocol" xml:space="preserve"><value>Protocolo</value></data>
-  <data name="Server_Title" xml:space="preserve"><value>Servidor</value></data>
-  <data name="Server_PublicKey" xml:space="preserve"><value>Clave pública</value></data>
-  <data name="Server_PrivateKey" xml:space="preserve"><value>Clave privada</value></data>
-  <data name="Server_KeyFilePassword" xml:space="preserve"><value>Contraseña del archivo de clave</value></data>
-  <data name="Server_UseKeyFileAuth" xml:space="preserve"><value>Usar autenticación con archivo de claves</value></data>
-  <data name="Server_ValidationSummary" xml:space="preserve"><value>Corrija los siguientes errores:</value></data>
-  <data name="Server_Actions" xml:space="preserve"><value>Acciones del servidor</value></data>
-
-  <!-- Snippets -->
-  <data name="Snippet_DeleteConfirmTitle" xml:space="preserve"><value>¿Eliminar este fragmento?</value></data>
-  <data name="Snippet_DeleteConfirmMessage" xml:space="preserve"><value>¿Seguro que desea eliminar {0}?</value></data>
-  <data name="Snippet_SystemSnippets" xml:space="preserve"><value>Fragmentos del sistema ({0})</value></data>
-  <data name="Snippet_UserSnippets" xml:space="preserve"><value>Fragmentos del usuario ({0})</value></data>
-
-  <!-- File Operations -->
-  <data name="FileOp_UploadFile" xml:space="preserve"><value>Subir archivo</value></data>
-  <data name="FileOp_DownloadFile" xml:space="preserve"><value>Descargar archivo</value></data>
-  <data name="FileOp_SelectDestinationFolder" xml:space="preserve"><value>Seleccione carpeta de destino para {0}</value></data>
-  <data name="FileOp_DeleteConfirmTitle" xml:space="preserve"><value>¿Eliminar {0}?</value></data>
-  <data name="FileOp_DeleteConfirmMessage" xml:space="preserve"><value>¿Está seguro que desea eliminar '{0}'?&#x0A;&#x0A;Esta acción no se puede deshacer.</value></data>
-  <data name="FileOp_DeleteMultiConfirmTitle" xml:space="preserve"><value>¿Eliminar {0} elementos?</value></data>
-  <data name="FileOp_DeleteMultiConfirmMessage" xml:space="preserve"><value>¿Está seguro que desea eliminar los siguientes {0} elemento(s)?&#x0A;&#x0A;{1}&#x0A;&#x0A;Esta acción no se puede deshacer.</value></data>
-  <data name="FileOp_DeleteMultiConfirmMessageMany" xml:space="preserve"><value>¿Está seguro que desea eliminar {0} elementos seleccionados?&#x0A;&#x0A;{1}... y {2} más&#x0A;&#x0A;Esta acción no se deshacer.</value></data>
-  <data name="FileOp_UploadCancelledByUser" xml:space="preserve"><value>Subida cancelada por el usuario</value></data>
-  <data name="FileOp_DownloadCancelledByUser" xml:space="preserve"><value>Descarga cancelada por el usuario</value></data>
-  <data name="FileOp_OperationCancelled" xml:space="preserve"><value>Operación cancelada</value></data>
-  <data name="FileOp_ClipboardEmpty" xml:space="preserve"><value>El portapapeles está vacío</value></data>
-  <data name="FileOp_NoFilesForUpload" xml:space="preserve"><value>No se proporcionaron archivos para subir</value></data>
-  <data name="FileOp_DragDropUploadInitiated" xml:space="preserve"><value>Subida por arrastrar y soltar iniciada para {0} elemento(s)</value></data>
-
-  <!-- Tooltips / Buttons -->
-  <data name="Tooltip_AddServer" xml:space="preserve"><value>Agregar un nuevo servidor a la lista</value></data>
-  <data name="Tooltip_OpenTerminal" xml:space="preserve"><value>Abrir una nueva sesión de terminal (elegir modo)</value></data>
-  <data name="Tooltip_ExportServers" xml:space="preserve"><value>Exportar servidores a un archivo para copia o compartir</value></data>
-  <data name="Tooltip_ImportServers" xml:space="preserve"><value>Importar servidores desde un archivo</value></data>
-  <data name="Tooltip_SearchServers" xml:space="preserve"><value>Buscar servidores por nombre, host o protocolo</value></data>
-  <data name="Tooltip_BrowseFile" xml:space="preserve"><value>Buscar archivo</value></data>
-  <data name="Tooltip_BrowsePublicKey" xml:space="preserve"><value>Buscar archivo de clave pública</value></data>
-  <data name="Tooltip_BrowsePrivateKey" xml:space="preserve"><value>Buscar archivo de clave privada</value></data>
-  <data name="Tooltip_BrowseExportLocation" xml:space="preserve"><value>Buscar ubicación de exportación</value></data>
-  <data name="Tooltip_CloseTab" xml:space="preserve"><value>Cerrar pestaña</value></data>
-  <data name="Tooltip_Back" xml:space="preserve"><value>Atrás (Alt+Flecha izquierda)</value></data>
-  <data name="Tooltip_Forward" xml:space="preserve"><value>Adelante (Alt+Flecha derecha)</value></data>
-  <data name="Tooltip_Refresh" xml:space="preserve"><value>Actualizar (F5)</value></data>
-  <data name="Tooltip_UpOneLevel" xml:space="preserve"><value>Subir un nivel</value></data>
-  <data name="Tooltip_CreateNewFolder" xml:space="preserve"><value>Crear nueva carpeta</value></data>
-  <data name="Tooltip_Paste" xml:space="preserve"><value>Pegar (Ctrl+V)</value></data>
-  <data name="Tooltip_ViewOptions" xml:space="preserve"><value>Opciones de vista</value></data>
-  <data name="Tooltip_FullScreenMode" xml:space="preserve"><value>Modo pantalla completa</value></data>
-  <data name="Tooltip_ShowHideLogPanel" xml:space="preserve"><value>Mostrar/ocultar panel de registros</value></data>
-  <data name="Tooltip_CopyFromTerminal" xml:space="preserve"><value>Copiar texto seleccionado del terminal (Ctrl+Click izq.)</value></data>
-  <data name="Tooltip_PasteToTerminal" xml:space="preserve"><value>Pegar texto en el terminal (Alt+Click izq.)</value></data>
-  <data name="Tooltip_ShowHideSnippets" xml:space="preserve"><value>Mostrar/ocultar panel de fragmentos</value></data>
-  <data name="Tooltip_ShowHideThemes" xml:space="preserve"><value>Mostrar/ocultar panel de temas</value></data>
-  <data name="Tooltip_ToggleFullScreenTerminal" xml:space="preserve"><value>Alternar modo pantalla completa del terminal</value></data>
-  <data name="Tooltip_CreateSnippet" xml:space="preserve"><value>Crear nuevo fragmento</value></data>
-  <data name="Tooltip_EditSnippet" xml:space="preserve"><value>Editar fragmento seleccionado</value></data>
-  <data name="Tooltip_DeleteSnippet" xml:space="preserve"><value>Eliminar fragmento seleccionado</value></data>
-  <data name="Tooltip_ShowHideSystemSnippets" xml:space="preserve"><value>Mostrar/ocultar fragmentos del sistema</value></data>
-  <data name="Tooltip_RunSnippet" xml:space="preserve"><value>Ejecutar este fragmento en el terminal</value></data>
-  <data name="Tooltip_PreviewDarkTheme" xml:space="preserve"><value>Vista previa tema oscuro</value></data>
-  <data name="Tooltip_PreviewLightTheme" xml:space="preserve"><value>Vista previa tema claro</value></data>
-  <data name="Tooltip_PreviewMonokaiTheme" xml:space="preserve"><value>Vista previa tema Monokai</value></data>
-  <data name="Tooltip_ResetTheme" xml:space="preserve"><value>Restablecer tema a valores predeterminados</value></data>
-
-  <!-- Placeholders -->
-  <data name="Placeholder_Username" xml:space="preserve"><value>Ingrese su usuario</value></data>
-  <data name="Placeholder_Password" xml:space="preserve"><value>Ingrese su contraseña</value></data>
-  <data name="Placeholder_ExportPassword" xml:space="preserve"><value>Ingrese contraseña para cifrar el archivo exportado</value></data>
-  <data name="Placeholder_KeyFilePassword" xml:space="preserve"><value>Ingrese contraseña del archivo de clave (vacío si no está cifrado)</value></data>
-  <data name="Placeholder_ServerPassword" xml:space="preserve"><value>Ingrese su contraseña (vacío si usa autenticación por clave)</value></data>
-  <data name="Placeholder_SearchSnippets" xml:space="preserve"><value>Buscar fragmentos...</value></data>
-
-  <!-- Terminal modes -->
-  <data name="Terminal_Elevated" xml:space="preserve"><value>Elevado</value></data>
-  <data name="Terminal_Normal" xml:space="preserve"><value>Normal</value></data>
-  <data name="Terminal_ElevatedTooltip" xml:space="preserve"><value>Abrir terminal con privilegios de administrador</value></data>
-  <data name="Terminal_NormalTooltip" xml:space="preserve"><value>Abrir terminal con privilegios normales</value></data>
-  <data name="Terminal_ConnectingTo" xml:space="preserve"><value>Conectando a {0}...</value></data>
-  <data name="Terminal_ConnectionFailed" xml:space="preserve"><value>Error al conectar a {0}: {1}</value></data>
-  <data name="Terminal_ServerNotInitialized" xml:space="preserve"><value>El servidor no está inicializado.</value></data>
-  <data name="Terminal_ResizeFailed" xml:space="preserve"><value>Error al redimensionar el terminal: {0}</value></data>
-  <data name="Terminal_Error" xml:space="preserve"><value>Error: {0}</value></data>
-  <data name="Terminal_AutoCompleteError" xml:space="preserve"><value>Error de autocompletar: {0}</value></data>
-  <data name="Terminal_UpdateError" xml:space="preserve"><value>Error de actualización del terminal: {0}</value></data>
-
-  <!-- Export / Import / Login -->
-  <data name="Export_Title" xml:space="preserve"><value>Exportar servidores</value></data>
-  <data name="Export_SelectServers" xml:space="preserve"><value>Seleccione los servidores a exportar:</value></data>
-  <data name="Export_ToFile" xml:space="preserve"><value>Exportar a archivo</value></data>
-  <data name="Import_Title" xml:space="preserve"><value>Importar</value></data>
-  <data name="Import_InvalidPassword" xml:space="preserve"><value>Contraseña inválida</value></data>
-  <data name="Login_Title" xml:space="preserve"><value>Iniciar sesión</value></data>
-  <data name="Login_Username" xml:space="preserve"><value>Usuario:</value></data>
-  <data name="Login_Password" xml:space="preserve"><value>Contraseña:</value></data>
-
-  <!-- Settings -->
-  <data name="Settings_Personalization" xml:space="preserve"><value>Personalización</value></data>
-  <data name="Settings_Theme" xml:space="preserve"><value>Tema</value></data>
-  <data name="Settings_Light" xml:space="preserve"><value>Claro</value></data>
-  <data name="Settings_Dark" xml:space="preserve"><value>Oscuro</value></data>
-  <data name="Settings_DefaultShell" xml:space="preserve"><value>Shell predeterminado</value></data>
-  <data name="Settings_Account" xml:space="preserve"><value>Cuenta</value></data>
-  <data name="Settings_CloudSync" xml:space="preserve"><value>Sincronización en la nube</value></data>
-  <data name="Settings_EnableCloudSync" xml:space="preserve"><value>Habilitar sincronización en la nube</value></data>
-  <data name="Settings_AutoSyncStartup" xml:space="preserve"><value>Sincronizar automáticamente al iniciar</value></data>
-  <data name="Settings_AutoSyncChanges" xml:space="preserve"><value>Sincronizar automáticamente con cambios</value></data>
-  <data name="Settings_LastSync" xml:space="preserve"><value>Última sincronización: {0}</value></data>
-  <data name="Settings_DeleteCloudData" xml:space="preserve"><value>Eliminar datos en la nube</value></data>
-  <data name="Settings_About" xml:space="preserve"><value>Acerca de</value></data>
-  <data name="Settings_Language" xml:space="preserve"><value>Idioma</value><comment>Language setting label</comment></data>
-  <data name="Language_English" xml:space="preserve"><value>English</value><comment>English language option</comment></data>
-  <data name="Language_Bangla" xml:space="preserve"><value>বাংলা</value><comment>Bangla language option</comment></data>
-  <data name="Language_Spanish" xml:space="preserve"><value>Español</value><comment>Spanish language option</comment></data>
-  <data name="Language_ChangeMessage" xml:space="preserve"><value>Reinicie la aplicación para que el cambio de idioma surta efecto.</value></data>
-
-  <!-- About / Credits -->
-  <data name="Status_CancelledSSHTerminalUAC" xml:space="preserve"><value>El terminal SSH no se abrió (permiso de administrador rechazado).</value></data>
-  <data name="App_DeveloperCredit" xml:space="preserve"><value>por Taufiq Abdur Rahman</value></data>
-
-  <!-- Protocol descriptions -->
-  <data name="Protocol_SSH_Description" xml:space="preserve"><value>SSH: Shell seguro para acceso a terminal</value></data>
-  <data name="Protocol_FTP_Description" xml:space="preserve"><value>FTP: Protocolo de transferencia de archivos</value></data>
-  <data name="Protocol_SFTP_Description" xml:space="preserve"><value>SFTP: Protocolo de transferencia de archivos SSH</value></data>
-  <data name="Protocol_Description_Combined" xml:space="preserve"><value>SSH: Shell seguro para acceso a terminal&#x0A;FTP: Protocolo de transferencia de archivos&#x0A;SFTP: Protocolo de transferencia de archivos SSH</value></data>
-
-  <!-- Validation tooltips -->
-  <data name="Validation_HostTooltip" xml:space="preserve"><value>Ingrese dirección IP (ej. 192.168.1.100) o nombre de host (ej. servidor.ejemplo.com)</value></data>
-  <data name="Validation_PortTooltip" xml:space="preserve"><value>Ingrese número de puerto (1-65535). Puertos comunes: SSH=22, FTP=21, SFTP=22</value></data>
-  <data name="Validation_ProtocolTooltip" xml:space="preserve"><value>Seleccione el protocolo de conexión</value></data>
-  <data name="Validation_UsernameTooltip" xml:space="preserve"><value>Ingrese su usuario del servidor</value></data>
-  <data name="Validation_PublicKeyTooltip" xml:space="preserve"><value>Ruta a su archivo de clave pública (.pub)</value></data>
-  <data name="Validation_PrivateKeyTooltip" xml:space="preserve"><value>Ruta a su archivo de clave privada (.pem, .key)</value></data>
-
-  <!-- File filters -->
-  <data name="FileFilter_ScratchShell" xml:space="preserve"><value>(*.ss)|*.ss|Todos los archivos (*.*)|*.*</value></data>
-  <data name="FileFilter_PublicKey" xml:space="preserve"><value>Archivos de clave pública (*.pub)|*.pub|Todos los archivos (*.*)|*.*</value></data>
-  <data name="FileFilter_PrivateKey" xml:space="preserve"><value>Archivos de clave privada (*.pem;*.key)|*.pem;*.key|Todos los archivos (*.*)|*.*</value></data>
-
-  <!-- Reconnect Dialog -->
-  <data name="Dialog_Reconnect_ConnectionTimedOutTemplate" xml:space="preserve"><value>La conexión a '{0}' ({1}:{2}) ha superado el tiempo de espera.</value></data>
-  <data name="Dialog_Reconnect_Title" xml:space="preserve"><value>Conexión perdida</value></data>
-  <data name="Dialog_Reconnect_PrimaryButton" xml:space="preserve"><value>Reconectar</value></data>
-  <data name="Dialog_Reconnect_CloseButton" xml:space="preserve"><value>Cerrar pestaña</value></data>
-  <data name="Dialog_Reconnect_Header" xml:space="preserve"><value>Tiempo de espera de la conexión</value></data>
-  <data name="Dialog_Reconnect_DefaultInfo" xml:space="preserve"><value>La conexión con el servidor ha superado el tiempo de espera.</value></data>
-  <data name="Dialog_Reconnect_ErrorDetailsLabel" xml:space="preserve"><value>Detalles del error:</value></data>
-  <data name="Dialog_Reconnect_ErrorDetailsDefault" xml:space="preserve"><value>La conexión se perdió por tiempo de espera de red o indisponibilidad del servidor.</value></data>
-  <data name="Dialog_Reconnect_Question" xml:space="preserve"><value>¿Qué desea hacer?</value></data>
-  <data name="Dialog_Reconnect_ActionReconnect" xml:space="preserve"><value>Reconectar</value></data>
-  <data name="Dialog_Reconnect_ActionReconnectDescription" xml:space="preserve"><value>Intentar reconectar al servidor y reanudar la sesión</value></data>
-  <data name="Dialog_Reconnect_ActionClose" xml:space="preserve"><value>Cerrar pestaña</value></data>
-  <data name="Dialog_Reconnect_ActionCloseDescription" xml:space="preserve"><value>Cerrar esta pestaña y volver al panel</value></data>
-
-  <!-- Event Handler / Errors -->
-  <data name="EventHandler_EditCancelled" xml:space="preserve"><value>Edición cancelada para: {0}</value></data>
-  <data name="EventHandler_BrowserEventsSetupSuccess" xml:space="preserve"><value>Eventos del navegador configurados correctamente</value></data>
-  <data name="EventHandler_BrowserEventsSetupError" xml:space="preserve"><value>Error configurando eventos del navegador</value></data>
-  <data name="EventHandler_SafeExecuteError" xml:space="preserve"><value>Error en ejecución segura</value></data>
-  <data name="EventHandler_SafeExecuteAsyncError" xml:space="preserve"><value>Error en ejecución segura asíncrona</value></data>
-  <data name="EventHandler_ExceptionIn" xml:space="preserve"><value>Excepción en {0}</value></data>
-  <data name="EventHandler_CriticalErrorInExceptionHandler" xml:space="preserve"><value>Error crítico en el manejador de excepciones: {0}</value></data>
-  <data name="Critical_ErrorInDispose" xml:space="preserve"><value>Error crítico en Dispose: {0} - {1}</value></data>
-
-  <!-- UI Grid/List & Sorting -->
-  <data name="UI_Name" xml:space="preserve"><value>Nombre</value></data>
-  <data name="UI_Size" xml:space="preserve"><value>Tamaño</value></data>
-  <data name="UI_Type" xml:space="preserve"><value>Tipo</value></data>
-  <data name="UI_Date" xml:space="preserve"><value>Fecha</value></data>
-  <data name="UI_DateModified" xml:space="preserve"><value>Fecha de modificación</value></data>
-  <data name="UI_SortAscending" xml:space="preserve"><value>Orden ascendente (clic para descendente)</value></data>
-  <data name="UI_SortDescending" xml:space="preserve"><value>Orden descendente (clic para ascendente)</value></data>
-  <data name="UI_GridView" xml:space="preserve"><value>Vista de cuadrícula</value></data>
-  <data name="UI_ListView" xml:space="preserve"><value>Vista de lista</value></data>
-  <data name="UI_SortBy" xml:space="preserve"><value>Ordenar por:</value></data>
-  <data name="UI_SortOptions" xml:space="preserve"><value>Opciones de ordenación</value></data>
-  <data name="UI_ToggleSortDirection" xml:space="preserve"><value>Cambiar dirección de ordenación</value></data>
-  <data name="UI_SortNameAZ" xml:space="preserve"><value>Nombre (A a Z)</value></data>
-  <data name="UI_SortNameZA" xml:space="preserve"><value>Nombre (Z a A)</value></data>
-  <data name="UI_SortSizeSmallest" xml:space="preserve"><value>Tamaño (Más pequeño primero)</value></data>
-  <data name="UI_SortSizeLargest" xml:space="preserve"><value>Tamaño (Más grande primero)</value></data>
-  <data name="UI_SortTypeAZ" xml:space="preserve"><value>Tipo (A a Z)</value></data>
-  <data name="UI_SortTypeZA" xml:space="preserve"><value>Tipo (Z a A)</value></data>
-  <data name="UI_SortDateOldest" xml:space="preserve"><value>Fecha (Más antiguo primero)</value></data>
-  <data name="UI_SortDateNewest" xml:space="preserve"><value>Fecha (Más reciente primero)</value></data>
-  <data name="UI_CancelOperation" xml:space="preserve"><value>Cancelar operación actual</value></data>
-  <data name="UI_DragDropDefault" xml:space="preserve"><value>Suelte archivos y carpetas aquí para subir</value></data>
-  <data name="UI_DragDropSupport" xml:space="preserve"><value>Se admiten múltiples archivos y carpetas</value></data>
-
-  <!-- Drag & Drop overlays -->
-  <data name="DragDrop_DropHere" xml:space="preserve"><value>Suelte {0} '{1}' aquí para subir</value></data>
-  <data name="DragDrop_FolderRecursive" xml:space="preserve"><value>El contenido de la carpeta se subirá recursivamente</value></data>
-  <data name="DragDrop_FileToDirectory" xml:space="preserve"><value>El archivo se subirá al directorio actual</value></data>
-  <data name="DragDrop_DropMultiple" xml:space="preserve"><value>Suelte {0} elemento(s) aquí para subir</value></data>
-  <data name="DragDrop_FilesAndFolders" xml:space="preserve"><value>{0} archivo(s) y {1} carpeta(s) se subirán</value></data>
-  <data name="DragDrop_FoldersOnly" xml:space="preserve"><value>{0} carpeta(s) se subirán recursivamente</value></data>
-  <data name="DragDrop_FilesOnly" xml:space="preserve"><value>{0} archivo(s) se subirán</value></data>
-
-  <!-- Theme / Terminal Theming -->
-  <data name="Theme_TerminalTheme" xml:space="preserve"><value>Tema del terminal</value></data>
-  <data name="Theme_Apply" xml:space="preserve"><value>Aplicar</value></data>
-  <data name="Theme_PredefinedThemes" xml:space="preserve"><value>Temas predefinidos:</value></data>
-  <data name="Theme_Dark" xml:space="preserve"><value>Oscuro</value></data>
-  <data name="Theme_Light" xml:space="preserve"><value>Claro</value></data>
-  <data name="Theme_Monokai" xml:space="preserve"><value>Monokai</value></data>
-  <data name="Theme_Reset" xml:space="preserve"><value>Restablecer</value></data>
-  <data name="Theme_FontSettings" xml:space="preserve"><value>Configuración de fuente</value></data>
-  <data name="Theme_FontFamily" xml:space="preserve"><value>Familia:</value></data>
-  <data name="Theme_FontSize" xml:space="preserve"><value>Tamaño:</value></data>
-  <data name="Theme_ColorSettings" xml:space="preserve"><value>Configuración de color</value></data>
-  <data name="Theme_ColorEditing" xml:space="preserve"><value>Editando:</value></data>
-  <data name="Theme_TextColor" xml:space="preserve"><value>Color de texto</value></data>
-  <data name="Theme_BackgroundColor" xml:space="preserve"><value>Color de fondo</value></data>
-  <data name="Theme_SelectionColor" xml:space="preserve"><value>Color de selección</value></data>
-  <data name="Theme_CursorColor" xml:space="preserve"><value>Color del cursor</value></data>
-  <data name="Theme_CopyHighlightColor" xml:space="preserve"><value>Color de resaltado de copia</value></data>
-  <data name="Theme_Text" xml:space="preserve"><value>Texto</value></data>
-  <data name="Theme_Background" xml:space="preserve"><value>Fondo</value></data>
-  <data name="Theme_Selection" xml:space="preserve"><value>Selección</value></data>
-  <data name="Theme_Cursor" xml:space="preserve"><value>Cursor</value></data>
-  <data name="Theme_Copy" xml:space="preserve"><value>Copiar</value></data>
-  <data name="Theme_TerminalPresets" xml:space="preserve"><value>Preajustes del terminal:</value></data>
-
+Esta acción no se deshacer.</value>
+  </data>
+  <data name="FileOp_UploadCancelledByUser" xml:space="preserve">
+    <value>Subida cancelada por el usuario</value>
+  </data>
+  <data name="FileOp_DownloadCancelledByUser" xml:space="preserve">
+    <value>Descarga cancelada por el usuario</value>
+  </data>
+  <data name="FileOp_OperationCancelled" xml:space="preserve">
+    <value>Operación cancelada</value>
+  </data>
+  <data name="FileOp_ClipboardEmpty" xml:space="preserve">
+    <value>El portapapeles está vacío</value>
+  </data>
+  <data name="FileOp_NoFilesForUpload" xml:space="preserve">
+    <value>No se proporcionaron archivos para subir</value>
+  </data>
+  <data name="FileOp_DragDropUploadInitiated" xml:space="preserve">
+    <value>Subida por arrastrar y soltar iniciada para {0} elemento(s)</value>
+  </data>
+  <data name="Tooltip_AddServer" xml:space="preserve">
+    <value>Agregar un nuevo servidor a la lista</value>
+  </data>
+  <data name="Tooltip_OpenTerminal" xml:space="preserve">
+    <value>Abrir una nueva sesión de terminal (elegir modo)</value>
+  </data>
+  <data name="Tooltip_ExportServers" xml:space="preserve">
+    <value>Exportar servidores a un archivo para copia o compartir</value>
+  </data>
+  <data name="Tooltip_ImportServers" xml:space="preserve">
+    <value>Importar servidores desde un archivo</value>
+  </data>
+  <data name="Tooltip_SearchServers" xml:space="preserve">
+    <value>Buscar servidores por nombre, host o protocolo</value>
+  </data>
+  <data name="Tooltip_BrowseFile" xml:space="preserve">
+    <value>Buscar archivo</value>
+  </data>
+  <data name="Tooltip_BrowsePublicKey" xml:space="preserve">
+    <value>Buscar archivo de clave pública</value>
+  </data>
+  <data name="Tooltip_BrowsePrivateKey" xml:space="preserve">
+    <value>Buscar archivo de clave privada</value>
+  </data>
+  <data name="Tooltip_BrowseExportLocation" xml:space="preserve">
+    <value>Buscar ubicación de exportación</value>
+  </data>
+  <data name="Tooltip_CloseTab" xml:space="preserve">
+    <value>Cerrar pestaña</value>
+  </data>
+  <data name="Placeholder_Username" xml:space="preserve">
+    <value>Ingrese su usuario</value>
+  </data>
+  <data name="Placeholder_Password" xml:space="preserve">
+    <value>Ingrese su contraseña</value>
+  </data>
+  <data name="Placeholder_ExportPassword" xml:space="preserve">
+    <value>Ingrese contraseña para cifrar el archivo exportado</value>
+  </data>
+  <data name="Placeholder_KeyFilePassword" xml:space="preserve">
+    <value>Ingrese contraseña del archivo de clave (vacío si no está cifrado)</value>
+  </data>
+  <data name="Placeholder_ServerPassword" xml:space="preserve">
+    <value>Ingrese su contraseña (vacío si usa autenticación por clave)</value>
+  </data>
+  <data name="Terminal_Elevated" xml:space="preserve">
+    <value>Elevado</value>
+  </data>
+  <data name="Terminal_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Terminal_ElevatedTooltip" xml:space="preserve">
+    <value>Abrir terminal con privilegios de administrador</value>
+  </data>
+  <data name="Terminal_NormalTooltip" xml:space="preserve">
+    <value>Abrir terminal con privilegios normales</value>
+  </data>
+  <data name="Export_Title" xml:space="preserve">
+    <value>Exportar servidores</value>
+  </data>
+  <data name="Export_SelectServers" xml:space="preserve">
+    <value>Seleccione los servidores a exportar:</value>
+  </data>
+  <data name="Export_ToFile" xml:space="preserve">
+    <value>Exportar a archivo</value>
+  </data>
+  <data name="Import_Title" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="Import_InvalidPassword" xml:space="preserve">
+    <value>Contraseña inválida</value>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>Iniciar sesión</value>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>Usuario:</value>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>Contraseña:</value>
+  </data>
+  <data name="Settings_Personalization" xml:space="preserve">
+    <value>Personalización</value>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="Settings_Light" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="Settings_Dark" xml:space="preserve">
+    <value>Oscuro</value>
+  </data>
+  <data name="Settings_DefaultShell" xml:space="preserve">
+    <value>Shell predeterminado</value>
+  </data>
+  <data name="Settings_Account" xml:space="preserve">
+    <value>Cuenta</value>
+  </data>
+  <data name="Settings_CloudSync" xml:space="preserve">
+    <value>Sincronización en la nube</value>
+  </data>
+  <data name="Settings_EnableCloudSync" xml:space="preserve">
+    <value>Habilitar sincronización en la nube</value>
+  </data>
+  <data name="Settings_AutoSyncStartup" xml:space="preserve">
+    <value>Sincronizar automáticamente al iniciar</value>
+  </data>
+  <data name="Settings_AutoSyncChanges" xml:space="preserve">
+    <value>Sincronizar automáticamente con cambios</value>
+  </data>
+  <data name="Settings_LastSync" xml:space="preserve">
+    <value>Última sincronización: {0}</value>
+  </data>
+  <data name="Settings_DeleteCloudData" xml:space="preserve">
+    <value>Eliminar datos en la nube</value>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="Status_CancelledSSHTerminalUAC" xml:space="preserve">
+    <value>El terminal SSH no se abrió (permiso de administrador rechazado).</value>
+  </data>
+  <data name="App_DeveloperCredit" xml:space="preserve">
+    <value>por Taufiq Abdur Rahman</value>
+  </data>
+  <data name="Protocol_SSH_Description" xml:space="preserve">
+    <value>SSH: Shell seguro para acceso a terminal</value>
+  </data>
+  <data name="Protocol_FTP_Description" xml:space="preserve">
+    <value>FTP: Protocolo de transferencia de archivos</value>
+  </data>
+  <data name="Protocol_SFTP_Description" xml:space="preserve">
+    <value>SFTP: Protocolo de transferencia de archivos SSH</value>
+  </data>
+  <data name="Protocol_Description_Combined" xml:space="preserve">
+    <value>SSH: Shell seguro para acceso a terminal
+FTP: Protocolo de transferencia de archivos
+SFTP: Protocolo de transferencia de archivos SSH</value>
+  </data>
+  <data name="Validation_HostTooltip" xml:space="preserve">
+    <value>Ingrese dirección IP (ej. 192.168.1.100) o nombre de host (ej. servidor.ejemplo.com)</value>
+  </data>
+  <data name="Validation_PortTooltip" xml:space="preserve">
+    <value>Ingrese número de puerto (1-65535). Puertos comunes: SSH=22, FTP=21, SFTP=22</value>
+  </data>
+  <data name="Validation_ProtocolTooltip" xml:space="preserve">
+    <value>Seleccione el protocolo de conexión</value>
+  </data>
+  <data name="Validation_UsernameTooltip" xml:space="preserve">
+    <value>Ingrese su usuario del servidor</value>
+  </data>
+  <data name="Validation_PublicKeyTooltip" xml:space="preserve">
+    <value>Ruta a su archivo de clave pública (.pub)</value>
+  </data>
+  <data name="Validation_PrivateKeyTooltip" xml:space="preserve">
+    <value>Ruta a su archivo de clave privada (.pem, .key)</value>
+  </data>
+  <data name="FileFilter_ScratchShell" xml:space="preserve">
+    <value>(*.ss)|*.ss|Todos los archivos (*.*)|*.*</value>
+  </data>
+  <data name="FileFilter_PublicKey" xml:space="preserve">
+    <value>Archivos de clave pública (*.pub)|*.pub|Todos los archivos (*.*)|*.*</value>
+  </data>
+  <data name="FileFilter_PrivateKey" xml:space="preserve">
+    <value>Archivos de clave privada (*.pem;*.key)|*.pem;*.key|Todos los archivos (*.*)|*.*</value>
+  </data>
+  <data name="Dialog_Reconnect_ConnectionTimedOutTemplate" xml:space="preserve">
+    <value>La conexión a '{0}' ({1}:{2}) ha superado el tiempo de espera.</value>
+  </data>
+  <data name="Dialog_Reconnect_Title" xml:space="preserve">
+    <value>Conexión perdida</value>
+  </data>
+  <data name="Dialog_Reconnect_PrimaryButton" xml:space="preserve">
+    <value>Reconectar</value>
+  </data>
+  <data name="Dialog_Reconnect_CloseButton" xml:space="preserve">
+    <value>Cerrar pestaña</value>
+  </data>
+  <data name="Dialog_Reconnect_Header" xml:space="preserve">
+    <value>Tiempo de espera de la conexión</value>
+  </data>
+  <data name="Dialog_Reconnect_DefaultInfo" xml:space="preserve">
+    <value>La conexión con el servidor ha superado el tiempo de espera.</value>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsLabel" xml:space="preserve">
+    <value>Detalles del error:</value>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsDefault" xml:space="preserve">
+    <value>La conexión se perdió por tiempo de espera de red o indisponibilidad del servidor.</value>
+  </data>
+  <data name="Dialog_Reconnect_Question" xml:space="preserve">
+    <value>¿Qué desea hacer?</value>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnect" xml:space="preserve">
+    <value>Reconectar</value>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnectDescription" xml:space="preserve">
+    <value>Intentar reconectar al servidor y reanudar la sesión</value>
+  </data>
+  <data name="Dialog_Reconnect_ActionClose" xml:space="preserve">
+    <value>Cerrar pestaña</value>
+  </data>
+  <data name="Dialog_Reconnect_ActionCloseDescription" xml:space="preserve">
+    <value>Cerrar esta pestaña y volver al panel</value>
+  </data>
+  <data name="EventHandler_EditCancelled" xml:space="preserve">
+    <value>Edición cancelada para: {0}</value>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupSuccess" xml:space="preserve">
+    <value>Eventos del navegador configurados correctamente</value>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupError" xml:space="preserve">
+    <value>Error configurando eventos del navegador</value>
+  </data>
+  <data name="EventHandler_SafeExecuteError" xml:space="preserve">
+    <value>Error en ejecución segura</value>
+  </data>
+  <data name="EventHandler_SafeExecuteAsyncError" xml:space="preserve">
+    <value>Error en ejecución segura asíncrona</value>
+  </data>
+  <data name="EventHandler_ExceptionIn" xml:space="preserve">
+    <value>Excepción en {0}</value>
+  </data>
+  <data name="EventHandler_CriticalErrorInExceptionHandler" xml:space="preserve">
+    <value>Error crítico en el manejador de excepciones: {0}</value>
+  </data>
+  <data name="Terminal_UpdateError" xml:space="preserve">
+    <value>Error de actualización del terminal: {0}</value>
+  </data>
+  <data name="Critical_ErrorInDispose" xml:space="preserve">
+    <value>Error crítico en Dispose: {0} - {1}</value>
+  </data>
+  <data name="Connection_HandleTimeoutError" xml:space="preserve">
+    <value>Error al manejar el tiempo de espera de la conexión</value>
+  </data>
+  <data name="Connection_ErrorClosingTab" xml:space="preserve">
+    <value>Error al cerrar la pestaña actual</value>
+  </data>
+  <data name="Connection_ErrorDuringControlLoad" xml:space="preserve">
+    <value>Error durante la carga del control</value>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Idioma</value>
+    <comment>Language setting label</comment>
+  </data>
+  <data name="Language_English" xml:space="preserve">
+    <value>English</value>
+    <comment>English language option</comment>
+  </data>
+  <data name="Language_Bangla" xml:space="preserve">
+    <value>বাংলা</value>
+    <comment>Bangla language option</comment>
+  </data>
+  <data name="Language_Spanish" xml:space="preserve">
+    <value>Español</value>
+    <comment>Spanish language option</comment>
+  </data>
+  <data name="Language_ChangeMessage" xml:space="preserve">
+    <value>Reinicie la aplicación para que el cambio de idioma surta efecto.</value>
+  </data>
+  <data name="Navigation_Home" xml:space="preserve">
+    <value>Inicio</value>
+    <comment>Navigation menu item: Home</comment>
+  </data>
+  <data name="Navigation_Session" xml:space="preserve">
+    <value>Sesión</value>
+    <comment>Navigation menu item: Session</comment>
+  </data>
+  <data name="Navigation_Settings" xml:space="preserve">
+    <value>Ajustes</value>
+    <comment>Navigation menu item: Settings</comment>
+  </data>
+  <data name="UI_Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="UI_Size" xml:space="preserve">
+    <value>Tamaño</value>
+  </data>
+  <data name="UI_Type" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="UI_Date" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="UI_DateModified" xml:space="preserve">
+    <value>Fecha de modificación</value>
+  </data>
+  <data name="UI_SortAscending" xml:space="preserve">
+    <value>Orden ascendente (clic para descendente)</value>
+  </data>
+  <data name="UI_SortDescending" xml:space="preserve">
+    <value>Orden descendente (clic para ascendente)</value>
+  </data>
+  <data name="Operation_InProgress" xml:space="preserve">
+    <value>Operación en progreso...</value>
+  </data>
+  <data name="Operation_Cancelling" xml:space="preserve">
+    <value>Cancelando operación...</value>
+  </data>
+  <data name="DragDrop_DropHere" xml:space="preserve">
+    <value>Suelte {0} '{1}' aquí para subir</value>
+  </data>
+  <data name="DragDrop_FolderRecursive" xml:space="preserve">
+    <value>El contenido de la carpeta se subirá recursivamente</value>
+  </data>
+  <data name="DragDrop_FileToDirectory" xml:space="preserve">
+    <value>El archivo se subirá al directorio actual</value>
+  </data>
+  <data name="DragDrop_DropMultiple" xml:space="preserve">
+    <value>Suelte {0} elemento(s) aquí para subir</value>
+  </data>
+  <data name="DragDrop_FilesAndFolders" xml:space="preserve">
+    <value>{0} archivo(s) y {1} carpeta(s) se subirán</value>
+  </data>
+  <data name="DragDrop_FoldersOnly" xml:space="preserve">
+    <value>{0} carpeta(s) se subirán recursivamente</value>
+  </data>
+  <data name="DragDrop_FilesOnly" xml:space="preserve">
+    <value>{0} archivo(s) se subirán</value>
+  </data>
+  <data name="UI_GridView" xml:space="preserve">
+    <value>Vista de cuadrícula</value>
+  </data>
+  <data name="UI_ListView" xml:space="preserve">
+    <value>Vista de lista</value>
+  </data>
+  <data name="UI_SortBy" xml:space="preserve">
+    <value>Ordenar por:</value>
+  </data>
+  <data name="UI_SortOptions" xml:space="preserve">
+    <value>Opciones de ordenación</value>
+  </data>
+  <data name="UI_ToggleSortDirection" xml:space="preserve">
+    <value>Cambiar dirección de ordenación</value>
+  </data>
+  <data name="UI_SortNameAZ" xml:space="preserve">
+    <value>Nombre (A a Z)</value>
+  </data>
+  <data name="UI_SortNameZA" xml:space="preserve">
+    <value>Nombre (Z a A)</value>
+  </data>
+  <data name="UI_SortSizeSmallest" xml:space="preserve">
+    <value>Tamaño (Más pequeño primero)</value>
+  </data>
+  <data name="UI_SortSizeLargest" xml:space="preserve">
+    <value>Tamaño (Más grande primero)</value>
+  </data>
+  <data name="UI_SortTypeAZ" xml:space="preserve">
+    <value>Tipo (A a Z)</value>
+  </data>
+  <data name="UI_SortTypeZA" xml:space="preserve">
+    <value>Tipo (Z a A)</value>
+  </data>
+  <data name="UI_SortDateOldest" xml:space="preserve">
+    <value>Fecha (Más antiguo primero)</value>
+  </data>
+  <data name="UI_SortDateNewest" xml:space="preserve">
+    <value>Fecha (Más reciente primero)</value>
+  </data>
+  <data name="UI_CancelOperation" xml:space="preserve">
+    <value>Cancelar operación actual</value>
+  </data>
+  <data name="UI_DragDropDefault" xml:space="preserve">
+    <value>Suelte archivos y carpetas aquí para subir</value>
+  </data>
+  <data name="UI_DragDropSupport" xml:space="preserve">
+    <value>Se admiten múltiples archivos y carpetas</value>
+  </data>
+  <data name="Tooltip_Back" xml:space="preserve">
+    <value>Atrás (Alt+Flecha izquierda)</value>
+  </data>
+  <data name="Tooltip_Forward" xml:space="preserve">
+    <value>Adelante (Alt+Flecha derecha)</value>
+  </data>
+  <data name="Tooltip_Refresh" xml:space="preserve">
+    <value>Actualizar (F5)</value>
+  </data>
+  <data name="Tooltip_UpOneLevel" xml:space="preserve">
+    <value>Subir un nivel</value>
+  </data>
+  <data name="Tooltip_CreateNewFolder" xml:space="preserve">
+    <value>Crear nueva carpeta</value>
+  </data>
+  <data name="Tooltip_Paste" xml:space="preserve">
+    <value>Pegar (Ctrl+V)</value>
+  </data>
+  <data name="Tooltip_ViewOptions" xml:space="preserve">
+    <value>Opciones de vista</value>
+  </data>
+  <data name="Tooltip_FullScreenMode" xml:space="preserve">
+    <value>Modo pantalla completa</value>
+  </data>
+  <data name="Tooltip_ShowHideLogPanel" xml:space="preserve">
+    <value>Mostrar/ocultar panel de registros</value>
+  </data>
+  <data name="UI_OperationLog" xml:space="preserve">
+    <value>Registro de operaciones</value>
+    <comment>Label for the operations log panel</comment>
+  </data>
+  <data name="Tooltip_CopyFromTerminal" xml:space="preserve">
+    <value>Copiar texto seleccionado del terminal (Ctrl+Click izq.)</value>
+  </data>
+  <data name="Tooltip_PasteToTerminal" xml:space="preserve">
+    <value>Pegar texto en el terminal (Alt+Click izq.)</value>
+  </data>
+  <data name="Tooltip_ShowHideSnippets" xml:space="preserve">
+    <value>Mostrar/ocultar panel de fragmentos</value>
+  </data>
+  <data name="Tooltip_ShowHideThemes" xml:space="preserve">
+    <value>Mostrar/ocultar panel de temas</value>
+  </data>
+  <data name="Tooltip_ToggleFullScreenTerminal" xml:space="preserve">
+    <value>Alternar modo pantalla completa del terminal</value>
+  </data>
+  <data name="ContextMenu_SelectAll" xml:space="preserve">
+    <value>Seleccionar todo</value>
+    <comment>Context menu item: Select All</comment>
+  </data>
+  <data name="Terminal_ConnectingTo" xml:space="preserve">
+    <value>Conectando a {0}...</value>
+  </data>
+  <data name="Terminal_ConnectionFailed" xml:space="preserve">
+    <value>Error al conectar a {0}: {1}</value>
+  </data>
+  <data name="Terminal_ServerNotInitialized" xml:space="preserve">
+    <value>El servidor no está inicializado.</value>
+  </data>
+  <data name="Terminal_ResizeFailed" xml:space="preserve">
+    <value>Error al redimensionar el terminal: {0}</value>
+  </data>
+  <data name="Terminal_Error" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Terminal_AutoCompleteError" xml:space="preserve">
+    <value>Error de autocompletar: {0}</value>
+  </data>
+  <data name="Tooltip_CreateSnippet" xml:space="preserve">
+    <value>Crear nuevo fragmento</value>
+  </data>
+  <data name="Tooltip_EditSnippet" xml:space="preserve">
+    <value>Editar fragmento seleccionado</value>
+  </data>
+  <data name="Tooltip_DeleteSnippet" xml:space="preserve">
+    <value>Eliminar fragmento seleccionado</value>
+  </data>
+  <data name="Tooltip_ShowHideSystemSnippets" xml:space="preserve">
+    <value>Mostrar/ocultar fragmentos del sistema</value>
+  </data>
+  <data name="Tooltip_RunSnippet" xml:space="preserve">
+    <value>Ejecutar este fragmento en el terminal</value>
+  </data>
+  <data name="Placeholder_SearchSnippets" xml:space="preserve">
+    <value>Buscar fragmentos...</value>
+  </data>
+  <data name="Theme_TerminalTheme" xml:space="preserve">
+    <value>Tema del terminal</value>
+  </data>
+  <data name="Theme_Apply" xml:space="preserve">
+    <value>Aplicar</value>
+  </data>
+  <data name="Theme_PredefinedThemes" xml:space="preserve">
+    <value>Temas predefinidos:</value>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Oscuro</value>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Claro</value>
+  </data>
+  <data name="Theme_Monokai" xml:space="preserve">
+    <value>Monokai</value>
+  </data>
+  <data name="Theme_Reset" xml:space="preserve">
+    <value>Restablecer</value>
+  </data>
+  <data name="Theme_FontSettings" xml:space="preserve">
+    <value>Configuración de fuente</value>
+  </data>
+  <data name="Theme_FontFamily" xml:space="preserve">
+    <value>Familia:</value>
+  </data>
+  <data name="Theme_FontSize" xml:space="preserve">
+    <value>Tamaño:</value>
+  </data>
+  <data name="Theme_ColorSettings" xml:space="preserve">
+    <value>Configuración de color</value>
+  </data>
+  <data name="Theme_ColorEditing" xml:space="preserve">
+    <value>Editando:</value>
+  </data>
+  <data name="Theme_TextColor" xml:space="preserve">
+    <value>Color de texto</value>
+  </data>
+  <data name="Theme_BackgroundColor" xml:space="preserve">
+    <value>Color de fondo</value>
+  </data>
+  <data name="Theme_SelectionColor" xml:space="preserve">
+    <value>Color de selección</value>
+  </data>
+  <data name="Theme_CursorColor" xml:space="preserve">
+    <value>Color del cursor</value>
+  </data>
+  <data name="Theme_CopyHighlightColor" xml:space="preserve">
+    <value>Color de resaltado de copia</value>
+  </data>
+  <data name="Theme_Text" xml:space="preserve">
+    <value>Texto</value>
+  </data>
+  <data name="Theme_Background" xml:space="preserve">
+    <value>Fondo</value>
+  </data>
+  <data name="Theme_Selection" xml:space="preserve">
+    <value>Selección</value>
+  </data>
+  <data name="Theme_Cursor" xml:space="preserve">
+    <value>Cursor</value>
+  </data>
+  <data name="Theme_Copy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Theme_TerminalPresets" xml:space="preserve">
+    <value>Preajustes del terminal:</value>
+  </data>
+  <data name="Tooltip_PreviewDarkTheme" xml:space="preserve">
+    <value>Vista previa tema oscuro</value>
+  </data>
+  <data name="Tooltip_PreviewLightTheme" xml:space="preserve">
+    <value>Vista previa tema claro</value>
+  </data>
+  <data name="Tooltip_PreviewMonokaiTheme" xml:space="preserve">
+    <value>Vista previa tema Monokai</value>
+  </data>
+  <data name="Tooltip_ResetTheme" xml:space="preserve">
+    <value>Restablecer tema a valores predeterminados</value>
+  </data>
+  <data name="Settings_Restart" xml:space="preserve">
+    <value>Reiniciar</value>
+  </data>
 </root>

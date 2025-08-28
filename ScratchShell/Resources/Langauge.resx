@@ -1285,4 +1285,8 @@ SFTP: SSH File Transfer Protocol</value>
     <value>Reset theme to default values</value>
     <comment>Reset theme button tooltip</comment>
   </data>
+  <data name="Settings_Restart" xml:space="preserve">
+    <value>Restart</value>
+    <comment>Settings Langauge Change Restart</comment>
+  </data>
 </root>

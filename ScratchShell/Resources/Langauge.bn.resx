@@ -1282,4 +1282,7 @@ SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</
     <value>থিম ডিফল্ট মানে রিসেট করুন</value>
     <comment>Reset theme button tooltip</comment>
   </data>
+  <data name="Settings_Restart" xml:space="preserve">
+    <value>রিস্টার্ট</value>
+  </data>
 </root>

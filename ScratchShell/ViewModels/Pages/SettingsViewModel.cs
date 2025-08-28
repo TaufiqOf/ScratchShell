@@ -76,10 +76,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
             if (SetProperty(ref _selectedLanguage, value))
             {
                 LocalizationManager.ChangeLanguage(value.Code);
-                
+
                 // Trigger cloud sync if enabled
                 _ = Task.Run(async () => await UserSettingsService.TriggerCloudSyncIfEnabled());
-                
+
                 // Show message about restart requirement
                 ShowLanguageChangeMessage();
             }
@@ -95,10 +95,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         ShellTypes = Enum.GetValues(typeof(ShellType)).Cast<ShellType>();
         AvailableLanguages = LocalizationManager.SupportedLanguages.Values;
         _selectedLanguage = LocalizationManager.CurrentLanguageInfo;
-        
+
         // Subscribe to language changes to ensure the UI stays updated
         LocalizationManager.LanguageChanged += OnLanguageChanged;
-        
+
         InitializeCloudSync();
     }
 
@@ -194,8 +194,10 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         try
         {
             var message = LocalizationManager.GetString("Language_ChangeMessage");
-            var title = LocalizationManager.GetString("Settings_Language") + " Changed";
-            
+            var title = LocalizationManager.GetString("Settings_Language");
+            var buttonText = LocalizationManager.GetString("Settings_Restart");
+            var buttonSecondText = LocalizationManager.GetString("General_Close");
+
             // Show a simple message dialog
             _ = Task.Run(async () =>
             {
@@ -205,10 +207,15 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
                     {
                         Title = title,
                         Content = message,
-                        PrimaryButtonText = "OK"
+                        PrimaryButtonText = buttonText,
+                        CloseButtonText = buttonSecondText
                     };
 
-                    await messageDialog.ShowDialogAsync();
+                    var result = await messageDialog.ShowDialogAsync();
+                    if(result == Wpf.Ui.Controls.MessageBoxResult.Primary)
+                    {
+                        Application.Current.Shutdown();
+                    }
                 });
             });
         }

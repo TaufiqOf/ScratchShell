@@ -33,14 +33,9 @@
             FontSize="20"
             FontWeight="Medium"
             Text="{helpers:Localized Settings_Personalization}" />
-        
-        <TextBlock Margin="0,12,0,0" Text="{helpers:Localized Settings_Language}" />
-        <ComboBox
-            Margin="0,5,0,0"
-            DisplayMemberPath="DisplayName"
-            ItemsSource="{Binding ViewModel.AvailableLanguages}"
-            SelectedItem="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}" />
-        
+
+
+
         <TextBlock Margin="0,12,0,0" Text="{helpers:Localized Settings_Theme}" />
         <RadioButton
             Margin="0,12,0,0"
@@ -57,6 +52,12 @@
             GroupName="themeSelect"
             IsChecked="{Binding ViewModel.CurrentTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}" />
 
+        <TextBlock Margin="0,12,0,0" Text="{helpers:Localized Settings_Language}" />
+        <ComboBox
+            Margin="0,5,0,0"
+            DisplayMemberPath="DisplayName"
+            ItemsSource="{Binding ViewModel.AvailableLanguages}"
+            SelectedItem="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}" />
         <TextBlock Margin="0,12,0,0" Text="{helpers:Localized Settings_DefaultShell}" />
         <ComboBox
             Margin="0,5,0,0"

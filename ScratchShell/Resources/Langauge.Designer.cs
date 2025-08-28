@@ -1711,6 +1711,15 @@ namespace ScratchShell.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Restart.
+        /// </summary>
+        internal static string Settings_Restart {
+            get {
+                return ResourceManager.GetString("Settings_Restart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Theme.
         /// </summary>
         internal static string Settings_Theme {
