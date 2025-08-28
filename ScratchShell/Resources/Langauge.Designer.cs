@@ -1133,6 +1133,15 @@ namespace ScratchShell.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spanish.
+        /// </summary>
+        internal static string Language_Spanish {
+            get {
+                return ResourceManager.GetString("Language_Spanish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Password:.
         /// </summary>
         internal static string Login_Password {
@@ -1855,6 +1864,213 @@ namespace ScratchShell.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apply.
+        /// </summary>
+        internal static string Theme_Apply {
+            get {
+                return ResourceManager.GetString("Theme_Apply", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Background.
+        /// </summary>
+        internal static string Theme_Background {
+            get {
+                return ResourceManager.GetString("Theme_Background", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Background Color.
+        /// </summary>
+        internal static string Theme_BackgroundColor {
+            get {
+                return ResourceManager.GetString("Theme_BackgroundColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Editing:.
+        /// </summary>
+        internal static string Theme_ColorEditing {
+            get {
+                return ResourceManager.GetString("Theme_ColorEditing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color Settings.
+        /// </summary>
+        internal static string Theme_ColorSettings {
+            get {
+                return ResourceManager.GetString("Theme_ColorSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        internal static string Theme_Copy {
+            get {
+                return ResourceManager.GetString("Theme_Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy Highlight Color.
+        /// </summary>
+        internal static string Theme_CopyHighlightColor {
+            get {
+                return ResourceManager.GetString("Theme_CopyHighlightColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cursor.
+        /// </summary>
+        internal static string Theme_Cursor {
+            get {
+                return ResourceManager.GetString("Theme_Cursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cursor Color.
+        /// </summary>
+        internal static string Theme_CursorColor {
+            get {
+                return ResourceManager.GetString("Theme_CursorColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark.
+        /// </summary>
+        internal static string Theme_Dark {
+            get {
+                return ResourceManager.GetString("Theme_Dark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Family:.
+        /// </summary>
+        internal static string Theme_FontFamily {
+            get {
+                return ResourceManager.GetString("Theme_FontFamily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Font Settings.
+        /// </summary>
+        internal static string Theme_FontSettings {
+            get {
+                return ResourceManager.GetString("Theme_FontSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size:.
+        /// </summary>
+        internal static string Theme_FontSize {
+            get {
+                return ResourceManager.GetString("Theme_FontSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Light.
+        /// </summary>
+        internal static string Theme_Light {
+            get {
+                return ResourceManager.GetString("Theme_Light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monokai.
+        /// </summary>
+        internal static string Theme_Monokai {
+            get {
+                return ResourceManager.GetString("Theme_Monokai", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predefined Themes:.
+        /// </summary>
+        internal static string Theme_PredefinedThemes {
+            get {
+                return ResourceManager.GetString("Theme_PredefinedThemes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset.
+        /// </summary>
+        internal static string Theme_Reset {
+            get {
+                return ResourceManager.GetString("Theme_Reset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selection.
+        /// </summary>
+        internal static string Theme_Selection {
+            get {
+                return ResourceManager.GetString("Theme_Selection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selection Color.
+        /// </summary>
+        internal static string Theme_SelectionColor {
+            get {
+                return ResourceManager.GetString("Theme_SelectionColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terminal Presets:.
+        /// </summary>
+        internal static string Theme_TerminalPresets {
+            get {
+                return ResourceManager.GetString("Theme_TerminalPresets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terminal Theme.
+        /// </summary>
+        internal static string Theme_TerminalTheme {
+            get {
+                return ResourceManager.GetString("Theme_TerminalTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text.
+        /// </summary>
+        internal static string Theme_Text {
+            get {
+                return ResourceManager.GetString("Theme_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text Color.
+        /// </summary>
+        internal static string Theme_TextColor {
+            get {
+                return ResourceManager.GetString("Theme_TextColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a new server to your list.
         /// </summary>
         internal static string Tooltip_AddServer {
@@ -2026,11 +2242,47 @@ namespace ScratchShell.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preview dark theme.
+        /// </summary>
+        internal static string Tooltip_PreviewDarkTheme {
+            get {
+                return ResourceManager.GetString("Tooltip_PreviewDarkTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preview light theme.
+        /// </summary>
+        internal static string Tooltip_PreviewLightTheme {
+            get {
+                return ResourceManager.GetString("Tooltip_PreviewLightTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preview Monokai theme.
+        /// </summary>
+        internal static string Tooltip_PreviewMonokaiTheme {
+            get {
+                return ResourceManager.GetString("Tooltip_PreviewMonokaiTheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refresh (F5).
         /// </summary>
         internal static string Tooltip_Refresh {
             get {
                 return ResourceManager.GetString("Tooltip_Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset theme to default values.
+        /// </summary>
+        internal static string Tooltip_ResetTheme {
+            get {
+                return ResourceManager.GetString("Tooltip_ResetTheme", resourceCulture);
             }
         }
         

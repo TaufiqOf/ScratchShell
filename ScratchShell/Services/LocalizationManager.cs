@@ -17,7 +17,8 @@ public static class LocalizationManager
     public static readonly Dictionary<string, LanguageInfo> SupportedLanguages = new()
     {
         { "en", new LanguageInfo("en", "English", "English") },
-        { "bn", new LanguageInfo("bn", "বাংলা", "Bangla") }
+        { "bn", new LanguageInfo("bn", "বাংলা", "Bangla") },
+        { "es", new LanguageInfo("es", "Español", "Spanish") }
     };
 
     /// <summary>

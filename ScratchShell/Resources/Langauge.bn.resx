@@ -274,7 +274,7 @@
     <comment>Health check failure message</comment>
   </data>
   <data name="Connection_ReconnectionFailed" xml:space="preserve">
-    <value>পুনরায় সংযোগ ব্যর্থ: {0}</value>
+    <value>পুনরায় সংযোজন ব্যর্থ: {0}</value>
     <comment>Reconnection failure message template: error details</comment>
   </data>
   <data name="Operation_Timeout" xml:space="preserve">
@@ -692,7 +692,7 @@
     <comment>Login password label</comment>
   </data>
   <data name="Settings_Personalization" xml:space="preserve">
-    <value>ব্যক্তিগতকরণ</value>
+    <value>ব্যক্তিগতকরণের</value>
     <comment>Settings personalization section</comment>
   </data>
   <data name="Settings_Theme" xml:space="preserve">
@@ -740,7 +740,7 @@
     <comment>Delete cloud data button</comment>
   </data>
   <data name="Settings_About" xml:space="preserve">
-    <value>সম্পর্কে</value>
+    <value>সম্পর্কিত</value>
     <comment>Settings about section</comment>
   </data>
   <data name="Status_CancelledSSHTerminalUAC" xml:space="preserve">
@@ -916,6 +916,10 @@ SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</
   <data name="Language_Bangla" xml:space="preserve">
     <value>বাংলা</value>
     <comment>Bangla language option</comment>
+  </data>
+  <data name="Language_Spanish" xml:space="preserve">
+    <value>Spanish</value>
+    <comment>Spanish language option</comment>
   </data>
   <data name="Language_ChangeMessage" xml:space="preserve">
     <value>ভাষা পরিবর্তনের জন্য অ্যাপ্লিকেশন পুনরায় চালু করুন</value>
@@ -1263,7 +1267,7 @@ SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</
     <comment>Terminal color presets section label</comment>
   </data>
   <data name="Tooltip_PreviewDarkTheme" xml:space="preserve">
-    <value>গাঢ় থিম প্রিভিউ করুন</value>
+    <value>গাঢের থিম প্রিভিউ করুন</value>
     <comment>Preview dark theme button tooltip</comment>
   </data>
   <data name="Tooltip_PreviewLightTheme" xml:space="preserve">
