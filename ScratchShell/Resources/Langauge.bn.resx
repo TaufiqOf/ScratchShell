@@ -1,0 +1,1281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ContextMenu_Cut" xml:space="preserve">
+    <value>কাট</value>
+    <comment>Context menu item: Cut</comment>
+  </data>
+  <data name="ContextMenu_Copy" xml:space="preserve">
+    <value>কপি</value>
+    <comment>Context menu item: Copy </comment>
+  </data>
+  <data name="ContextMenu_Paste" xml:space="preserve">
+    <value>পেস্ট</value>
+    <comment>Context menu item: Paste</comment>
+  </data>
+  <data name="ContextMenu_Rename" xml:space="preserve">
+    <value>নাম পরিবর্তন</value>
+    <comment>Context menu item: Rename</comment>
+  </data>
+  <data name="ContextMenu_Upload" xml:space="preserve">
+    <value>আপলোড</value>
+    <comment>Context menu item: Upload</comment>
+  </data>
+  <data name="ContextMenu_Download" xml:space="preserve">
+    <value>ডাউনলোড</value>
+    <comment>Context menu item: Download</comment>
+  </data>
+  <data name="ContextMenu_NewFolder" xml:space="preserve">
+    <value>নতুন ফোল্ডার</value>
+    <comment>Context menu item: Create new folder</comment>
+  </data>
+  <data name="General_NotApplicable" xml:space="preserve">
+    <value>প্রযোজ্য নয়</value>
+    <comment>Generic not applicable abbreviation</comment>
+  </data>
+  <data name="General_Folder" xml:space="preserve">
+    <value>ফোল্ডার</value>
+    <comment>Generic folder type label</comment>
+  </data>
+  <data name="General_File" xml:space="preserve">
+    <value>ফাইল</value>
+    <comment>Generic file type fallback label</comment>
+  </data>
+  <data name="General_Save" xml:space="preserve">
+    <value>সংরক্ষণ</value>
+    <comment>Generic save button text</comment>
+  </data>
+  <data name="General_Cancel" xml:space="preserve">
+    <value>বাতিল</value>
+    <comment>Generic cancel button text</comment>
+  </data>
+  <data name="General_Close" xml:space="preserve">
+    <value>বন্ধ</value>
+    <comment>Generic close button text</comment>
+  </data>
+  <data name="General_Login" xml:space="preserve">
+    <value>লগইন</value>
+    <comment>Generic login button text</comment>
+  </data>
+  <data name="General_Register" xml:space="preserve">
+    <value>নিবন্ধন</value>
+    <comment>Generic register button text</comment>
+  </data>
+  <data name="General_Export" xml:space="preserve">
+    <value>এক্সপোর্ট</value>
+    <comment>Generic export button text</comment>
+  </data>
+  <data name="General_Import" xml:space="preserve">
+    <value>ইমপোর্ট</value>
+    <comment>Generic import button text</comment>
+  </data>
+  <data name="General_Sync" xml:space="preserve">
+    <value>সিঙ্ক</value>
+    <comment>Generic sync button text</comment>
+  </data>
+  <data name="General_Logout" xml:space="preserve">
+    <value>লগআউট</value>
+    <comment>Generic logout button text</comment>
+  </data>
+  <data name="General_Edit" xml:space="preserve">
+    <value>সম্পাদনা</value>
+    <comment>Generic edit action</comment>
+  </data>
+  <data name="General_Delete" xml:space="preserve">
+    <value>মুছে ফেলুন</value>
+    <comment>Generic delete action</comment>
+  </data>
+  <data name="General_OK" xml:space="preserve">
+    <value>ঠিক আছে</value>
+    <comment>Generic OK button text</comment>
+  </data>
+  <data name="General_Error" xml:space="preserve">
+    <value>ত্রুটি</value>
+    <comment>Generic error title</comment>
+  </data>
+  <data name="General_Cancelled" xml:space="preserve">
+    <value>বাতিল করা হয়েছে</value>
+    <comment>Generic cancelled status</comment>
+  </data>
+  <data name="General_Yes" xml:space="preserve">
+    <value>হ্যাঁ</value>
+    <comment>Generic yes button text</comment>
+  </data>
+  <data name="General_No" xml:space="preserve">
+    <value>না</value>
+    <comment>Generic no button text</comment>
+  </data>
+  <data name="Connection_EstablishingConnection" xml:space="preserve">
+    <value>{0} এর সাথে সংযোগ স্থাপন করা হচ্ছে...</value>
+    <comment>Connection status message template: server name</comment>
+  </data>
+  <data name="Connection_ConnectingTo" xml:space="preserve">
+    <value>{0} এর সাথে সংযোগ করা হচ্ছে...</value>
+    <comment>Connection status message template: server name</comment>
+  </data>
+  <data name="Connection_InitializingFileOps" xml:space="preserve">
+    <value>ফাইল অপারেশন শুরু করা হচ্ছে...</value>
+    <comment>Connection initialization step message</comment>
+  </data>
+  <data name="Connection_SettingUpNavigation" xml:space="preserve">
+    <value>নেভিগেশন সেটআপ করা হচ্ছে...</value>
+    <comment>Navigation setup step message</comment>
+  </data>
+  <data name="Connection_LoadingHomeDirectory" xml:space="preserve">
+    <value>হোম ডিরেক্টরি লোড করা হচ্ছে...</value>
+    <comment>Home directory loading step message</comment>
+  </data>
+  <data name="Connection_Failed" xml:space="preserve">
+    <value>সংযোগ ব্যর্থ</value>
+    <comment>Connection failure status</comment>
+  </data>
+  <data name="Connection_Lost" xml:space="preserve">
+    <value>সংযোগ হারিয়ে গেছে - পুনরায় সংযোগ করার চেষ্টা করা হচ্ছে...</value>
+    <comment>Connection lost status message</comment>
+  </data>
+  <data name="Connection_Reconnecting" xml:space="preserve">
+    <value>{0} এর সাথে পুনরায় সংযোগ করা হচ্ছে...</value>
+    <comment>Reconnection status message template: server name</comment>
+  </data>
+  <data name="Connection_FailedTo" xml:space="preserve">
+    <value>{0}:{1} এর সাথে সংযোগ করতে ব্যর্থ</value>
+    <comment>Connection failure message template: host, port</comment>
+  </data>
+  <data name="Connection_AttemptingTo" xml:space="preserve">
+    <value>{0} ({1}:{2}) এর সাথে সংযোগ করার চেষ্টা করা হচ্ছে</value>
+    <comment>Connection attempt message template: server name, host, port</comment>
+  </data>
+  <data name="Connection_SuccessfullyConnected" xml:space="preserve">
+    <value>{0} এর সাথে সফলভাবে সংযুক্ত এবং শুরু করা হয়েছে</value>
+    <comment>Connection success message template: server name</comment>
+  </data>
+  <data name="Connection_SuccessfullyReconnected" xml:space="preserve">
+    <value>{0} এর সাথে সফলভাবে পুনরায় সংযুক্ত হয়েছে</value>
+    <comment>Reconnection success message template: server name</comment>
+  </data>
+  <data name="Connection_HealthCheckFailed" xml:space="preserve">
+    <value>সংযোগ স্বাস্থ্য পরীক্ষা ব্যর্থ - সংযোগ হারিয়ে গেছে বলে মনে হচ্ছে</value>
+    <comment>Health check failure message</comment>
+  </data>
+  <data name="Connection_ReconnectionFailed" xml:space="preserve">
+    <value>পুনরায় সংযোগ ব্যর্থ: {0}</value>
+    <comment>Reconnection failure message template: error details</comment>
+  </data>
+  <data name="Operation_Timeout" xml:space="preserve">
+    <value>অপারেশন টাইমআউট: {0}</value>
+    <comment>Operation timeout message template: error details</comment>
+  </data>
+  <data name="Operation_NetworkError" xml:space="preserve">
+    <value>নেটওয়ার্ক ত্রুটি: {0}</value>
+    <comment>Network error message template: error details</comment>
+  </data>
+  <data name="Operation_SSHConnectionError" xml:space="preserve">
+    <value>SSH সংযোগ ত্রুটি: {0}</value>
+    <comment>SSH connection error message template: error details</comment>
+  </data>
+  <data name="Operation_ConnectionError" xml:space="preserve">
+    <value>সংযোগ ত্রুটি: {0}</value>
+    <comment>Generic connection error message template: error details</comment>
+  </data>
+  <data name="Operation_HealthCheckError" xml:space="preserve">
+    <value>সংযোগ স্বাস্থ্য পরীক্ষার সময় ত্রুটি</value>
+    <comment>Health check error message</comment>
+  </data>
+  <data name="Operation_ConnectionTimeoutDetected" xml:space="preserve">
+    <value>সংযোগ টাইমআউট সনাক্ত: {0}</value>
+    <comment>Connection timeout detection message template: error details</comment>
+  </data>
+  <data name="Operation_LogPanelOpened" xml:space="preserve">
+    <value>অপারেশন লগ প্যানেল খোলা হয়েছে</value>
+    <comment>Log panel opened status</comment>
+  </data>
+  <data name="Operation_LogPanelClosed" xml:space="preserve">
+    <value>অপারেশন লগ প্যানেল বন্ধ হয়েছে</value>
+    <comment>Log panel closed status</comment>
+  </data>
+  <data name="Operation_EnteringFullscreen" xml:space="preserve">
+    <value>পূর্ণ স্ক্রিন মোডে প্রবেশ করা হচ্ছে</value>
+    <comment>Full screen mode entry message</comment>
+  </data>
+  <data name="Operation_ExitingFullscreen" xml:space="preserve">
+    <value>পূর্ণ স্ক্রিন মোড থেকে বের হওয়া হচ্ছে</value>
+    <comment>Full screen mode exit message</comment>
+  </data>
+  <data name="Operation_UIEnabled" xml:space="preserve">
+    <value>ব্যবহারকারী ইন্টারফেস সক্ষম - ফাইল অপারেশনের জন্য প্রস্তুত</value>
+    <comment>UI enabled after connection message</comment>
+  </data>
+  <data name="Operation_StartingCleanup" xml:space="preserve">
+    <value>পরিষ্কার এবং অবজেক্ট বিচ্ছিন্নতা শুরু</value>
+    <comment>Cleanup process start message</comment>
+  </data>
+  <data name="Operation_CleanupCompleted" xml:space="preserve">
+    <value>পরিষ্কার সফলভাবে সম্পন্ন</value>
+    <comment>Cleanup process completion message</comment>
+  </data>
+  <data name="Operation_ClosingCurrentTab" xml:space="preserve">
+    <value>সংযোগ ব্যর্থতার কারণে বর্তমান ট্যাব বন্ধ করা হচ্ছে</value>
+    <comment>Tab closing due to connection failure message</comment>
+  </data>
+  <data name="Navigation_NavigatingToParent" xml:space="preserve">
+    <value>প্যারেন্ট ডিরেক্টরিতে নেভিগেট করা হচ্ছে: {0}</value>
+    <comment>Parent directory navigation message template: path</comment>
+  </data>
+  <data name="Navigation_NavigatingToFolder" xml:space="preserve">
+    <value>ফোল্ডারে নেভিগেট করা হচ্ছে: {0}</value>
+    <comment>Folder navigation message template: path</comment>
+  </data>
+  <data name="Navigation_OpeningFile" xml:space="preserve">
+    <value>ফাইল খোলা হচ্ছে: {0}</value>
+    <comment>File opening message template: filename</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperation" xml:space="preserve">
+    <value>{0} টি নির্বাচিত আইটেমের জন্য মাল্টি-সিলেক্ট অপারেশন অনুরোধ করা হয়েছে</value>
+    <comment>Multi-select operation message template: count</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailed" xml:space="preserve">
+    <value>মাল্টি-সিলেক্ট অপারেশন ব্যর্থ: কোন আইটেম নির্বাচিত নেই</value>
+    <comment>Multi-select operation failure - no items</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailedValid" xml:space="preserve">
+    <value>মাল্টি-সিলেক্ট অপারেশন ব্যর্থ: কোন বৈধ আইটেম নির্বাচিত নেই</value>
+    <comment>Multi-select operation failure - no valid items</comment>
+  </data>
+  <data name="Navigation_ErrorGettingParentPath" xml:space="preserve">
+    <value>{0} এর জন্য প্যারেন্ট পাথ পেতে ত্রুটি</value>
+    <comment>Parent path error message template: current path</comment>
+  </data>
+  <data name="CloudSync_UserNotAuthenticated" xml:space="preserve">
+    <value>ব্যবহারকারী প্রমাণীকৃত নন</value>
+    <comment>Cloud sync authentication error</comment>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailable" xml:space="preserve">
+    <value>ক্লাউড এনক্রিপশন কী উপলব্ধ নেই। ক্লাউড সিঙ্ক সক্ষম করতে আপনার পাসওয়ার্ড পুনরায় লিখুন।</value>
+    <comment>Cloud sync encryption keys not available message</comment>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailableLogin" xml:space="preserve">
+    <value>ক্লাউড এনক্রিপশন কী উপলব্ধ নেই। ক্লাউড সিঙ্ক সক্ষম করতে আবার লগইন করুন।</value>
+    <comment>Cloud sync encryption keys not available - login required</comment>
+  </data>
+  <data name="CloudSync_SyncConflictDetected" xml:space="preserve">
+    <value>সিঙ্ক কনফ্লিক্ট সনাক্ত করা হয়েছে</value>
+    <comment>Cloud sync conflict detected message</comment>
+  </data>
+  <data name="CloudSync_SettingsSyncedToCloud" xml:space="preserve">
+    <value>ক্লাউডে সেটিংস সফলভাবে সিঙ্ক হয়েছে</value>
+    <comment>Cloud sync to cloud success message</comment>
+  </data>
+  <data name="CloudSync_SyncFailed" xml:space="preserve">
+    <value>সিঙ্ক ব্যর্থ</value>
+    <comment>Cloud sync failure message</comment>
+  </data>
+  <data name="CloudSync_SyncFailedWithStatus" xml:space="preserve">
+    <value>সিঙ্ক ব্যর্থ: {0}</value>
+    <comment>Cloud sync failure message with status template</comment>
+  </data>
+  <data name="CloudSync_SyncError" xml:space="preserve">
+    <value>সিঙ্ক ত্রুটি: {0}</value>
+    <comment>Cloud sync error message template</comment>
+  </data>
+  <data name="CloudSync_NoCloudSettingsFound" xml:space="preserve">
+    <value>কোন ক্লাউড সেটিংস পাওয়া যায়নি</value>
+    <comment>No cloud settings available message</comment>
+  </data>
+  <data name="CloudSync_LocalChangesDetected" xml:space="preserve">
+    <value>স্থানীয় পরিবর্তন সনাক্ত করা হয়েছে। প্রথমে কনফ্লিক্ট সমাধান করুন।</value>
+    <comment>Local changes conflict message</comment>
+  </data>
+  <data name="CloudSync_SettingsDownloadedFromCloud" xml:space="preserve">
+    <value>ক্লাউড থেকে সেটিংস সফলভাবে ডাউনলোড হয়েছে</value>
+    <comment>Cloud sync download success message</comment>
+  </data>
+  <data name="CloudSync_FailedToGetCloudSettings" xml:space="preserve">
+    <value>ক্লাউড সেটিংস পেতে ব্যর্থ</value>
+    <comment>Failed to get cloud settings message</comment>
+  </data>
+  <data name="CloudSync_DownloadFailed" xml:space="preserve">
+    <value>ডাউনলোড ব্যর্থ: {0}</value>
+    <comment>Cloud sync download failure message template</comment>
+  </data>
+  <data name="CloudSync_DownloadError" xml:space="preserve">
+    <value>ডাউনলোড ত্রুটি: {0}</value>
+    <comment>Cloud sync download error message template </comment>
+  </data>
+  <data name="CloudSync_CustomSettingsNotProvided" xml:space="preserve">
+    <value>কাস্টম সেটিংস প্রদান করা হয়নি</value>
+    <comment>Custom settings not provided error</comment>
+  </data>
+  <data name="CloudSync_InvalidResolutionOption" xml:space="preserve">
+    <value>অবৈধ সমাধান অপশন</value>
+    <comment>Invalid conflict resolution option error</comment>
+  </data>
+  <data name="CloudSync_ConflictResolutionError" xml:space="preserve">
+    <value>কনফ্লিক্ট সমাধান ত্রুটি: {0}</value>
+    <comment>Conflict resolution error message template </comment>
+  </data>
+  <data name="CloudSync_CloudSettingsDeletedSuccessfully" xml:space="preserve">
+    <value>ক্লাউড সেটিংস সফলভাবে মুছে ফেলা হয়েছে</value>
+    <comment>Cloud settings deletion success message</comment>
+  </data>
+  <data name="CloudSync_DeleteFailed" xml:space="preserve">
+    <value>মুছে ফেলা ব্যর্থ: {0}</value>
+    <comment>Cloud settings deletion failure message template</comment>
+  </data>
+  <data name="CloudSync_DeleteError" xml:space="preserve">
+    <value>মুছে ফেলার ত্রুটি: {0}</value>
+    <comment>Cloud settings deletion error message template</comment>
+  </data>
+  <data name="UI_Username" xml:space="preserve">
+    <value>ব্যবহারকারীর নাম</value>
+    <comment>Username label</comment>
+  </data>
+  <data name="UI_Password" xml:space="preserve">
+    <value>পাসওয়ার্ড</value>
+    <comment>Password label</comment>
+  </data>
+  <data name="UI_Search" xml:space="preserve">
+    <value>অনুসন্ধান...</value>
+    <comment>Search placeholder text</comment>
+  </data>
+  <data name="UI_SelectAll" xml:space="preserve">
+    <value>সব নির্বাচন করুন</value>
+    <comment>Select All checkbox text</comment>
+  </data>
+  <data name="Server_Name" xml:space="preserve">
+    <value>সার্ভারের নাম</value>
+    <comment>Server name field label</comment>
+  </data>
+  <data name="Server_Host" xml:space="preserve">
+    <value>হোস্ট</value>
+    <comment>Server host field label</comment>
+  </data>
+  <data name="Server_Port" xml:space="preserve">
+    <value>পোর্ট</value>
+    <comment>Server port field label</comment>
+  </data>
+  <data name="Server_Protocol" xml:space="preserve">
+    <value>প্রোটোকল</value>
+    <comment>Server protocol field label</comment>
+  </data>
+  <data name="Server_Title" xml:space="preserve">
+    <value>সার্ভার</value>
+    <comment>Server dialog title</comment>
+  </data>
+  <data name="Server_PublicKey" xml:space="preserve">
+    <value>পাবলিক কী</value>
+    <comment>Public key field label</comment>
+  </data>
+  <data name="Server_PrivateKey" xml:space="preserve">
+    <value>প্রাইভেট কী</value>
+    <comment>Private key field label</comment>
+  </data>
+  <data name="Server_KeyFilePassword" xml:space="preserve">
+    <value>কী ফাইল পাসওয়ার্ড</value>
+    <comment>Key file password field label</comment>
+  </data>
+  <data name="Server_UseKeyFileAuth" xml:space="preserve">
+    <value>কী ফাইল প্রমাণীকরণ ব্যবহার করুন</value>
+    <comment>Use key file authentication checkbox text</comment>
+  </data>
+  <data name="Server_ValidationSummary" xml:space="preserve">
+    <value>নিম্নলিখিত ত্রুটিগুলি ঠিক করুন:</value>
+    <comment>Validation summary header</comment>
+  </data>
+  <data name="Server_Actions" xml:space="preserve">
+    <value>সার্ভার ক্রিয়া</value>
+    <comment>Server actions dropdown tooltip</comment>
+  </data>
+  <data name="Snippet_DeleteConfirmTitle" xml:space="preserve">
+    <value>এই স্নিপেট মুছবেন?</value>
+    <comment>Snippet delete confirmation dialog title</comment>
+  </data>
+  <data name="Snippet_DeleteConfirmMessage" xml:space="preserve">
+    <value>আপনি কি নিশ্চিত যে আপনি {0} মুছে ফেলতে চান?</value>
+    <comment>Snippet delete confirmation message template</comment>
+  </data>
+  <data name="Snippet_SystemSnippets" xml:space="preserve">
+    <value>সিস্টেম স্নিপেটস ({0})</value>
+    <comment>System snippets submenu label with count</comment>
+  </data>
+  <data name="Snippet_UserSnippets" xml:space="preserve">
+    <value>ব্যবহারকারী স্নিপেটস ({0})</value>
+    <comment>User snippets submenu label with count</comment>
+  </data>
+  <data name="FileOp_UploadFile" xml:space="preserve">
+    <value>ফাইল আপলোড</value>
+    <comment>Upload file dialog title</comment>
+  </data>
+  <data name="FileOp_DownloadFile" xml:space="preserve">
+    <value>ফাইল ডাউনলোড</value>
+    <comment>Download file dialog title</comment>
+  </data>
+  <data name="FileOp_SelectDestinationFolder" xml:space="preserve">
+    <value>{0} এর জন্য গন্তব্য ফোল্ডার নির্বাচন করুন</value>
+    <comment>Folder download destination dialog title template</comment>
+  </data>
+  <data name="FileOp_DeleteConfirmTitle" xml:space="preserve">
+    <value>{0} মুছবেন?</value>
+    <comment>Delete confirmation dialog title template (file/folder)</comment>
+  </data>
+  <data name="FileOp_DeleteConfirmMessage" xml:space="preserve">
+    <value>আপনি কি নিশ্চিত যে আপনি '{0}' মুছে ফেলতে চান?
+
+এমন একটি কাজ যা পূর্বাবস্থায় ফেরানো যাবে না।</value>
+    <comment>Delete confirmation dialog message template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmTitle" xml:space="preserve">
+    <value>{0} আইটেম মুছবেন?</value>
+    <comment>Multi-delete confirmation dialog title template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessage" xml:space="preserve">
+    <value>আপনি কি নিশ্চিত bahawa আপনিআপনি কি নিশ্চিত যে আপনি নিম্নলিখিত {0} আইটেম(গুলি) মুছে ফেলতে চান?
+
+{1}
+
+এমন একটি কাজ যা পূর্বাবস্থায় ফেরানো যাবে না।</value>
+    <comment>Multi-delete confirmation dialog message template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessageMany" xml:space="preserve">
+    <value>আপনি কি নিশ্চিত যে আপনি {0} নির্বাচিত আইটেম মুছে ফেলতে চান?
+
+{1}... এবং আরো {2} টি
+
+এমন একটি কাজ যা পূর্বাবস্থায় ফেরানো যাবে না।</value>
+    <comment>Multi-delete confirmation dialog message template for many items</comment>
+  </data>
+  <data name="FileOp_UploadCancelledByUser" xml:space="preserve">
+    <value>ব্যবহারকারী কর্তৃক আপলোড বাতিল</value>
+    <comment>Upload cancelled status message</comment>
+  </data>
+  <data name="FileOp_DownloadCancelledByUser" xml:space="preserve">
+    <value>ব্যবহারকারী কর্তৃক ডাউনলোড বাতিল</value>
+    <comment>Download cancelled status message</comment>
+  </data>
+  <data name="FileOp_OperationCancelled" xml:space="preserve">
+    <value>অপারেশন বাতিল</value>
+    <comment>Generic operation cancelled message</comment>
+  </data>
+  <data name="FileOp_ClipboardEmpty" xml:space="preserve">
+    <value>ক্লিপবোর্ড খালি</value>
+    <comment>Empty clipboard warning message</comment>
+  </data>
+  <data name="FileOp_NoFilesForUpload" xml:space="preserve">
+    <value>আপলোডের জন্য কোন ফাইল প্রদান করা হয়নি</value>
+    <comment>No files selected for upload warning</comment>
+  </data>
+  <data name="FileOp_DragDropUploadInitiated" xml:space="preserve">
+    <value>{0} আইটেম(গুলি) এর জন্য ড্র্যাগ এবং ড্রপ আপলোড শুরু হয়েছে</value>
+    <comment>Drag drop upload status message</comment>
+  </data>
+  <data name="Tooltip_AddServer" xml:space="preserve">
+    <value>আপনার তালিকায় একটি নতুন সার্ভার যোগ করুন</value>
+    <comment>Add server button tooltip</comment>
+  </data>
+  <data name="Tooltip_OpenTerminal" xml:space="preserve">
+    <value>একটি নতুন টার্মিনাল সেশন খুলুন (মোড নির্বাচন করুন)</value>
+    <comment>Open terminal dropdown tooltip</comment>
+  </data>
+  <data name="Tooltip_ExportServers" xml:space="preserve">
+    <value>ব্যাকআপ বা শেয়ারিংয়ের জন্য আপনার সার্ভার তালিকা একটি ফাইলে এক্সপোর্ট করুন</value>
+    <comment>Export servers button tooltip</comment>
+  </data>
+  <data name="Tooltip_ImportServers" xml:space="preserve">
+    <value>একটি ফাইল থেকে আপনার তালিকায় সার্ভার ইমপোর্ট করুন</value>
+    <comment>Import servers button tooltip</comment>
+  </data>
+  <data name="Tooltip_SearchServers" xml:space="preserve">
+    <value>নাম, হোস্ট, বা প্রোটোকল দ্বারা সার্ভার খুঁজুন</value>
+    <comment>Search textbox tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowseFile" xml:space="preserve">
+    <value>ফাইল ব্রাউজ করুন</value>
+    <comment>Generic browse file button tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowsePublicKey" xml:space="preserve">
+    <value>পাবলিক কী ফাইল ব্রাউজ করুন</value>
+    <comment>Browse public key file tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowsePrivateKey" xml:space="preserve">
+    <value>প্রাইভেট কী ফাইল ব্রাউজা করুন</value>
+    <comment>Browse private key file tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowseExportLocation" xml:space="preserve">
+    <value>এক্সপোর্ট ফাইল অবস্থান ব্রাউজ করুন</value>
+    <comment>Browse export location tooltip</comment>
+  </data>
+  <data name="Tooltip_CloseTab" xml:space="preserve">
+    <value>ট্যাব বন্ধ করুন</value>
+    <comment>Close tab button tooltip</comment>
+  </data>
+  <data name="Placeholder_Username" xml:space="preserve">
+    <value>আপনার ব্যবহারকারীর নাম লিখুন</value>
+    <comment>Username textbox placeholder</comment>
+  </data>
+  <data name="Placeholder_Password" xml:space="preserve">
+    <value>আপনার পাসওয়ার্দ লিখুন</value>
+    <comment>Password textbox placeholder</comment>
+  </data>
+  <data name="Placeholder_ExportPassword" xml:space="preserve">
+    <value>এক্সপোর্ট ফাইল এনক্রিপ্ট করতে পাসওয়ার্ড লিখুন</value>
+    <comment>Export password placeholder</comment>
+  </data>
+  <data name="Placeholder_KeyFilePassword" xml:space="preserve">
+    <value>এনক্রিপ্ট করা কী ফাইলের জন্য পাসওয়ার্ড লিখুন (যদি কী এনক্রিপ্ট না হয় তবে খালি রাখুন)</value>
+    <comment>Key file password placeholder</comment>
+  </data>
+  <data name="Placeholder_ServerPassword" xml:space="preserve">
+    <value>আপনার পাসওয়ার্ড লিখুন (যদি কী ফাইল প্রমাণীকরণ ব্যবহার করেন তবে খালি রাখুন)</value>
+    <comment>Server password placeholder</comment>
+  </data>
+  <data name="Terminal_Elevated" xml:space="preserve">
+    <value>উচ্চতর</value>
+    <comment>Elevated terminal mode</comment>
+  </data>
+  <data name="Terminal_Normal" xml:space="preserve">
+    <value>সাধারণ</value>
+    <comment>Normal terminal mode</comment>
+  </data>
+  <data name="Terminal_ElevatedTooltip" xml:space="preserve">
+    <value>প্রশাসক সুবিধা সহ টার্মিনাল খুলুন</value>
+    <comment>Elevated terminal tooltip</comment>
+  </data>
+  <data name="Terminal_NormalTooltip" xml:space="preserve">
+    <value>সাধারণ সুবিধা সহ টার্মিনাল খুলুন</value>
+    <comment>Normal terminal tooltip</comment>
+  </data>
+  <data name="Export_Title" xml:space="preserve">
+    <value>সার্ভার এক্সপোর্ট</value>
+    <comment>Export dialog title</comment>
+  </data>
+  <data name="Export_SelectServers" xml:space="preserve">
+    <value>এক্সপোর্ট করার জন্য সার্ভার নির্বাচন করুন:</value>
+    <comment>Export dialog instruction</comment>
+  </data>
+  <data name="Export_ToFile" xml:space="preserve">
+    <value>ফাইলে এক্সপোর্ট করুন</value>
+    <comment>Export file path label</comment>
+  </data>
+  <data name="Import_Title" xml:space="preserve">
+    <value>ইমপোর্ট</value>
+    <comment>Import dialog title</comment>
+  </data>
+  <data name="Import_InvalidPassword" xml:space="preserve">
+    <value>অবৈধ পাসওয়ার্ড</value>
+    <comment>Import invalid password message</comment>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>লগইন</value>
+    <comment>Login dialog title</comment>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>ব্যবহারকারীর নাম:</value>
+    <comment>Login username label</comment>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>পাসওয়ার্ড:</value>
+    <comment>Login password label</comment>
+  </data>
+  <data name="Settings_Personalization" xml:space="preserve">
+    <value>ব্যক্তিগতকরণ</value>
+    <comment>Settings personalization section</comment>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>থিম</value>
+    <comment>Settings theme label</comment>
+  </data>
+  <data name="Settings_Light" xml:space="preserve">
+    <value>হালকা</value>
+    <comment>Light theme option</comment>
+  </data>
+  <data name="Settings_Dark" xml:space="preserve">
+    <value>গাঢ়</value>
+    <comment>Dark theme option</comment>
+  </data>
+  <data name="Settings_DefaultShell" xml:space="preserve">
+    <value>ডিফল্ট শেল</value>
+    <comment>Default shell setting</comment>
+  </data>
+  <data name="Settings_Account" xml:space="preserve">
+    <value>অ্যাকাউন্ট</value>
+    <comment>Settings account section</comment>
+  </data>
+  <data name="Settings_CloudSync" xml:space="preserve">
+    <value>ক্লাউড সিঙ্ক</value>
+    <comment>Settings cloud sync section</comment>
+  </data>
+  <data name="Settings_EnableCloudSync" xml:space="preserve">
+    <value>ক্লাউড সিঙ্ক সক্ষম করুন</value>
+    <comment>Enable cloud sync checkbox</comment>
+  </data>
+  <data name="Settings_AutoSyncStartup" xml:space="preserve">
+    <value>স্টার্টআপে অটো-সিঙ্ক</value>
+    <comment>Auto sync on startup checkbox</comment>
+  </data>
+  <data name="Settings_AutoSyncChanges" xml:space="preserve">
+    <value>পরিবর্তনে অটো-সিঙ্ক</value>
+    <comment>Auto sync on changes checkbox</comment>
+  </data>
+  <data name="Settings_LastSync" xml:space="preserve">
+    <value>শেষ সিঙ্ক: {0}</value>
+    <comment>Last sync status template</comment>
+  </data>
+  <data name="Settings_DeleteCloudData" xml:space="preserve">
+    <value>ক্লাউড ডেটা মুছুন</value>
+    <comment>Delete cloud data button</comment>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>সম্পর্কে</value>
+    <comment>Settings about section</comment>
+  </data>
+  <data name="Status_CancelledSSHTerminalUAC" xml:space="preserve">
+    <value>SSH টার্মিনাল খোলা হয়নি (প্রশাসক অনুমতি প্রত্যাখ্যাত হয়েছে)।</value>
+    <comment>Status message when UAC is cancelled for elevated terminal</comment>
+  </data>
+  <data name="App_DeveloperCredit" xml:space="preserve">
+    <value>তৌফিক আবদুর রহমান কর্তৃক</value>
+    <comment>Developer credit line in main window</comment>
+  </data>
+  <data name="Protocol_SSH_Description" xml:space="preserve">
+    <value>SSH: টার্মিনাল অ্যাক্সেসের জন্য নিরাপদ শেল</value>
+    <comment>SSH protocol description</comment>
+  </data>
+  <data name="Protocol_FTP_Description" xml:space="preserve">
+    <value>FTP: ফাইল ট্রান্সফার প্রোটোকল</value>
+    <comment>FTP protocol description</comment>
+  </data>
+  <data name="Protocol_SFTP_Description" xml:space="preserve">
+    <value>SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</value>
+    <comment>SFTP protocol description</comment>
+  </data>
+  <data name="Protocol_Description_Combined" xml:space="preserve">
+    <value>SSH: টার্মিনাল অ্যাক্সেসের জন্য নিরাপদ শেল
+FTP: ফাইল ট্রান্সফার প্রোটোকল
+SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</value>
+    <comment>Combined protocol descriptions</comment>
+  </data>
+  <data name="Validation_HostTooltip" xml:space="preserve">
+    <value>IP ঠিকানা (যেমন, 192.168.1.100) বা হোস্টনাম (যেমন, server.example.com) লিখুন</value>
+    <comment>Host field validation tooltip</comment>
+  </data>
+  <data name="Validation_PortTooltip" xml:space="preserve">
+    <value>পোর্ট নম্বর লিখুন (1-65535)। সাধারণ পোর্ট: SSH=22, FTP=21, SFTP=22</value>
+    <comment>Port field validation tooltip</comment>
+  </data>
+  <data name="Validation_ProtocolTooltip" xml:space="preserve">
+    <value>সংযোগ প্রোটোকল নির্বাচন করুন</value>
+    <comment>Protocol field tooltip</comment>
+  </data>
+  <data name="Validation_UsernameTooltip" xml:space="preserve">
+    <value>সার্ভারের জন্য আপনার ব্যবহারকারীর নাম লিখুন</value>
+    <comment>Username field tooltip</comment>
+  </data>
+  <data name="Validation_PublicKeyTooltip" xml:space="preserve">
+    <value>আপনার পাবলিক কী ফাইলের পাথ (.pub)</value>
+    <comment>Public key path tooltip</comment>
+  </data>
+  <data name="Validation_PrivateKeyTooltip" xml:space="preserve">
+    <value>আপনার প্রাইভেট কী ফাইলের পাথ (.pem, .key)</value>
+    <comment>Private key path tooltip</comment>
+  </data>
+  <data name="FileFilter_ScratchShell" xml:space="preserve">
+    <value>(*.ss)|*.ss|সব ফাইল (*.*)|*.*</value>
+    <comment>ScratchShell file filter</comment>
+  </data>
+  <data name="FileFilter_PublicKey" xml:space="preserve">
+    <value>পাবলিক কী ফাইল (*.pub)|*.pub|সব ফাইল (*.*)|*.*</value>
+    <comment>Public key file filter</comment>
+  </data>
+  <data name="FileFilter_PrivateKey" xml:space="preserve">
+    <value>প্রাইভেট কী ফাইল (*.pem;*.key)|*.pem;*.key|সব ফাইল (*.*)|*.*</value>
+    <comment>Private key file filter</comment>
+  </data>
+  <data name="Dialog_Reconnect_ConnectionTimedOutTemplate" xml:space="preserve">
+    <value>'{0}' ({1}:{2}) এর সাথে সংযোগ টাইমআউট হয়েছে।</value>
+    <comment>Reconnection dialog timeout message template: server name, host, port</comment>
+  </data>
+  <data name="Dialog_Reconnect_Title" xml:space="preserve">
+    <value>সংযোগ হারিয়ে গেছে</value>
+    <comment>Reconnection dialog window title</comment>
+  </data>
+  <data name="Dialog_Reconnect_PrimaryButton" xml:space="preserve">
+    <value>পুনরায় সংযোগ</value>
+    <comment>Reconnect button text</comment>
+  </data>
+  <data name="Dialog_Reconnect_CloseButton" xml:space="preserve">
+    <value>ট্যাব বন্ধ করুন</value>
+    <comment>Close tab button text</comment>
+  </data>
+  <data name="Dialog_Reconnect_Header" xml:space="preserve">
+    <value>সংযোগ টাইমআউট</value>
+    <comment>Header text inside reconnection dialog</comment>
+  </data>
+  <data name="Dialog_Reconnect_DefaultInfo" xml:space="preserve">
+    <value>সার্ভারের সাথে সংযোগ টাইমআউট হয়েছে।</value>
+    <comment>Default info text before formatting</comment>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsLabel" xml:space="preserve">
+    <value>ত্রুটির বিবরণ:</value>
+    <comment>Label for error details section</comment>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsDefault" xml:space="preserve">
+    <value>নেটওয়ার্ক টাইমআউট বা সার্ভার অনুপলব্ধতার কারণে সংযোগ হারিয়ে গেছে।</value>
+    <comment>Default error details description</comment>
+  </data>
+  <data name="Dialog_Reconnect_Question" xml:space="preserve">
+    <value>আপনি কী করতে চান?</value>
+    <comment>Prompt asking user what action to take</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnect" xml:space="preserve">
+    <value>পুনরায় সংযোগ</value>
+    <comment>Reconnect action title </comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnectDescription" xml:space="preserve">
+    <value>সার্ভারের সাথে পুনরায় সংযোগ করার চেষ্টা করুন এবং আপনার সেশন পুনরায় শুরু করুন</value>
+    <comment>Description of reconnect action</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionClose" xml:space="preserve">
+    <value>ট্যাব বন্ধ করুন</value>
+    <comment>Close tab action title</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionCloseDescription" xml:space="preserve">
+    <value>এই সংযোগ ট্যাব বন্ধ করুন এবং ড্যাশবোর্ডে ফিরে যান</value>
+    <comment>Description of close action</comment>
+  </data>
+  <data name="EventHandler_EditCancelled" xml:space="preserve">
+    <value>সম্পাদনা বাতিল করা হয়েছে: {0}</value>
+    <comment>Edit operation cancellation message template</comment>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupSuccess" xml:space="preserve">
+    <value>ব্রাউজার ইভেন্ট সফলভাবে সেটআপ হয়েছে</value>
+    <comment>Browser events setup success message</comment>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupError" xml:space="preserve">
+    <value>ব্রাউজার ইভেন্ট সেটআপ ত্রুটি</value>
+    <comment>Browser events setup error message</comment>
+  </data>
+  <data name="EventHandler_SafeExecuteError" xml:space="preserve">
+    <value>নিরাপদ এক্সিকিউট ত্রুটি</value>
+    <comment>Safe execute error message</comment>
+  </data>
+  <data name="EventHandler_SafeExecuteAsyncError" xml:space="preserve">
+    <value>নিরাপদ অ্যাসিঙ্ক এক্সিকিউট ত্রুটি</value>
+    <comment>Safe execute async error message</comment>
+  </data>
+  <data name="EventHandler_ExceptionIn" xml:space="preserve">
+    <value>{0} এ ব্যতিক্রম</value>
+    <comment>Exception in handler message template</comment>
+  </data>
+  <data name="EventHandler_CriticalErrorInExceptionHandler" xml:space="preserve">
+    <value>ব্যতিক্রম হ্যান্ডলারে জটিল ত্রুটি: {0}</value>
+    <comment>Critical error in exception handler message template</comment>
+  </data>
+  <data name="Terminal_UpdateError" xml:space="preserve">
+    <value>টার্মিনাল আপডেট ত্রুটি: {0}</value>
+    <comment>Terminal update error message template</comment>
+  </data>
+  <data name="Critical_ErrorInDispose" xml:space="preserve">
+    <value>ডিসপোজে জটিল ত্রুটি: {0} - {1}</value>
+    <comment>Critical error in dispose message template: exception type, message</comment>
+  </data>
+  <data name="Connection_HandleTimeoutError" xml:space="preserve">
+    <value>সংযোগ টাইমআউট পরিচালনার ত্রুটি</value>
+    <comment>Error handling connection timeout message</comment>
+  </data>
+  <data name="Connection_ErrorClosingTab" xml:space="preserve">
+    <value>বর্তমান ট্যাব বন্ধ করতে ত্রুটি</value>
+    <comment>Error closing tab message</comment>
+  </data>
+  <data name="Connection_ErrorDuringControlLoad" xml:space="preserve">
+    <value>কন্ট্রোল লোড করার সময় ত্রুটি</value>
+    <comment>Error during control load message</comment>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>ভাষা</value>
+    <comment>Language setting label</comment>
+  </data>
+  <data name="Language_English" xml:space="preserve">
+    <value>English</value>
+    <comment>English language option</comment>
+  </data>
+  <data name="Language_Bangla" xml:space="preserve">
+    <value>বাংলা</value>
+    <comment>Bangla language option</comment>
+  </data>
+  <data name="Language_ChangeMessage" xml:space="preserve">
+    <value>ভাষা পরিবর্তনের জন্য অ্যাপ্লিকেশন পুনরায় চালু করুন</value>
+    <comment>Message about restarting app for language change</comment>
+  </data>
+  <data name="Navigation_Home" xml:space="preserve">
+    <value>হোম</value>
+  </data>
+  <data name="Navigation_Session" xml:space="preserve">
+    <value>সেশন</value>
+  </data>
+  <data name="Navigation_Settings" xml:space="preserve">
+    <value>সেটিংস</value>
+  </data>
+  <data name="UI_Name" xml:space="preserve">
+    <value>নাম</value>
+    <comment>Column header: Name</comment>
+  </data>
+  <data name="UI_Size" xml:space="preserve">
+    <value>আকার</value>
+    <comment>Column header: Size</comment>
+  </data>
+  <data name="UI_Type" xml:space="preserve">
+    <value>ধরন</value>
+    <comment>Column header: Type</comment>
+  </data>
+  <data name="UI_Date" xml:space="preserve">
+    <value>তারিখ</value>
+    <comment>Column header: Date</comment>
+  </data>
+  <data name="UI_DateModified" xml:space="preserve">
+    <value>পরিবর্তিত তারিখ</value>
+    <comment>Column header: Date Modified</comment>
+  </data>
+  <data name="UI_SortAscending" xml:space="preserve">
+    <value>क्रमबद्ध करें (छोटे से बड़े क्रम में सॉर्ट করার জন্য क्लिक करें)</value>
+    <comment>Sort ascending tooltip</comment>
+  </data>
+  <data name="UI_SortDescending" xml:space="preserve">
+    <value>क्रमबद्ध करें (बड़े से छोटे क्रम में सॉर्ट करने के लिए क्लिक करें)</value>
+    <comment>Sort descending tooltip</comment>
+  </data>
+  <data name="Operation_InProgress" xml:space="preserve">
+    <value>অপারেশন চলমান...</value>
+    <comment>Default progress message</comment>
+  </data>
+  <data name="Operation_Cancelling" xml:space="preserve">
+    <value>অপারেশন বাতিল করা হচ্ছে...</value>
+    <comment>Operation cancelling message</comment>
+  </data>
+  <data name="DragDrop_DropHere" xml:space="preserve">
+    <value>আপলোড করতে {0} '{1}' এখানে ছেড়ে দিন</value>
+    <comment>Drag drop message template: type, filename</comment>
+  </data>
+  <data name="DragDrop_FolderRecursive" xml:space="preserve">
+    <value>ফোল্ডারের সামগ্রী পুনরাবৃত্তভাবে আপলোড করা হবে</value>
+    <comment>Drag drop folder description</comment>
+  </data>
+  <data name="DragDrop_FileToDirectory" xml:space="preserve">
+    <value>বর্তমান ডিরেক্টরিতে ফাইল আপলোড করা হবে</value>
+    <comment>Drag drop file description</comment>
+  </data>
+  <data name="DragDrop_DropMultiple" xml:space="preserve">
+    <value>আপলোড করতে {0} আইটেম এখানে ছেড়ে দিন</value>
+    <comment>Drag drop multiple items message template: count</comment>
+  </data>
+  <data name="DragDrop_FilesAndFolders" xml:space="preserve">
+    <value>{0} ফাইল এবং {1} ফোল্ডার আপলোড করা হবে</value>
+    <comment>Drag drop mixed content description template: file count, folder count</comment>
+  </data>
+  <data name="DragDrop_FoldersOnly" xml:space="preserve">
+    <value>{0} ফোল্ডার পুনরাবৃত্তভাবে আপলোড করা হবে</value>
+    <comment>Drag drop folders only description template: folder count</comment>
+  </data>
+  <data name="DragDrop_FilesOnly" xml:space="preserve">
+    <value>{0} ফাইল আপলোড করা হবে</value>
+    <comment>Drag drop files only description template: file count</comment>
+  </data>
+  <data name="UI_GridView" xml:space="preserve">
+    <value>গ্রিড ভিউ</value>
+    <comment>Grid view button tooltip</comment>
+  </data>
+  <data name="UI_ListView" xml:space="preserve">
+    <value>লিস্ট ভিউ</value>
+    <comment>List view button tooltip</comment>
+  </data>
+  <data name="UI_SortBy" xml:space="preserve">
+    <value>সাজান:</value>
+    <comment>Sort by label text</comment>
+  </data>
+  <data name="UI_SortOptions" xml:space="preserve">
+    <value>সাজানোর অপশন</value>
+    <comment>Sort dropdown tooltip</comment>
+  </data>
+  <data name="UI_ToggleSortDirection" xml:space="preserve">
+    <value>সাজানোর দিক পরিবর্তন করুন</value>
+    <comment>Toggle sort direction button tooltip</comment>
+  </data>
+  <data name="UI_SortNameAZ" xml:space="preserve">
+    <value>নাম (ক থেকে য)</value>
+    <comment>Sort by name ascending menu item</comment>
+  </data>
+  <data name="UI_SortNameZA" xml:space="preserve">
+    <value>নাম (য থেকে ক)</value>
+    <comment>Sort by name descending menu item</comment>
+  </data>
+  <data name="UI_SortSizeSmallest" xml:space="preserve">
+    <value>আকার (ছোট আগে)</value>
+    <comment>Sort by size ascending menu item</comment>
+  </data>
+  <data name="UI_SortSizeLargest" xml:space="preserve">
+    <value>আকার (বড় আগে)</value>
+    <comment>Sort by size descending menu item</comment>
+  </data>
+  <data name="UI_SortTypeAZ" xml:space="preserve">
+    <value>ধরন (ক থেকে য)</value>
+    <comment>Sort by type ascending menu item</comment>
+  </data>
+  <data name="UI_SortTypeZA" xml:space="preserve">
+    <value>ধরন (য থেকে ক)</value>
+    <comment>Sort by type descending menu item</comment>
+  </data>
+  <data name="UI_SortDateOldest" xml:space="preserve">
+    <value>তারিখ (পুরনো আগে)</value>
+    <comment>Sort by date ascending menu item</comment>
+  </data>
+  <data name="UI_SortDateNewest" xml:space="preserve">
+    <value>তারিখ (নতুন আগে)</value>
+    <comment>Sort by date descending menu item</comment>
+  </data>
+  <data name="UI_CancelOperation" xml:space="preserve">
+    <value>বর্তমান অপারেশন বাতিল করুন</value>
+    <comment>Cancel operation button tooltip</comment>
+  </data>
+  <data name="UI_DragDropDefault" xml:space="preserve">
+    <value>আপলোড করতে ফাইল ও ফোল্ডার এখানে ছেড়ে দিন</value>
+    <comment>Default drag drop overlay text</comment>
+  </data>
+  <data name="UI_DragDropSupport" xml:space="preserve">
+    <value>একাধিক ফাইল ও ফোল্ডার সাপোর্ট করা হয়</value>
+    <comment>Drag drop support subtext</comment>
+  </data>
+  <data name="Tooltip_Back" xml:space="preserve">
+    <value>পেছনে (Alt+Left Arrow)</value>
+    <comment>Back navigation button tooltip</comment>
+  </data>
+  <data name="Tooltip_Forward" xml:space="preserve">
+    <value>এগিয়ে (Alt+Right Arrow)</value>
+    <comment>Forward navigation button tooltip</comment>
+  </data>
+  <data name="Tooltip_Refresh" xml:space="preserve">
+    <value>রিফ্রেশ (F5)</value>
+    <comment>Refresh button tooltip</comment>
+  </data>
+  <data name="Tooltip_UpOneLevel" xml:space="preserve">
+    <value>এক স্তর উপরে</value>
+    <comment>Up button tooltip</comment>
+  </data>
+  <data name="Tooltip_CreateNewFolder" xml:space="preserve">
+    <value>নতুন ফোল্ডার তৈরি করুন</value>
+    <comment>Create folder button tooltip</comment>
+  </data>
+  <data name="Tooltip_Paste" xml:space="preserve">
+    <value>পেস্ট (Ctrl+V)</value>
+    <comment>Paste button tooltip</comment>
+  </data>
+  <data name="Tooltip_ViewOptions" xml:space="preserve">
+    <value>দেখার অপশন</value>
+    <comment>View options button tooltip</comment>
+  </data>
+  <data name="Tooltip_FullScreenMode" xml:space="preserve">
+    <value>ফুল স্ক্রিন মোড</value>
+    <comment>Full screen button tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideLogPanel" xml:space="preserve">
+    <value>লগ প্যানেল দেখান/লুকান</value>
+    <comment>Log panel toggle button tooltip</comment>
+  </data>
+  <data name="UI_OperationLog" xml:space="preserve">
+    <value>অপারেশন লগ</value>
+    <comment>Operation log panel header</comment>
+  </data>
+  <data name="Tooltip_CopyFromTerminal" xml:space="preserve">
+    <value>টার্মিনাল থেকে নির্বাচিত টেক্সট কপি করুন (Ctrl+Left Click)</value>
+    <comment>Copy from terminal tooltip</comment>
+  </data>
+  <data name="Tooltip_PasteToTerminal" xml:space="preserve">
+    <value>টার্মিনালে টেক্সট পেস্ট করুন (Alt+Left Click)</value>
+    <comment>Paste to terminal tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideSnippets" xml:space="preserve">
+    <value>কমান্ড স্নিপেট প্যানেল দেখান/লুকান</value>
+    <comment>Show/hide snippets panel tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideThemes" xml:space="preserve">
+    <value>থিমিং প্যানেল দেখান/লুকান</value>
+    <comment>Show/hide theming panel tooltip</comment>
+  </data>
+  <data name="Tooltip_ToggleFullScreenTerminal" xml:space="preserve">
+    <value>টার্মিনালের জন্য ফুল স্ক্রিন মোড টগল করুন</value>
+    <comment>Toggle full screen terminal tooltip</comment>
+  </data>
+  <data name="ContextMenu_SelectAll" xml:space="preserve">
+    <value>সব নির্বাচন করুন</value>
+    <comment>Context menu item: Select All</comment>
+  </data>
+  <data name="Terminal_ConnectingTo" xml:space="preserve">
+    <value>{0} এর সাথে সংযোগ করা হচ্ছে...</value>
+    <comment>Terminal connecting status message template: server name</comment>
+  </data>
+  <data name="Terminal_ConnectionFailed" xml:space="preserve">
+    <value>{0} এর সাথে সংযোগ ব্যর্থ: {1}</value>
+    <comment>Terminal connection failed message template: server name, error</comment>
+  </data>
+  <data name="Terminal_ServerNotInitialized" xml:space="preserve">
+    <value>সার্ভার ইনিশিয়ালাইজ করা হয়নি।</value>
+    <comment>Terminal server not initialized message</comment>
+  </data>
+  <data name="Terminal_ResizeFailed" xml:space="preserve">
+    <value>টার্মিনাল রিসাইজ ব্যর্থ: {0}</value>
+    <comment>Terminal resize failed message template: error</comment>
+  </data>
+  <data name="Terminal_Error" xml:space="preserve">
+    <value>ত্রুটি: {0}</value>
+    <comment>Generic terminal error message template: error</comment>
+  </data>
+  <data name="Terminal_AutoCompleteError" xml:space="preserve">
+    <value>অটোকমপ্লিট ত্রুটি: {0}</value>
+    <comment>Terminal autocomplete error message template: error</comment>
+  </data>
+  <data name="Tooltip_CreateSnippet" xml:space="preserve">
+    <value>নতুন স্নিপেট তৈরি করুন</value>
+    <comment>Create snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_EditSnippet" xml:space="preserve">
+    <value>নির্বাচিত স্নিপেট সম্পাদনা করুন</value>
+    <comment>Edit snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_DeleteSnippet" xml:space="preserve">
+    <value>নির্বাচিত স্নিপেট মুছে ফেলুন</value>
+    <comment>Delete snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideSystemSnippets" xml:space="preserve">
+    <value>সিস্টেম স্নিপেট দেখান/লুকান</value>
+    <comment>Toggle system snippets visibility tooltip</comment>
+  </data>
+  <data name="Tooltip_RunSnippet" xml:space="preserve">
+    <value>এই স্নিপেট টার্মিনালে চালান</value>
+    <comment>Run snippet button tooltip</comment>
+  </data>
+  <data name="Placeholder_SearchSnippets" xml:space="preserve">
+    <value>স্নিপেট খুঁজুন...</value>
+    <comment>Search snippets textbox placeholder</comment>
+  </data>
+  <data name="Theme_TerminalTheme" xml:space="preserve">
+    <value>টার্মিনাল থিম</value>
+    <comment>Terminal theme header text</comment>
+  </data>
+  <data name="Theme_Apply" xml:space="preserve">
+    <value>প্রয়োগ করুন</value>
+    <comment>Apply theme button text</comment>
+  </data>
+  <data name="Theme_PredefinedThemes" xml:space="preserve">
+    <value>পূর্বনির্ধারিত থিম:</value>
+    <comment>Predefined themes section label</comment>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>গাঢ়</value>
+    <comment>Dark theme button text</comment>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>হালকা</value>
+    <comment>Light theme button text</comment>
+  </data>
+  <data name="Theme_Monokai" xml:space="preserve">
+    <value>মোনোকাই</value>
+    <comment>Monokai theme button text</comment>
+  </data>
+  <data name="Theme_Reset" xml:space="preserve">
+    <value>রিসেট</value>
+    <comment>Reset theme button text</comment>
+  </data>
+  <data name="Theme_FontSettings" xml:space="preserve">
+    <value>ফন্ট সেটিংস</value>
+    <comment>Font settings section header</comment>
+  </data>
+  <data name="Theme_FontFamily" xml:space="preserve">
+    <value>পরিবার:</value>
+    <comment>Font family label</comment>
+  </data>
+  <data name="Theme_FontSize" xml:space="preserve">
+    <value>আকার:</value>
+    <comment>Font size label</comment>
+  </data>
+  <data name="Theme_ColorSettings" xml:space="preserve">
+    <value>রং সেটিংস</value>
+    <comment>Color settings section header</comment>
+  </data>
+  <data name="Theme_ColorEditing" xml:space="preserve">
+    <value>সম্পাদনা:</value>
+    <comment>Color editing selection label</comment>
+  </data>
+  <data name="Theme_TextColor" xml:space="preserve">
+    <value>টেক্সট রং</value>
+    <comment>Text color option</comment>
+  </data>
+  <data name="Theme_BackgroundColor" xml:space="preserve">
+    <value>ব্যাকগ্রাউন্ড রং</value>
+    <comment>Background color option</comment>
+  </data>
+  <data name="Theme_SelectionColor" xml:space="preserve">
+    <value>নির্বাচন রং</value>
+    <comment>Selection color option</comment>
+  </data>
+  <data name="Theme_CursorColor" xml:space="preserve">
+    <value>কার্সার রঙ</value>
+    <comment>Cursor color option</comment>
+  </data>
+  <data name="Theme_CopyHighlightColor" xml:space="preserve">
+    <value>কপি হাইলাইট রং</value>
+    <comment>Copy highlight color option</comment>
+  </data>
+  <data name="Theme_Text" xml:space="preserve">
+    <value>টেক্সট</value>
+    <comment>Text color preview label</comment>
+  </data>
+  <data name="Theme_Background" xml:space="preserve">
+    <value>ব্যাকগ্রাউন্ড</value>
+    <comment>Background color preview label</comment>
+  </data>
+  <data name="Theme_Selection" xml:space="preserve">
+    <value>নির্বাচন</value>
+    <comment>Selection color preview label</comment>
+  </data>
+  <data name="Theme_Cursor" xml:space="preserve">
+    <value>কার্সার</value>
+    <comment>Cursor color preview label</comment>
+  </data>
+  <data name="Theme_Copy" xml:space="preserve">
+    <value>কপি</value>
+    <comment>Copy color preview label</comment>
+  </data>
+  <data name="Theme_TerminalPresets" xml:space="preserve">
+    <value>টার্মিনাল প্রিসেট:</value>
+    <comment>Terminal color presets section label</comment>
+  </data>
+  <data name="Tooltip_PreviewDarkTheme" xml:space="preserve">
+    <value>গাঢ় থিম প্রিভিউ করুন</value>
+    <comment>Preview dark theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_PreviewLightTheme" xml:space="preserve">
+    <value>হালকা থিম প্রিভিউ করুন</value>
+    <comment>Preview light theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_PreviewMonokaiTheme" xml:space="preserve">
+    <value>মোনোকাই থিম প্রিভিউ করুন</value>
+    <comment>Preview Monokai theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_ResetTheme" xml:space="preserve">
+    <value>থিম ডিফল্ট মানে রিসেট করুন</value>
+    <comment>Reset theme button tooltip</comment>
+  </data>
+</root>

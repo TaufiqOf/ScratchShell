@@ -8,6 +8,9 @@
     <Setting Name="DefaultShellType" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="CurrentLanguage" Type="System.String" Scope="User">
+      <Value Profile="(Default)">en</Value>
+    </Setting>
     <Setting Name="Servers" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

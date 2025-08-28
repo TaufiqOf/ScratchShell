@@ -4,11 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:dialog="clr-namespace:ScratchShell.Views.Dialog"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="Connection Lost"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
+    Title="{helpers:Localized Dialog_Reconnect_Title}"
     MinWidth="400"
     MinHeight="200"
-    CloseButtonText="Close Tab"
-    PrimaryButtonText="Reconnect">
+    CloseButtonText="{helpers:Localized Dialog_Reconnect_CloseButton}"
+    PrimaryButtonText="{helpers:Localized Dialog_Reconnect_PrimaryButton}">
     <ui:ContentDialog.Resources>
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type dialog:ReconnectionDialog}" />
     </ui:ContentDialog.Resources>
@@ -21,10 +22,7 @@
         </Grid.RowDefinitions>
 
         <!--  Icon and main message  -->
-        <StackPanel
-            Grid.Row="0"
-            Margin="0,0,0,15"
-            Orientation="Horizontal">
+        <StackPanel Grid.Row="0" Margin="0,0,0,15" Orientation="Horizontal">
             <ui:SymbolIcon
                 Margin="0,0,10,0"
                 FontSize="24"
@@ -34,7 +32,7 @@
                 VerticalAlignment="Center"
                 FontSize="16"
                 FontWeight="SemiBold"
-                Text="Connection Timeout" />
+                Text="{helpers:Localized Dialog_Reconnect_Header}" />
         </StackPanel>
 
         <!--  Server information  -->
@@ -43,7 +41,7 @@
                 x:Name="ServerInfoText"
                 FontSize="14"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="Connection to server has timed out."
+                Text="{helpers:Localized Dialog_Reconnect_DefaultInfo}"
                 TextWrapping="Wrap" />
         </StackPanel>
 
@@ -53,13 +51,13 @@
                 Margin="0,0,0,5"
                 FontSize="12"
                 FontWeight="SemiBold"
-                Text="Error Details:" />
+                Text="{helpers:Localized Dialog_Reconnect_ErrorDetailsLabel}" />
             <TextBlock
                 x:Name="ErrorDetailsText"
                 FontSize="12"
                 FontStyle="Italic"
                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                Text="The connection has been lost due to network timeout or server unavailability."
+                Text="{helpers:Localized Dialog_Reconnect_ErrorDetailsDefault}"
                 TextWrapping="Wrap" />
         </StackPanel>
 
@@ -69,7 +67,7 @@
                 Margin="0,0,0,10"
                 FontSize="14"
                 FontWeight="SemiBold"
-                Text="What would you like to do?" />
+                Text="{helpers:Localized Dialog_Reconnect_Question}" />
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -80,11 +78,11 @@
                     <TextBlock
                         FontSize="12"
                         FontWeight="SemiBold"
-                        Text="Reconnect" />
+                        Text="{helpers:Localized Dialog_Reconnect_ActionReconnect}" />
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="Attempt to reconnect to the server and resume your session"
+                        Text="{helpers:Localized Dialog_Reconnect_ActionReconnectDescription}"
                         TextWrapping="Wrap" />
                 </StackPanel>
 
@@ -92,11 +90,11 @@
                     <TextBlock
                         FontSize="12"
                         FontWeight="SemiBold"
-                        Text="Close Tab" />
+                        Text="{helpers:Localized Dialog_Reconnect_ActionClose}" />
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="Close this connection tab and return to the dashboard"
+                        Text="{helpers:Localized Dialog_Reconnect_ActionCloseDescription}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Grid>

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     AllowDrop="True"
     DragEnter="BrowserUserControl_DragEnter"
@@ -129,7 +130,7 @@
                         Margin="2"
                         Padding="4"
                         Click="GridViewButton_Click"
-                        ToolTip="Grid View">
+                        ToolTip="{helpers:Localized UI_GridView}">
                         <ui:SymbolIcon FontSize="16" Symbol="Grid24" />
                     </ui:Button>
                     <ui:Button
@@ -139,7 +140,7 @@
                         Margin="2"
                         Padding="4"
                         Click="ListViewButton_Click"
-                        ToolTip="List View">
+                        ToolTip="{helpers:Localized UI_ListView}">
                         <ui:SymbolIcon FontSize="16" Symbol="List24" />
                     </ui:Button>
                 </StackPanel>
@@ -151,7 +152,7 @@
                         VerticalAlignment="Center"
                         FontSize="12"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="Sort by:" />
+                        Text="{helpers:Localized UI_SortBy}" />
 
                     <ui:DropDownButton
                         x:Name="SortDropDown"
@@ -161,58 +162,58 @@
                         Click="SortDropDown_Click"
                         Content="{Binding ElementName=SortDropDown, Path=Tag, FallbackValue='Name ↑'}"
                         Icon="{ui:SymbolIcon Symbol=ArrowSort24}"
-                        ToolTip="Sort options">
+                        ToolTip="{helpers:Localized UI_SortOptions}">
                         <ui:DropDownButton.Flyout>
                             <ContextMenu>
                                 <ui:MenuItem
                                     x:Name="SortByNameAsc"
                                     Click="SortMenuItem_Click"
-                                    Header="Name (A to Z)"
+                                    Header="{helpers:Localized UI_SortNameAZ}"
                                     Icon="{ui:SymbolIcon Symbol=TextSortAscending20}"
                                     Tag="Name:Ascending" />
                                 <ui:MenuItem
                                     x:Name="SortByNameDesc"
                                     Click="SortMenuItem_Click"
-                                    Header="Name (Z to A)"
+                                    Header="{helpers:Localized UI_SortNameZA}"
                                     Icon="{ui:SymbolIcon Symbol=TextSortDescending20}"
                                     Tag="Name:Descending" />
                                 <Separator />
                                 <ui:MenuItem
                                     x:Name="SortBySizeAsc"
                                     Click="SortMenuItem_Click"
-                                    Header="Size (Smallest first)"
+                                    Header="{helpers:Localized UI_SortSizeSmallest}"
                                     Icon="{ui:SymbolIcon Symbol=ArrowSortUp20}"
                                     Tag="Size:Ascending" />
                                 <ui:MenuItem
                                     x:Name="SortBySizeDesc"
                                     Click="SortMenuItem_Click"
-                                    Header="Size (Largest first)"
+                                    Header="{helpers:Localized UI_SortSizeLargest}"
                                     Icon="{ui:SymbolIcon Symbol=ArrowSortDown20}"
                                     Tag="Size:Descending" />
                                 <Separator />
                                 <ui:MenuItem
                                     x:Name="SortByTypeAsc"
                                     Click="SortMenuItem_Click"
-                                    Header="Type (A to Z)"
+                                    Header="{helpers:Localized UI_SortTypeAZ}"
                                     Icon="{ui:SymbolIcon Symbol=DocumentOnePageSparkle20}"
                                     Tag="Type:Ascending" />
                                 <ui:MenuItem
                                     x:Name="SortByTypeDesc"
                                     Click="SortMenuItem_Click"
-                                    Header="Type (Z to A)"
+                                    Header="{helpers:Localized UI_SortTypeZA}"
                                     Icon="{ui:SymbolIcon Symbol=DocumentOnePageSparkle20}"
                                     Tag="Type:Descending" />
                                 <Separator />
                                 <ui:MenuItem
                                     x:Name="SortByDateAsc"
                                     Click="SortMenuItem_Click"
-                                    Header="Date (Oldest first)"
+                                    Header="{helpers:Localized UI_SortDateOldest}"
                                     Icon="{ui:SymbolIcon Symbol=CalendarLtr20}"
                                     Tag="Date:Ascending" />
                                 <ui:MenuItem
                                     x:Name="SortByDateDesc"
                                     Click="SortMenuItem_Click"
-                                    Header="Date (Newest first)"
+                                    Header="{helpers:Localized UI_SortDateNewest}"
                                     Icon="{ui:SymbolIcon Symbol=CalendarLtr20}"
                                     Tag="Date:Descending" />
                             </ContextMenu>
@@ -226,7 +227,7 @@
                         Margin="0"
                         Padding="4"
                         Click="SortDirectionButton_Click"
-                        ToolTip="Toggle sort direction">
+                        ToolTip="{helpers:Localized UI_ToggleSortDirection}">
                         <ui:SymbolIcon
                             x:Name="SortDirectionIcon"
                             FontSize="16"
@@ -251,7 +252,7 @@
                 Visibility="Visible">
                 <ui:ListView.View>
                     <ui:GridView>
-                        <ui:GridViewColumn Width="350" Header="Name">
+                        <ui:GridViewColumn Width="350" Header="{helpers:Localized UI_Name}">
                             <ui:GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="5,2" Orientation="Horizontal">
@@ -292,17 +293,17 @@
                                 </DataTemplate>
                             </ui:GridViewColumn.CellTemplate>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn Width="120" Header="Date Modified">
+                        <ui:GridViewColumn Width="120" Header="{helpers:Localized UI_DateModified}">
                             <ui:GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="LastUpdated" StringFormat="{}{0:yyyy-MM-dd HH:mm}" />
                             </ui:GridViewColumn.DisplayMemberBinding>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn Width="100" Header="Type">
+                        <ui:GridViewColumn Width="100" Header="{helpers:Localized UI_Type}">
                             <ui:GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="DisplayType" />
                             </ui:GridViewColumn.DisplayMemberBinding>
                         </ui:GridViewColumn>
-                        <ui:GridViewColumn Width="100" Header="Size">
+                        <ui:GridViewColumn Width="100" Header="{helpers:Localized UI_Size}">
                             <ui:GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="SizeFormatted" />
                             </ui:GridViewColumn.DisplayMemberBinding>
@@ -352,16 +353,16 @@
                         HorizontalAlignment="Center"
                         FontSize="14"
                         Foreground="White"
-                        Text="Operation in progress..." />
+                        Text="{helpers:Localized Operation_InProgress}" />
                     <ui:Button
                         x:Name="CancelOperationButton"
                         Width="100"
                         Margin="0,10,0,0"
                         HorizontalAlignment="Center"
                         Click="CancelOperationButton_Click"
-                        Content="Cancel"
+                        Content="{helpers:Localized General_Cancel}"
                         Icon="{ui:SymbolIcon Symbol=Dismiss20}"
-                        ToolTip="Cancel current operation" />
+                        ToolTip="{helpers:Localized UI_CancelOperation}" />
                 </StackPanel>
             </Border>
 
@@ -383,14 +384,14 @@
                         FontSize="18"
                         FontWeight="SemiBold"
                         Foreground="White"
-                        Text="Drop files and folders here to upload" />
+                        Text="{helpers:Localized UI_DragDropDefault}" />
                     <TextBlock
                         x:Name="DragDropSubText"
                         Margin="0,8,0,0"
                         HorizontalAlignment="Center"
                         FontSize="14"
                         Foreground="#E0FFFFFF"
-                        Text="Multiple files and folders are supported" />
+                        Text="{helpers:Localized UI_DragDropSupport}" />
                 </StackPanel>
             </Border>
         </Grid>

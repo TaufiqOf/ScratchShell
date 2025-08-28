@@ -7,6 +7,7 @@
     xmlns:local="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     mc:Ignorable="d">
 
     <ScrollViewer
@@ -35,14 +36,14 @@
                             VerticalAlignment="Center"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="Terminal Theme" />
+                            Text="{helpers:Localized Theme_TerminalTheme}" />
                     </StackPanel>
                     <ui:Button
                         x:Name="ApplyButton"
                         Grid.Column="1"
                         Appearance="Primary"
                         Click="ApplyButton_Click"
-                        Content="Apply"
+                        Content="{helpers:Localized Theme_Apply}"
                         Icon="{ui:SymbolIcon Checkmark24}" />
                 </Grid>
                 <!--  Preview Section  -->
@@ -53,7 +54,7 @@
                             Margin="0,0,0,8"
                             FontSize="12"
                             FontWeight="Medium"
-                            Text="Predefined Themes:" />
+                            Text="{helpers:Localized Theme_PredefinedThemes}" />
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -67,9 +68,9 @@
                                 Margin="0,0,4,0"
                                 Appearance="Secondary"
                                 Click="DarkThemeButton_Click"
-                                Content="Dark"
+                                Content="{helpers:Localized Theme_Dark}"
                                 Icon="{ui:SymbolIcon WeatherMoon16}"
-                                ToolTip="Preview dark theme" />
+                                ToolTip="{helpers:Localized Tooltip_PreviewDarkTheme}" />
 
 
                             <ui:Button
@@ -78,9 +79,9 @@
                                 Margin="2,0,2,0"
                                 Appearance="Secondary"
                                 Click="LightThemeButton_Click"
-                                Content="Light"
+                                Content="{helpers:Localized Theme_Light}"
                                 Icon="{ui:SymbolIcon WeatherSunny16}"
-                                ToolTip="Preview light theme" />
+                                ToolTip="{helpers:Localized Tooltip_PreviewLightTheme}" />
 
 
                             <ui:Button
@@ -89,9 +90,9 @@
                                 Margin="4,0,0,0"
                                 Appearance="Secondary"
                                 Click="MonokaiThemeButton_Click"
-                                Content="Monokai"
+                                Content="{helpers:Localized Theme_Monokai}"
                                 Icon="{ui:SymbolIcon ColorBackground20}"
-                                ToolTip="Preview Monokai theme" />
+                                ToolTip="{helpers:Localized Tooltip_PreviewMonokaiTheme}" />
                         </Grid>
 
                         <!--  Enhanced Terminal Preview  -->
@@ -114,9 +115,9 @@
                                 Grid.Column="1"
                                 Appearance="Secondary"
                                 Click="ResetThemeButton_Click"
-                                Content="Reset"
+                                Content="{helpers:Localized Theme_Reset}"
                                 Icon="{ui:SymbolIcon ArrowReset20}"
-                                ToolTip="Reset theme to default values" />
+                                ToolTip="{helpers:Localized Tooltip_ResetTheme}" />
                         </Grid>
                     </StackPanel>
                 </ui:Card>
@@ -128,7 +129,7 @@
                             FontSize="14"
                             FontWeight="Medium"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="Font Settings" />
+                            Text="{helpers:Localized Theme_FontSettings}" />
 
                         <!--  Font Family  -->
                         <Grid Margin="0,0,0,8">
@@ -139,7 +140,7 @@
                             <TextBlock
                                 VerticalAlignment="Center"
                                 FontWeight="Medium"
-                                Text="Family:" />
+                                Text="{helpers:Localized Theme_FontFamily}" />
                             <ComboBox
                                 x:Name="FontFamilyComboBox"
                                 Grid.Column="1"
@@ -155,7 +156,7 @@
                             <TextBlock
                                 VerticalAlignment="Center"
                                 FontWeight="Medium"
-                                Text="Size:" />
+                                Text="{helpers:Localized Theme_FontSize}" />
                             <ComboBox
                                 x:Name="FontSizeComboBox"
                                 Grid.Column="1"
@@ -190,7 +191,7 @@
                             FontSize="14"
                             FontWeight="Medium"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="Color Settings" />
+                            Text="{helpers:Localized Theme_ColorSettings}" />
 
                         <!--  Color Type Selection  -->
                         <Grid Margin="0,0,0,12">
@@ -201,16 +202,16 @@
                             <TextBlock
                                 VerticalAlignment="Center"
                                 FontWeight="Medium"
-                                Text="Editing:" />
+                                Text="{helpers:Localized Theme_ColorEditing}" />
                             <ComboBox
                                 x:Name="ColorTypeComboBox"
                                 Grid.Column="1"
                                 SelectionChanged="ColorTypeComboBox_SelectionChanged">
-                                <ComboBoxItem Content="Text Color" Tag="Foreground" />
-                                <ComboBoxItem Content="Background Color" Tag="Background" />
-                                <ComboBoxItem Content="Selection Color" Tag="Selection" />
-                                <ComboBoxItem Content="Cursor Color" Tag="Cursor" />
-                                <ComboBoxItem Content="Copy Highlight Color" Tag="CopySelection" />
+                                <ComboBoxItem Content="{helpers:Localized Theme_TextColor}" Tag="Foreground" />
+                                <ComboBoxItem Content="{helpers:Localized Theme_BackgroundColor}" Tag="Background" />
+                                <ComboBoxItem Content="{helpers:Localized Theme_SelectionColor}" Tag="Selection" />
+                                <ComboBoxItem Content="{helpers:Localized Theme_CursorColor}" Tag="Cursor" />
+                                <ComboBoxItem Content="{helpers:Localized Theme_CopyHighlightColor}" Tag="CopySelection" />
                             </ComboBox>
                         </Grid>
 
@@ -230,7 +231,7 @@
                                     Margin="0,0,0,4"
                                     HorizontalAlignment="Center"
                                     FontSize="10"
-                                    Text="Text" />
+                                    Text="{helpers:Localized Theme_Text}" />
                                 <Border
                                     x:Name="ForegroundPreview"
                                     Height="32"
@@ -254,7 +255,7 @@
                                     Margin="0,0,0,4"
                                     HorizontalAlignment="Center"
                                     FontSize="10"
-                                    Text="Background" />
+                                    Text="{helpers:Localized Theme_Background}" />
                                 <Border
                                     x:Name="BackgroundPreview"
                                     Height="32"
@@ -271,7 +272,7 @@
                                     Margin="0,0,0,4"
                                     HorizontalAlignment="Center"
                                     FontSize="10"
-                                    Text="Selection" />
+                                    Text="{helpers:Localized Theme_Selection}" />
                                 <Border
                                     x:Name="SelectionPreview"
                                     Height="32"
@@ -296,7 +297,7 @@
                                     Margin="0,0,0,4"
                                     HorizontalAlignment="Center"
                                     FontSize="10"
-                                    Text="Cursor" />
+                                    Text="{helpers:Localized Theme_Cursor}" />
                                 <Border
                                     x:Name="CursorPreview"
                                     Height="32"
@@ -321,7 +322,7 @@
                                     Margin="0,0,0,4"
                                     HorizontalAlignment="Center"
                                     FontSize="10"
-                                    Text="Copy" />
+                                    Text="{helpers:Localized Theme_Copy}" />
                                 <Border
                                     x:Name="CopySelectionPreview"
                                     Height="32"
@@ -356,7 +357,7 @@
                             Margin="0,12,0,8"
                             FontSize="12"
                             FontWeight="Medium"
-                            Text="Terminal Presets:" />
+                            Text="{helpers:Localized Theme_TerminalPresets}" />
                         <WrapPanel x:Name="ColorPresetsPanel" />
 
 

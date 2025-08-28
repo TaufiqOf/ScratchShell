@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using ScratchShell.Enums;
 using ScratchShell.Models;
 using ScratchShell.Properties;
+using ScratchShell.Resources;
 using System.IO;
 using System.Management;
 using System.Net.Http;
@@ -46,7 +47,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = "User not authenticated"
+                    Message = Langauge.CloudSync_UserNotAuthenticated
                 };
             }
 
@@ -60,7 +61,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = "Cloud encryption keys not available. Please re-enter your password to enable cloud sync.",
+                        Message = Langauge.CloudSync_EncryptionKeysNotAvailable,
                         RequiresPasswordReentry = true
                     };
                 }
@@ -69,7 +70,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = "Cloud encryption keys not available. Please login again to enable cloud sync."
+                        Message = Langauge.CloudSync_EncryptionKeysNotAvailableLogin
                     };
                 }
             }
@@ -116,7 +117,7 @@ public class CloudSyncService
                         return new SyncResult
                         {
                             IsSuccess = false,
-                            Message = "Sync conflict detected",
+                            Message = Langauge.CloudSync_SyncConflictDetected,
                             HasConflict = true,
                             ServerSettings = syncResponse.Settings
                         };
@@ -131,13 +132,13 @@ public class CloudSyncService
                     SyncStatusChanged?.Invoke(this, new SyncStatusEventArgs
                     {
                         Status = SyncStatus.UploadCompleted,
-                        Message = "Settings synced to cloud successfully"
+                        Message = Langauge.CloudSync_SettingsSyncedToCloud
                     });
 
                     return new SyncResult
                     {
                         IsSuccess = true,
-                        Message = "Settings synced to cloud successfully"
+                        Message = Langauge.CloudSync_SettingsSyncedToCloud
                     };
                 }
                 else
@@ -145,7 +146,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = syncResponse?.Message ?? "Sync failed"
+                        Message = syncResponse?.Message ?? Langauge.CloudSync_SyncFailed
                     };
                 }
             }
@@ -154,7 +155,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = $"Sync failed: {response.StatusCode}"
+                    Message = string.Format(Langauge.CloudSync_SyncFailedWithStatus, response.StatusCode)
                 };
             }
         }
@@ -163,7 +164,7 @@ public class CloudSyncService
             return new SyncResult
             {
                 IsSuccess = false,
-                Message = $"Sync error: {ex.Message}"
+                Message = string.Format(Langauge.CloudSync_SyncError, ex.Message)
             };
         }
     }
@@ -181,7 +182,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = "User not authenticated"
+                    Message = Langauge.CloudSync_UserNotAuthenticated
                 };
             }
 
@@ -195,7 +196,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = "Cloud encryption keys not available. Please re-enter your password to enable cloud sync.",
+                        Message = Langauge.CloudSync_EncryptionKeysNotAvailable,
                         RequiresPasswordReentry = true
                     };
                 }
@@ -204,7 +205,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = "Cloud encryption keys not available. Please login again to enable cloud sync."
+                        Message = Langauge.CloudSync_EncryptionKeysNotAvailableLogin
                     };
                 }
             }
@@ -230,7 +231,7 @@ public class CloudSyncService
                         return new SyncResult
                         {
                             IsSuccess = true,
-                            Message = "No cloud settings found"
+                            Message = Langauge.CloudSync_NoCloudSettingsFound
                         };
                     }
 
@@ -259,7 +260,7 @@ public class CloudSyncService
                                 return new SyncResult
                                 {
                                     IsSuccess = false,
-                                    Message = "Local changes detected. Resolve conflicts first.",
+                                    Message = Langauge.CloudSync_LocalChangesDetected,
                                     HasConflict = true,
                                     ServerSettings = cloudSettings
                                 };
@@ -272,13 +273,13 @@ public class CloudSyncService
                         SyncStatusChanged?.Invoke(this, new SyncStatusEventArgs
                         {
                             Status = SyncStatus.DownloadCompleted,
-                            Message = "Settings downloaded from cloud successfully"
+                            Message = Langauge.CloudSync_SettingsDownloadedFromCloud
                         });
 
                         return new SyncResult
                         {
                             IsSuccess = true,
-                            Message = "Settings downloaded from cloud successfully"
+                            Message = Langauge.CloudSync_SettingsDownloadedFromCloud
                         };
                     }
                 }
@@ -286,7 +287,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = getResponse?.Message ?? "Failed to get cloud settings"
+                    Message = getResponse?.Message ?? Langauge.CloudSync_FailedToGetCloudSettings
                 };
             }
             else
@@ -294,7 +295,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = $"Download failed: {response.StatusCode}"
+                    Message = string.Format(Langauge.CloudSync_DownloadFailed, response.StatusCode)
                 };
             }
         }
@@ -303,7 +304,7 @@ public class CloudSyncService
             return new SyncResult
             {
                 IsSuccess = false,
-                Message = $"Download error: {ex.Message}"
+                Message = string.Format(Langauge.CloudSync_DownloadError, ex.Message)
             };
         }
     }
@@ -332,7 +333,7 @@ public class CloudSyncService
                         return new SyncResult
                         {
                             IsSuccess = false,
-                            Message = "Custom settings not provided"
+                            Message = Langauge.CloudSync_CustomSettingsNotProvided
                         };
                     }
                     settingsToUse = customSettings;
@@ -343,7 +344,7 @@ public class CloudSyncService
                     return new SyncResult
                     {
                         IsSuccess = false,
-                        Message = "Invalid resolution option"
+                        Message = Langauge.CloudSync_InvalidResolutionOption
                     };
             }
         }
@@ -352,7 +353,7 @@ public class CloudSyncService
             return new SyncResult
             {
                 IsSuccess = false,
-                Message = $"Conflict resolution error: {ex.Message}"
+                Message = string.Format(Langauge.CloudSync_ConflictResolutionError, ex.Message)
             };
         }
     }
@@ -370,7 +371,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = "User not authenticated"
+                    Message = Langauge.CloudSync_UserNotAuthenticated
                 };
             }
 
@@ -391,7 +392,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = true,
-                    Message = "Cloud settings deleted successfully"
+                    Message = Langauge.CloudSync_CloudSettingsDeletedSuccessfully
                 };
             }
             else
@@ -399,7 +400,7 @@ public class CloudSyncService
                 return new SyncResult
                 {
                     IsSuccess = false,
-                    Message = $"Delete failed: {response.StatusCode}"
+                    Message = string.Format(Langauge.CloudSync_DeleteFailed, response.StatusCode)
                 };
             }
         }
@@ -408,7 +409,7 @@ public class CloudSyncService
             return new SyncResult
             {
                 IsSuccess = false,
-                Message = $"Delete error: {ex.Message}"
+                Message = string.Format(Langauge.CloudSync_DeleteError, ex.Message)
             };
         }
     }

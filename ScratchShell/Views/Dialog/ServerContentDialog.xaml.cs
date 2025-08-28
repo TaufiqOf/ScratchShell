@@ -3,6 +3,7 @@ using ScratchShell.ViewModels.Models;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using TextBox = Wpf.Ui.Controls.TextBox;
+using ScratchShell.Resources;
 
 namespace ScratchShell.View.Dialog;
 
@@ -143,10 +144,9 @@ public partial class ServerContentDialog : ContentDialog
     {
         var openDialog = new OpenFileDialog
         {
-            Filter = "Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*",
-            Title = "Select Public Key File"
+            Filter = Langauge.FileFilter_PublicKey,
+            DefaultExt = ".pub"
         };
-
         if (openDialog.ShowDialog() == true)
         {
             if (DataContext is ServerViewModel viewModel)
@@ -160,10 +160,9 @@ public partial class ServerContentDialog : ContentDialog
     {
         var openDialog = new OpenFileDialog
         {
-            Filter = "Private Key Files (*.pem;*.key)|*.pem;*.key|All Files (*.*)|*.*",
-            Title = "Select Private Key File"
+            Filter = Langauge.FileFilter_PrivateKey,
+            DefaultExt = ".pem"
         };
-
         if (openDialog.ShowDialog() == true)
         {
             if (DataContext is ServerViewModel viewModel)

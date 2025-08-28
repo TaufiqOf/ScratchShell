@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:ScratchShell.Views.Component"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -50,13 +51,13 @@
                                 FontSize="20"
                                 FontWeight="Bold"
                                 Icon="{ui:SymbolIcon WindowConsole20}"
-                                ToolTip="Open Terminal">
+                                ToolTip="{helpers:Localized Tooltip_OpenTerminal}">
                                 <ui:DropDownButton.Flyout>
                                     <ContextMenu>
                                         <MenuItem
                                             Command="{Binding OpenTerminalCommand}"
                                             CommandParameter="Elevated"
-                                            Header="Elevated">
+                                            Header="{helpers:Localized Terminal_Elevated}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="Shield24" />
                                             </MenuItem.Icon>
@@ -64,7 +65,7 @@
                                         <MenuItem
                                             Command="{Binding OpenTerminalCommand}"
                                             CommandParameter="Normal"
-                                            Header="Normal">
+                                            Header="{helpers:Localized Terminal_Normal}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="WindowConsole20" />
                                             </MenuItem.Icon>
@@ -80,21 +81,21 @@
                                 FontSize="20"
                                 FontWeight="Bold"
                                 Icon="{ui:SymbolIcon Options24}"
-                                ToolTip="Server Actions">
+                                ToolTip="{helpers:Localized Server_Actions}">
                                 <ui:DropDownButton.Flyout>
                                     <ContextMenu>
-                                        <MenuItem Command="{Binding EditServerCommand, Mode=OneWay}" Header="Edit">
+                                        <MenuItem Command="{Binding EditServerCommand, Mode=OneWay}" Header="{helpers:Localized General_Edit}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="Edit24" />
                                             </MenuItem.Icon>
                                         </MenuItem>
-                                        <MenuItem Command="{Binding CopyServerCommand, Mode=OneWay}" Header="Copy">
+                                        <MenuItem Command="{Binding CopyServerCommand, Mode=OneWay}" Header="{helpers:Localized ContextMenu_Copy}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="Copy24" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator />
-                                        <MenuItem Command="{Binding DeleteServerCommand, Mode=OneWay}" Header="Delete">
+                                        <MenuItem Command="{Binding DeleteServerCommand, Mode=OneWay}" Header="{helpers:Localized General_Delete}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="Delete24" />
                                             </MenuItem.Icon>

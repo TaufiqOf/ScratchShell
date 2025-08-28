@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:themecontrol="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     <Grid>
@@ -53,7 +54,7 @@
                     Command="Copy"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=Copy20}"
-                    ToolTip="Copy selected text from terminal (Ctrl+Left Click)" />
+                    ToolTip="{helpers:Localized Tooltip_CopyFromTerminal}" />
 
                 <!--  Paste  -->
                 <ui:Button
@@ -63,7 +64,7 @@
                     Command="Paste"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
-                    ToolTip="Paste text into terminal (Alt+Left Click)" />
+                    ToolTip="{helpers:Localized Tooltip_PasteToTerminal}" />
                 <!--  Separator  -->
                 <Border
                     Grid.Column="2"
@@ -79,7 +80,7 @@
                     VerticalAlignment="Stretch"
                     Checked="SnippetToggleButtonChecked"
                     FontSize="20"
-                    ToolTip="Show/hide command snippets panel"
+                    ToolTip="{helpers:Localized Tooltip_ShowHideSnippets}"
                     Unchecked="SnippetToggleButtonUnchecked">
                     <ui:SymbolIcon Symbol="Code20" />
                 </ToggleButton>
@@ -91,7 +92,7 @@
                     VerticalAlignment="Stretch"
                     Checked="ThemeToggleButtonChecked"
                     FontSize="20"
-                    ToolTip="Show/hide theming panel"
+                    ToolTip="{helpers:Localized Tooltip_ShowHideThemes}"
                     Unchecked="ThemeToggleButtonUnchecked">
                     <ui:SymbolIcon Symbol="ColorBackground20" />
                 </ToggleButton>
@@ -104,7 +105,7 @@
                     Click="FullScreenButton_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
-                    ToolTip="Toggle full screen mode for terminal" />
+                    ToolTip="{helpers:Localized Tooltip_ToggleFullScreenTerminal}" />
             </Grid>
             <ContentControl
                 x:Name="TerminalContentControl"
@@ -117,18 +118,18 @@
                     <ContextMenu>
                         <ui:MenuItem
                             Command="Copy"
-                            Header="Copy"
+                            Header="{helpers:Localized ContextMenu_Copy}"
                             Icon="{ui:SymbolIcon Symbol=Copy20}"
                             InputGestureText="Ctrl+Left Click" />
                         <ui:MenuItem
                             Command="Paste"
-                            Header="Paste"
+                            Header="{helpers:Localized ContextMenu_Paste}"
                             Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
                             InputGestureText="Alt+Left Click" />
                         <Separator />
                         <ui:MenuItem
                             Click="SelectAll_Click"
-                            Header="Select All"
+                            Header="{helpers:Localized ContextMenu_SelectAll}"
                             Icon="{ui:SymbolIcon Symbol=CheckboxChecked24}" />
                     </ContextMenu>
                 </ContentControl.ContextMenu>

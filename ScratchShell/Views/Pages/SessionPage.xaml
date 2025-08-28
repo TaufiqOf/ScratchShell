@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:ScratchShell.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     d:DataContext="{d:DesignInstance local:SessionPage,
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
@@ -67,7 +68,7 @@
                                 Content="✕"
                                 Focusable="False"
                                 FontSize="10"
-                                ToolTip="Close tab" />
+                                ToolTip="{helpers:Localized Tooltip_CloseTab}" />
                         </Grid>
                     </DataTemplate>
                 </TabControl.ItemTemplate>

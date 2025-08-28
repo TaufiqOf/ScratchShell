@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:ScratchShell.Views.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     Title="{Binding ViewModel.ApplicationTitle, Mode=OneWay}"
     Width="1100"
     Height="650"
@@ -60,7 +61,7 @@
                     <TextBlock
                         FontSize="10"
                         Foreground="Gray"
-                        Text="by Taufiq Abdur Rahman" />
+                        Text="{helpers:Localized App_DeveloperCredit}" />
                 </StackPanel>
             </ui:TitleBar.TrailingContent>
             <ui:TitleBar.Icon>

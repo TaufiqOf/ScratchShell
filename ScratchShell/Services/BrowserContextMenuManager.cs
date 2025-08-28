@@ -2,18 +2,19 @@ using ScratchShell.UserControls.BrowserControl;
 using System.Windows.Controls;
 using Wpf.Ui.Controls;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
+using ScratchShell.Resources;
 
 namespace ScratchShell.Services;
 
 /// <summary>
-/// Manages context menus for browser operations with unified handling
+/// Manages context menus for browser operations with unified handling and localization support
 /// </summary>
 public class BrowserContextMenuManager
 {
     private readonly ContextMenu _itemContextMenu;
     private readonly ContextMenu _emptySpaceContextMenu;
-    private readonly Dictionary<string, MenuItem> _itemMenuItems = new();
-    private readonly Dictionary<string, MenuItem> _emptySpaceMenuItems = new();
+    private readonly Dictionary<BrowserContextMenuAction, MenuItem> _itemMenuItems = new();
+    private readonly Dictionary<BrowserContextMenuAction, MenuItem> _emptySpaceMenuItems = new();
 
     public event Action<BrowserContextMenuAction, object?>? ActionRequested;
 
@@ -27,15 +28,15 @@ public class BrowserContextMenuManager
     {
         var menu = new ContextMenu();
 
-        AddItemMenuItem("Cut", BrowserContextMenuAction.Cut, SymbolRegular.Cut24);
-        AddItemMenuItem("Copy", BrowserContextMenuAction.Copy, SymbolRegular.Copy24);
-        AddItemMenuItem("Paste", BrowserContextMenuAction.Paste, SymbolRegular.ClipboardPaste24);
-        AddItemMenuItem("Rename", BrowserContextMenuAction.Rename, SymbolRegular.Rename20);
+        AddItemMenuItem(BrowserContextMenuAction.Cut, SymbolRegular.Cut24);
+        AddItemMenuItem(BrowserContextMenuAction.Copy, SymbolRegular.Copy24);
+        AddItemMenuItem(BrowserContextMenuAction.Paste, SymbolRegular.ClipboardPaste24);
+        AddItemMenuItem(BrowserContextMenuAction.Rename, SymbolRegular.Rename20);
 
         menu.Items.Add(new Separator());
 
-        AddItemMenuItem("Upload", BrowserContextMenuAction.Upload, SymbolRegular.ArrowUpload24);
-        AddItemMenuItem("Download", BrowserContextMenuAction.Download, SymbolRegular.ArrowDownload24);
+        AddItemMenuItem(BrowserContextMenuAction.Upload, SymbolRegular.ArrowUpload24);
+        AddItemMenuItem(BrowserContextMenuAction.Download, SymbolRegular.ArrowDownload24);
 
         return menu;
     }
@@ -44,40 +45,54 @@ public class BrowserContextMenuManager
     {
         var menu = new ContextMenu();
 
-        AddEmptySpaceMenuItem("Paste", BrowserContextMenuAction.EmptySpacePaste, SymbolRegular.ClipboardPaste24);
-        AddEmptySpaceMenuItem("Upload", BrowserContextMenuAction.EmptySpaceUpload, SymbolRegular.ArrowUpload24);
+        AddEmptySpaceMenuItem(BrowserContextMenuAction.EmptySpacePaste, SymbolRegular.ClipboardPaste24);
+        AddEmptySpaceMenuItem(BrowserContextMenuAction.EmptySpaceUpload, SymbolRegular.ArrowUpload24);
 
         menu.Items.Add(new Separator());
 
-        AddEmptySpaceMenuItem("New Folder", BrowserContextMenuAction.EmptySpaceNewFolder, SymbolRegular.FolderAdd24);
+        AddEmptySpaceMenuItem(BrowserContextMenuAction.EmptySpaceNewFolder, SymbolRegular.FolderAdd24);
 
         return menu;
     }
 
-    private void AddItemMenuItem(string header, BrowserContextMenuAction action, SymbolRegular icon)
+    private static string GetHeader(BrowserContextMenuAction action) => action switch
+    {
+        BrowserContextMenuAction.Cut => Langauge.ContextMenu_Cut,
+        BrowserContextMenuAction.Copy => Langauge.ContextMenu_Copy,
+        BrowserContextMenuAction.Paste => Langauge.ContextMenu_Paste,
+        BrowserContextMenuAction.Rename => Langauge.ContextMenu_Rename,
+        BrowserContextMenuAction.Upload => Langauge.ContextMenu_Upload,
+        BrowserContextMenuAction.Download => Langauge.ContextMenu_Download,
+        BrowserContextMenuAction.EmptySpacePaste => Langauge.ContextMenu_Paste,
+        BrowserContextMenuAction.EmptySpaceUpload => Langauge.ContextMenu_Upload,
+        BrowserContextMenuAction.EmptySpaceNewFolder => Langauge.ContextMenu_NewFolder,
+        _ => action.ToString()
+    };
+
+    private void AddItemMenuItem(BrowserContextMenuAction action, SymbolRegular icon)
     {
         var menuItem = new MenuItem
         {
-            Header = header,
+            Header = GetHeader(action),
             Icon = new SymbolIcon(icon)
         };
 
         menuItem.Click += (_, _) => ActionRequested?.Invoke(action, null);
         _itemContextMenu.Items.Add(menuItem);
-        _itemMenuItems[header] = menuItem;
+        _itemMenuItems[action] = menuItem;
     }
 
-    private void AddEmptySpaceMenuItem(string header, BrowserContextMenuAction action, SymbolRegular icon)
+    private void AddEmptySpaceMenuItem(BrowserContextMenuAction action, SymbolRegular icon)
     {
         var menuItem = new MenuItem
         {
-            Header = header,
+            Header = GetHeader(action),
             Icon = new SymbolIcon(icon)
         };
 
         menuItem.Click += (_, _) => ActionRequested?.Invoke(action, null);
         _emptySpaceContextMenu.Items.Add(menuItem);
-        _emptySpaceMenuItems[header] = menuItem;
+        _emptySpaceMenuItems[action] = menuItem;
     }
 
     public void ShowItemContextMenu(FrameworkElement target, BrowserItem item)
@@ -99,54 +114,54 @@ public class BrowserContextMenuManager
         // Configure menu based on item type and state
         if (item.Name == "..")
         {
-            SetItemMenuVisibility("Cut", false);
-            SetItemMenuVisibility("Copy", false);
-            SetItemMenuVisibility("Paste", false);
-            SetItemMenuVisibility("Rename", false);
-            SetItemMenuVisibility("Upload", false);
-            SetItemMenuVisibility("Download", false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Cut, false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Copy, false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Paste, false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Rename, false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Upload, false);
+            SetItemMenuVisibility(BrowserContextMenuAction.Download, false);
             return;
         }
 
         // Standard item menu configuration
-        SetItemMenuVisibility("Cut", true);
-        SetItemMenuVisibility("Copy", true);
-        SetItemMenuVisibility("Paste", true);
-        SetItemMenuVisibility("Rename", true);
-        SetItemMenuVisibility("Download", true);
+        SetItemMenuVisibility(BrowserContextMenuAction.Cut, true);
+        SetItemMenuVisibility(BrowserContextMenuAction.Copy, true);
+        SetItemMenuVisibility(BrowserContextMenuAction.Paste, true);
+        SetItemMenuVisibility(BrowserContextMenuAction.Rename, true);
+        SetItemMenuVisibility(BrowserContextMenuAction.Download, true);
 
         // Upload only available for folders
-        SetItemMenuVisibility("Upload", item.IsFolder);
+        SetItemMenuVisibility(BrowserContextMenuAction.Upload, item.IsFolder);
     }
 
-    public void SetItemMenuVisibility(string menuHeader, bool visible)
+    public void SetItemMenuVisibility(BrowserContextMenuAction action, bool visible)
     {
-        if (_itemMenuItems.TryGetValue(menuHeader, out var item))
+        if (_itemMenuItems.TryGetValue(action, out var item))
             item.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    public void SetItemMenuEnabled(string menuHeader, bool enabled)
+    public void SetItemMenuEnabled(BrowserContextMenuAction action, bool enabled)
     {
-        if (_itemMenuItems.TryGetValue(menuHeader, out var item))
+        if (_itemMenuItems.TryGetValue(action, out var item))
             item.IsEnabled = enabled;
     }
 
-    public void SetEmptySpaceMenuVisibility(string menuHeader, bool visible)
+    public void SetEmptySpaceMenuVisibility(BrowserContextMenuAction action, bool visible)
     {
-        if (_emptySpaceMenuItems.TryGetValue(menuHeader, out var item))
+        if (_emptySpaceMenuItems.TryGetValue(action, out var item))
             item.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    public void SetEmptySpaceMenuEnabled(string menuHeader, bool enabled)
+    public void SetEmptySpaceMenuEnabled(BrowserContextMenuAction action, bool enabled)
     {
-        if (_emptySpaceMenuItems.TryGetValue(menuHeader, out var item))
+        if (_emptySpaceMenuItems.TryGetValue(action, out var item))
             item.IsEnabled = enabled;
     }
 
     public void UpdatePasteAvailability(bool hasClipboardContent)
     {
-        SetItemMenuEnabled("Paste", hasClipboardContent);
-        SetEmptySpaceMenuEnabled("Paste", hasClipboardContent);
+        SetItemMenuEnabled(BrowserContextMenuAction.Paste, hasClipboardContent);
+        SetEmptySpaceMenuEnabled(BrowserContextMenuAction.EmptySpacePaste, hasClipboardContent);
     }
 }
 

@@ -4,6 +4,7 @@ using ScratchShell.ViewModels.Models;
 using System.Windows.Media;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
+using ScratchShell.Resources;
 
 namespace ScratchShell.Views.Dialog;
 
@@ -73,7 +74,7 @@ public partial class ExportServersDialog : ContentDialog
     private void ExportFilePathBrowseButtonClick(object sender, RoutedEventArgs e)
     {
         var saveDialog = new SaveFileDialog();
-        saveDialog.Filter = "(*.ss)|*.ss|All Files (*.*)|*.*";
+        saveDialog.Filter = Langauge.FileFilter_ScratchShell;
         if (saveDialog.ShowDialog() == true)
         {
             ExportFilePathTextBox.Text = saveDialog.FileName;
@@ -87,10 +88,6 @@ public partial class ExportServersDialog : ContentDialog
 
     private void SelectAllCheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
-        // ServersListBox unselect all items
-        foreach (var item in ServersListBox.Items)
-        {
-            ServersListBox.SelectedItems.Remove(item);
-        }
+        ServersListBox.UnselectAll();
     }
 }

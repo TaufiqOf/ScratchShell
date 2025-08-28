@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using ScratchShell.Services.FileOperations;
 using ScratchShell.Services.Navigation;
 using ScratchShell.UserControls.BrowserControl;
+using ScratchShell.Resources;
 
 namespace ScratchShell.Services.EventHandlers
 {
@@ -43,7 +38,7 @@ namespace ScratchShell.Services.EventHandlers
                     await fileOperationHandler.HandleCreateFolderAsync(pathTextBox.Text, item.Name));
                 
                 browser.ItemEditCancelled += SafeEventHandler<BrowserItem>(item => 
-                    _logger.LogInfo($"Edit cancelled for: {item.Name}"));
+                    _logger.LogInfo(string.Format(Langauge.EventHandler_EditCancelled, item.Name)));
 
                 // File operation events
                 browser.CutRequested += SafeEventHandler<BrowserItem>(async item => 
@@ -94,11 +89,11 @@ namespace ScratchShell.Services.EventHandlers
                 browser.FilesDropped += SafeEventHandler<string[]>(async files => 
                     await fileOperationHandler.HandleDragDropUploadAsync(files, pathTextBox.Text));
 
-                _logger.LogInfo("Browser events set up successfully");
+                _logger.LogInfo(Langauge.EventHandler_BrowserEventsSetupSuccess);
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error setting up browser events", ex);
+                _logger.LogError(Langauge.EventHandler_BrowserEventsSetupError, ex);
             }
         }
 
@@ -155,7 +150,7 @@ namespace ScratchShell.Services.EventHandlers
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error in safe execute", ex);
+                _logger.LogError(Langauge.EventHandler_SafeExecuteError, ex);
                 HandleEventException(ex, nameof(action));
             }
         }
@@ -168,7 +163,7 @@ namespace ScratchShell.Services.EventHandlers
             }
             catch (Exception ex)
             {
-                _logger.LogError("Error in safe execute async", ex);
+                _logger.LogError(Langauge.EventHandler_SafeExecuteAsyncError, ex);
                 HandleEventException(ex, nameof(asyncAction));
             }
         }
@@ -210,18 +205,18 @@ namespace ScratchShell.Services.EventHandlers
                 if (item.Name == "..")
                 {
                     var parentPath = GetParentPath(navigationManager.CurrentPath);
-                    _logger.LogInfo($"Navigating to parent directory: {parentPath}");
+                    _logger.LogInfo(string.Format(Langauge.Navigation_NavigatingToParent, parentPath));
                     await navigationManager.NavigateUpAsync();
                 }
                 else
                 {
-                    _logger.LogInfo($"Navigating to folder: {item.FullPath}");
+                    _logger.LogInfo(string.Format(Langauge.Navigation_NavigatingToFolder, item.FullPath));
                     await navigationManager.GoToFolderAsync(item.FullPath);
                 }
             }
             else
             {
-                _logger.LogInfo($"Opening file: {item.Name}");
+                _logger.LogInfo(string.Format(Langauge.Navigation_OpeningFile, item.Name));
             }
         }
 
@@ -229,18 +224,18 @@ namespace ScratchShell.Services.EventHandlers
         {
             if (!items.Any())
             {
-                _logger.LogWarning("Multi-select operation failed: No items selected");
+                _logger.LogWarning(Langauge.Navigation_MultiSelectOperationFailed);
                 return;
             }
 
             var validItems = items.Where(item => item.Name != "..").ToList();
             if (!validItems.Any())
             {
-                _logger.LogWarning("Multi-select operation failed: No valid items selected");
+                _logger.LogWarning(Langauge.Navigation_MultiSelectOperationFailedValid);
                 return;
             }
 
-            _logger.LogInfo($"Multi-select operation requested for {validItems.Count} selected item(s)");
+            _logger.LogInfo(string.Format(Langauge.Navigation_MultiSelectOperation, validItems.Count));
             await operation(validItems);
         }
 
@@ -264,7 +259,7 @@ namespace ScratchShell.Services.EventHandlers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error getting parent path for {currentPath}", ex);
+                _logger.LogError(string.Format(Langauge.Navigation_ErrorGettingParentPath, currentPath), ex);
                 return "/";
             }
         }
@@ -283,7 +278,7 @@ namespace ScratchShell.Services.EventHandlers
         {
             try
             {
-                _logger.LogError($"Exception in {handlerName}", ex);
+                _logger.LogError(string.Format(Langauge.EventHandler_ExceptionIn, handlerName), ex);
                 
                 // Additional error handling could go here:
                 // - Reset UI state
@@ -292,7 +287,7 @@ namespace ScratchShell.Services.EventHandlers
             }
             catch (Exception innerEx)
             {
-                System.Diagnostics.Debug.WriteLine($"Critical error in exception handler: {innerEx.Message}");
+                System.Diagnostics.Debug.WriteLine(string.Format(Langauge.EventHandler_CriticalErrorInExceptionHandler, innerEx.Message));
             }
         }
     }

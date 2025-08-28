@@ -21,6 +21,12 @@ public partial class MainWindowViewModel : ObservableObject
         this._contentDialogService = contentDialogService;
         InitializeCloudSync();
         AppVersion = $"v. {GetAssemblyVersion()}";
+        
+        // Subscribe to language changes for dynamic localization
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+        
+        // Initialize localized content
+        InitializeLocalizedContent();
     }
 
     private string GetAssemblyVersion()
@@ -40,6 +46,64 @@ public partial class MainWindowViewModel : ObservableObject
         {
             System.Diagnostics.Debug.WriteLine($"Error initializing cloud sync: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Initializes all localized content
+    /// </summary>
+    private void InitializeLocalizedContent()
+    {
+        UpdateLocalizedMenuItems();
+        UpdateLocalizedApplicationTitle();
+    }
+
+    /// <summary>
+    /// Handles language change events and updates all localized content
+    /// </summary>
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        UpdateLocalizedMenuItems();
+        UpdateLocalizedApplicationTitle();
+    }
+
+    /// <summary>
+    /// Updates navigation menu items with localized text
+    /// </summary>
+    private void UpdateLocalizedMenuItems()
+    {
+        MenuItems.Clear();
+        MenuItems.Add(new NavigationViewItem()
+        {
+            Content = LocalizationManager.GetString("Navigation_Home"),
+            Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
+            TargetPageType = typeof(Views.Pages.DashboardPage),
+        });
+        MenuItems.Add(new NavigationViewItem()
+        {
+            Content = LocalizationManager.GetString("Navigation_Session"),
+            Icon = new SymbolIcon { Symbol = SymbolRegular.DataHistogram24 },
+            TargetPageType = typeof(Views.Pages.SessionPage)
+        });
+
+        FooterMenuItems.Clear();
+        FooterMenuItems.Add(new NavigationViewItem()
+        {
+            Content = LocalizationManager.GetString("Navigation_Settings"),
+            Icon = new SymbolIcon { Symbol = SymbolRegular.Settings24 },
+            TargetPageType = typeof(Views.Pages.SettingsPage)
+        });
+
+        TrayMenuItems.Clear();
+        TrayMenuItems.Add(new MenuItem { Header = LocalizationManager.GetString("Navigation_Home"), Tag = "tray_home" });
+    }
+
+    /// <summary>
+    /// Updates the application title with localized text
+    /// </summary>
+    private void UpdateLocalizedApplicationTitle()
+    {
+        // Keep the application name constant, but could be localized if needed
+        ApplicationTitle = ApplicationConstant.Name;
     }
 
     private async void ShowLogin()
@@ -191,36 +255,19 @@ public partial class MainWindowViewModel : ObservableObject
     private string _applicationTitle = ApplicationConstant.Name;
 
     [ObservableProperty]
-    private ObservableCollection<object> _menuItems = new()
-        {
-            new NavigationViewItem()
-            {
-                Content = "Home",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
-                TargetPageType = typeof(Views.Pages.DashboardPage),
-            },
-            new NavigationViewItem()
-            {
-                Content = "Session",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.DataHistogram24 },
-                TargetPageType = typeof(Views.Pages.SessionPage)
-            }
-        };
+    private ObservableCollection<object> _menuItems = new();
 
     [ObservableProperty]
-    private ObservableCollection<object> _footerMenuItems = new()
-        {
-            new NavigationViewItem()
-            {
-                Content = "Settings",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.Settings24 },
-                TargetPageType = typeof(Views.Pages.SettingsPage)
-            }
-        };
+    private ObservableCollection<object> _footerMenuItems = new();
 
     [ObservableProperty]
-    private ObservableCollection<MenuItem> _trayMenuItems = new()
-        {
-            new MenuItem { Header = "Home", Tag = "tray_home" }
-        };
+    private ObservableCollection<MenuItem> _trayMenuItems = new();
+
+    /// <summary>
+    /// Cleanup method to unsubscribe from events
+    /// </summary>
+    public void Cleanup()
+    {
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
+    }
 }

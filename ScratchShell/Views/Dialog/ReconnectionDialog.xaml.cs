@@ -1,6 +1,7 @@
 using ScratchShell.ViewModels.Models;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
+using ScratchShell.Resources;
 
 namespace ScratchShell.Views.Dialog;
 
@@ -21,7 +22,7 @@ public partial class ReconnectionDialog : ContentDialog
 
     private void UpdateUI()
     {
-        ServerInfoText.Text = $"Connection to '{Server.Name}' ({Server.Host}:{Server.Port}) has timed out.";
+        ServerInfoText.Text = string.Format(Langauge.Dialog_Reconnect_ConnectionTimedOutTemplate, Server.Name, Server.Host, Server.Port);
         ErrorDetailsText.Text = ErrorMessage;
     }
 }

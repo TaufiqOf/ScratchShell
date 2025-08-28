@@ -8,6 +8,7 @@ using ListViewItem = Wpf.Ui.Controls.ListViewItem;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
 using System.IO;
+using ScratchShell.Services;
 
 namespace ScratchShell.UserControls.BrowserControl;
 
@@ -139,6 +140,28 @@ public partial class BrowserUserControl : UserControl
         
         // Initialize sort UI
         InitializeSortUI();
+        
+        // Subscribe to language changes to update context menus
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+        
+        // Subscribe to Unloaded event for cleanup
+        this.Unloaded += BrowserUserControl_Unloaded;
+    }
+    
+    private void BrowserUserControl_Unloaded(object sender, RoutedEventArgs e)
+    {
+        // Unsubscribe from language change events
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Recreate context menus with localized text
+        SetupContextMenu();
+        SetupEmptySpaceContextMenu();
+        
+        // Update sort tooltips
+        UpdateSortDirectionIcon(_lastSortDirection);
     }
 
     /// <summary>
@@ -266,36 +289,36 @@ public partial class BrowserUserControl : UserControl
 
             if (item.Name == "..")
             {
-                SetMenuVisibility("Cut", false);
-                SetMenuVisibility("Copy", false);
-                SetMenuVisibility("Paste", false);
-                SetMenuVisibility("Rename", false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), false);
                 SetMenuVisibility("Separator", false);
-                SetMenuVisibility("Upload", false);
-                SetMenuVisibility("Download", false);
-                SetMenuVisibility("Delete", false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), false);
+                SetMenuVisibility(LocalizationManager.GetString("General_Delete"), false);
             }
             else if (item.IsFolder)
             {
-                SetMenuVisibility("Cut", true);
-                SetMenuVisibility("Copy", true);
-                SetMenuVisibility("Paste", true);
-                SetMenuVisibility("Rename", true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), true);
                 SetMenuVisibility("Separator", false);
-                SetMenuVisibility("Upload", true);
-                SetMenuVisibility("Download", true);
-                SetMenuVisibility("Delete", true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), true);
+                SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
             }
             else
             {
-                SetMenuVisibility("Cut", true);
-                SetMenuVisibility("Copy", true);
-                SetMenuVisibility("Paste", true);
-                SetMenuVisibility("Rename", true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), true);
                 SetMenuVisibility("Separator", true);
-                SetMenuVisibility("Upload", false);
-                SetMenuVisibility("Download", true);
-                SetMenuVisibility("Delete", true);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), false);
+                SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), true);
+                SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
             }
 
             contextMenu.PlacementTarget = BrowserGrid;
@@ -616,8 +639,8 @@ public partial class BrowserUserControl : UserControl
 
         var newFolder = new BrowserItem
         {
-            Name = "New folder",
-            OriginalName = "New folder",
+            Name = LocalizationManager.GetString("ContextMenu_NewFolder"),
+            OriginalName = LocalizationManager.GetString("ContextMenu_NewFolder"),
             IsFolder = true,
             IsNewItem = true,
             LastUpdated = DateTime.Now,
@@ -681,39 +704,39 @@ public partial class BrowserUserControl : UserControl
             {
                 if (item.Name == "..")
                 {
-                    SetMenuVisibility("Cut", false);
-                    SetMenuVisibility("Copy", false);
-                    SetMenuVisibility("Paste", false);
-                    SetMenuVisibility("Rename", false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), false);
                     SetMenuVisibility("Separator", false);
-                    SetMenuVisibility("Upload", false);
-                    SetMenuVisibility("Download", false);
-                    SetMenuVisibility("Delete", false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("General_Delete"), false);
                     e.Handled = true;
                     return;
                 }
 
                 if (item.IsFolder)
                 {
-                    SetMenuVisibility("Cut", true);
-                    SetMenuVisibility("Copy", true);
-                    SetMenuVisibility("Paste", true);
-                    SetMenuVisibility("Rename", true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), true);
                     SetMenuVisibility("Separator", false);
-                    SetMenuVisibility("Upload", true);
-                    SetMenuVisibility("Download", true);
-                    SetMenuVisibility("Delete", true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
                 }
                 else
                 {
-                    SetMenuVisibility("Cut", true);
-                    SetMenuVisibility("Copy", true);
-                    SetMenuVisibility("Paste", true);
-                    SetMenuVisibility("Rename", true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Cut"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Copy"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Paste"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Rename"), true);
                     SetMenuVisibility("Separator", true);
-                    SetMenuVisibility("Upload", false);
-                    SetMenuVisibility("Download", true);
-                    SetMenuVisibility("Delete", true);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Upload"), false);
+                    SetMenuVisibility(LocalizationManager.GetString("ContextMenu_Download"), true);
+                    SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
                 }
 
                 e.Handled = true;
@@ -732,35 +755,35 @@ public partial class BrowserUserControl : UserControl
     private void SetupContextMenu()
     {
         contextMenu = new ContextMenu();
-        AddMenuItem("Cut", (_, __) => RaiseContextEvent(CutRequested), SymbolRegular.Cut24);
-        AddMenuItem("Copy", (_, __) => RaiseContextEvent(CopyRequested), SymbolRegular.Copy24);
-        AddMenuItem("Paste", (_, __) => RaiseContextEvent(PasteRequested), SymbolRegular.ClipboardPaste24);
-        AddMenuItem("Rename", (_, __) => HandleContextMenuRename(), SymbolRegular.Rename20);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Cut"), (_, __) => RaiseContextEvent(CutRequested), SymbolRegular.Cut24);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Copy"), (_, __) => RaiseContextEvent(CopyRequested), SymbolRegular.Copy24);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Paste"), (_, __) => RaiseContextEvent(PasteRequested), SymbolRegular.ClipboardPaste24);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Rename"), (_, __) => HandleContextMenuRename(), SymbolRegular.Rename20);
 
         var sep1 = new Separator();
         contextMenu.Items.Add(sep1);
         menuItems["Separator"] = new MenuItem { Header = "Separator", Visibility = Visibility.Collapsed };
         sep1.DataContext = menuItems["Separator"];
 
-        AddMenuItem("Upload", (_, __) => RaiseContextEvent(UploadRequested), SymbolRegular.ArrowUpload24);
-        AddMenuItem("Download", (_, __) => RaiseContextEvent(DownloadRequested), SymbolRegular.ArrowDownload24);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Upload"), (_, __) => RaiseContextEvent(UploadRequested), SymbolRegular.ArrowUpload24);
+        AddMenuItem(LocalizationManager.GetString("ContextMenu_Download"), (_, __) => RaiseContextEvent(DownloadRequested), SymbolRegular.ArrowDownload24);
 
         var sep2 = new Separator();
         contextMenu.Items.Add(sep2);
 
-        AddMenuItem("Delete", (_, __) => RaiseContextEvent(DeleteRequested), SymbolRegular.Delete24);
+        AddMenuItem(LocalizationManager.GetString("General_Delete"), (_, __) => RaiseContextEvent(DeleteRequested), SymbolRegular.Delete24);
     }
 
     private void SetupEmptySpaceContextMenu()
     {
         emptySpaceContextMenu = new ContextMenu();
-        AddEmptySpaceMenuItem("Paste", (_, __) => EmptySpacePasteRequested?.Invoke(), SymbolRegular.ClipboardPaste24);
-        AddEmptySpaceMenuItem("Upload", (_, __) => EmptySpaceUploadRequested?.Invoke(), SymbolRegular.ArrowUpload24);
+        AddEmptySpaceMenuItem(LocalizationManager.GetString("ContextMenu_Paste"), (_, __) => EmptySpacePasteRequested?.Invoke(), SymbolRegular.ClipboardPaste24);
+        AddEmptySpaceMenuItem(LocalizationManager.GetString("ContextMenu_Upload"), (_, __) => EmptySpaceUploadRequested?.Invoke(), SymbolRegular.ArrowUpload24);
 
         var sep = new Separator();
         emptySpaceContextMenu.Items.Add(sep);
 
-        AddEmptySpaceMenuItem("New Folder", (_, __) => EmptySpaceNewFolderRequested?.Invoke(), SymbolRegular.FolderAdd24);
+        AddEmptySpaceMenuItem(LocalizationManager.GetString("ContextMenu_NewFolder"), (_, __) => EmptySpaceNewFolderRequested?.Invoke(), SymbolRegular.FolderAdd24);
     }
 
     private void HandleContextMenuRename()
@@ -945,7 +968,7 @@ public partial class BrowserUserControl : UserControl
 
     public void UpdateEmptySpaceContextMenu(bool hasClipboardContent)
     {
-        SetEmptySpaceMenuEnabled("Paste", hasClipboardContent);
+        SetEmptySpaceMenuEnabled(LocalizationManager.GetString("ContextMenu_Paste"), hasClipboardContent);
     }
 
     /// <summary>
@@ -1098,11 +1121,11 @@ public partial class BrowserUserControl : UserControl
         var directionText = direction == ListSortDirection.Ascending ? "↑" : "↓";
         var propertyText = property switch
         {
-            "Name" => "Name",
-            "Size" => "Size",
-            "Type" => "Type", 
-            "Date" => "Date",
-            _ => "Name"
+            "Name" => LocalizationManager.GetString("UI_Name") ?? "Name",
+            "Size" => LocalizationManager.GetString("UI_Size") ?? "Size",
+            "Type" => LocalizationManager.GetString("UI_Type") ?? "Type", 
+            "Date" => LocalizationManager.GetString("UI_Date") ?? "Date",
+            _ => LocalizationManager.GetString("UI_Name") ?? "Name"
         };
         
         SortDropDown.Tag = $"{propertyText} {directionText}";
@@ -1117,9 +1140,12 @@ public partial class BrowserUserControl : UserControl
             ? SymbolRegular.ArrowUp20 
             : SymbolRegular.ArrowDown20;
             
+        var ascendingText = LocalizationManager.GetString("UI_SortAscending") ?? "Sort ascending (click to sort descending)";
+        var descendingText = LocalizationManager.GetString("UI_SortDescending") ?? "Sort descending (click to sort ascending)";
+        
         SortDirectionButton.ToolTip = direction == ListSortDirection.Ascending
-            ? "Sort ascending (click to sort descending)"
-            : "Sort descending (click to sort ascending)";
+            ? ascendingText
+            : descendingText;
     }
 
     /// <summary>
@@ -1247,15 +1273,18 @@ public partial class BrowserUserControl : UserControl
     /// <param name="message">Progress message to display</param>
     /// <param name="current">Current item number (optional)</param>
     /// <param name="total">Total number of items (optional)</param>
-    public void ShowProgress(bool show, string message = "Operation in progress...", int? current = null, int? total = null)
+    public void ShowProgress(bool show, string message = "", int? current = null, int? total = null)
     {
         if (show)
         {
-            // Format the message with progress count if available
-            var displayMessage = message;
+            // Use default localized message if none provided
+            var displayMessage = string.IsNullOrEmpty(message) 
+                ? LocalizationManager.GetString("Operation_InProgress") ?? "Operation in progress..."
+                : message;
+                
             if (current.HasValue && total.HasValue)
             {
-                displayMessage = $"{message}";
+                displayMessage = $"{displayMessage}";
             }
 
             ProgressText.Text = displayMessage;
@@ -1284,7 +1313,7 @@ public partial class BrowserUserControl : UserControl
     private void CancelOperationButton_Click(object sender, RoutedEventArgs e)
     {
         CancelOperationButton.IsEnabled = false;
-        ProgressText.Text = "Cancelling operation...";
+        ProgressText.Text = LocalizationManager.GetString("Operation_Cancelling") ?? "Cancelling operation...";
 
         // Notify parent that cancel was requested
         CancelRequested?.Invoke();
@@ -1381,24 +1410,36 @@ public partial class BrowserUserControl : UserControl
             {
                 var fileName = Path.GetFileName(files[0]);
                 var isFolder = Directory.Exists(files[0]);
-                primaryText = $"Drop {(isFolder ? "folder" : "file")} '{fileName}' here to upload";
-                subText = isFolder ? "Folder contents will be uploaded recursively" : "File will be uploaded to current directory";
+                
+                var folderText = LocalizationManager.GetString("General_Folder") ?? "folder";
+                var fileText = LocalizationManager.GetString("General_File") ?? "file";
+                var dropText = LocalizationManager.GetString("DragDrop_DropHere") ?? "Drop {0} '{1}' here to upload";
+                
+                primaryText = string.Format(dropText, isFolder ? folderText : fileText, fileName);
+                
+                var folderSubText = LocalizationManager.GetString("DragDrop_FolderRecursive") ?? "Folder contents will be uploaded recursively";
+                var fileSubText = LocalizationManager.GetString("DragDrop_FileToDirectory") ?? "File will be uploaded to current directory";
+                subText = isFolder ? folderSubText : fileSubText;
             }
             else
             {
-                primaryText = $"Drop {fileCount} item(s) here to upload";
+                var dropMultipleText = LocalizationManager.GetString("DragDrop_DropMultiple") ?? "Drop {0} item(s) here to upload";
+                primaryText = string.Format(dropMultipleText, fileCount);
 
                 if (folderCount > 0 && regularFileCount > 0)
                 {
-                    subText = $"{regularFileCount} file(s) and {folderCount} folder(s) will be uploaded";
+                    var mixedText = LocalizationManager.GetString("DragDrop_FilesAndFolders") ?? "{0} file(s) and {1} folder(s) will be uploaded";
+                    subText = string.Format(mixedText, regularFileCount, folderCount);
                 }
                 else if (folderCount > 0)
                 {
-                    subText = $"{folderCount} folder(s) will be uploaded recursively";
+                    var foldersText = LocalizationManager.GetString("DragDrop_FoldersOnly") ?? "{0} folder(s) will be uploaded recursively";
+                    subText = string.Format(foldersText, folderCount);
                 }
                 else
                 {
-                    subText = $"{regularFileCount} file(s) will be uploaded";
+                    var filesText = LocalizationManager.GetString("DragDrop_FilesOnly") ?? "{0} file(s) will be uploaded";
+                    subText = string.Format(filesText, regularFileCount);
                 }
             }
 
@@ -1421,13 +1462,22 @@ public partial class BrowserUserControl : UserControl
         {
             string? propertyName = null;
             var headerText = header.Content as string;
-            switch (headerText)
-            {
-                case "Name": propertyName = "Name"; break;
-                case "Date Modified": propertyName = "LastUpdated"; break;
-                case "Type": propertyName = "DisplayType"; break;
-                case "Size": propertyName = "Size"; break;
-            }
+            
+            // Handle both English and localized headers
+            var nameText = LocalizationManager.GetString("UI_Name") ?? "Name";
+            var dateText = LocalizationManager.GetString("UI_DateModified") ?? "Date Modified";
+            var typeText = LocalizationManager.GetString("UI_Type") ?? "Type";
+            var sizeText = LocalizationManager.GetString("UI_Size") ?? "Size";
+            
+            if (headerText == nameText || headerText == "Name")
+                propertyName = "Name";
+            else if (headerText == dateText || headerText == "Date Modified")
+                propertyName = "LastUpdated";
+            else if (headerText == typeText || headerText == "Type")
+                propertyName = "DisplayType";
+            else if (headerText == sizeText || headerText == "Size")
+                propertyName = "Size";
+                
             if (!string.IsNullOrEmpty(propertyName))
             {
                 ApplySort(propertyName);
@@ -1446,13 +1496,22 @@ public partial class BrowserUserControl : UserControl
         {
             string? propertyName = null;
             var headerText = header.Content as string;
-            switch (headerText)
-            {
-                case "Name": propertyName = "Name"; break;
-                case "Date Modified": propertyName = "LastUpdated"; break;
-                case "Type": propertyName = "DisplayType"; break;
-                case "Size": propertyName = "Size"; break;
-            }
+            
+            // Handle both English and localized headers
+            var nameText = LocalizationManager.GetString("UI_Name") ?? "Name";
+            var dateText = LocalizationManager.GetString("UI_DateModified") ?? "Date Modified";
+            var typeText = LocalizationManager.GetString("UI_Type") ?? "Type";
+            var sizeText = LocalizationManager.GetString("UI_Size") ?? "Size";
+            
+            if (headerText == nameText || headerText == "Name")
+                propertyName = "Name";
+            else if (headerText == dateText || headerText == "Date Modified")
+                propertyName = "LastUpdated";
+            else if (headerText == typeText || headerText == "Type")
+                propertyName = "DisplayType";
+            else if (headerText == sizeText || headerText == "Size")
+                propertyName = "Size";
+                
             if (!string.IsNullOrEmpty(propertyName))
             {
                 ApplySort(propertyName);

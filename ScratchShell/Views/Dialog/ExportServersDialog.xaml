@@ -6,13 +6,14 @@
     xmlns:local="clr-namespace:ScratchShell.Views.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="Export Servers"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
+    Title="{helpers:Localized Export_Title}"
     MinWidth="500"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    CloseButtonText="Cancel"
+    CloseButtonText="{helpers:Localized General_Cancel}"
     DefaultButton="Primary"
-    PrimaryButtonText="Export"
+    PrimaryButtonText="{helpers:Localized General_Export}"
     mc:Ignorable="d">
     <ui:ContentDialog.Resources>
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:ExportServersDialog}" />
@@ -32,7 +33,7 @@
             Grid.Row="0"
             Margin="0,0,0,10"
             FontWeight="SemiBold"
-            Text="Select servers to export:" />
+            Text="{helpers:Localized Export_SelectServers}" />
 
         <!--  Server List  -->
         <Border
@@ -53,7 +54,7 @@
                     Grid.Row="0"
                     Margin="10,10,10,5"
                     Checked="SelectAllCheckBox_Checked"
-                    Content="Select All"
+                    Content="{helpers:Localized UI_SelectAll}"
                     Unchecked="SelectAllCheckBox_Unchecked" />
 
                 <!--  Servers List  -->
@@ -85,8 +86,8 @@
                 <ui:TextBlock
                     x:Name="PasswordTextBlock"
                     Margin="0,0,0,5"
-                    Text="Password:" />
-                <ui:PasswordBox x:Name="PasswordInput" PlaceholderText="Enter password to encrypt the export file" />
+                    Text="{helpers:Localized UI_Password}" />
+                <ui:PasswordBox x:Name="PasswordInput" PlaceholderText="{helpers:Localized Placeholder_ExportPassword}" />
             </StackPanel>
 
             <!--  Info  -->
@@ -95,7 +96,7 @@
                     x:Name="ExportFilePathTextBlock"
                     Grid.Row="3"
                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="Export to file"
+                    Text="{helpers:Localized Export_ToFile}"
                     TextWrapping="Wrap" />
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -109,7 +110,7 @@
                         Click="ExportFilePathBrowseButtonClick"
                         FontSize="20"
                         Icon="{ui:SymbolIcon Symbol=Open24}"
-                        ToolTip="Browse for export file location" />
+                        ToolTip="{helpers:Localized Tooltip_BrowseExportLocation}" />
                 </Grid>
             </StackPanel>
         </StackPanel>

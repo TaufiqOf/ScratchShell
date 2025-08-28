@@ -65,6 +65,16 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         SetupEventHandlers();
         SetupBrowserEvents();
         SetupConnectionMonitoring();
+        
+        // Subscribe to language changes
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Update any UI elements that might need refreshing when language changes
+        // Most of the localized strings are used in logging which will use the new language automatically
+        // The browser control already handles its own language changes
     }
 
     private void SetupConnectionMonitoring()
@@ -86,14 +96,14 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             if (!_connectionManager.IsConnectionAlive())
             {
-                _logger.LogError("Connection health check failed - connection appears to be lost", null);
-                await HandleConnectionTimeout("Connection lost - health check failed");
+                _logger.LogError(LocalizationManager.GetString("Connection_HealthCheckFailed"), null);
+                await HandleConnectionTimeout(LocalizationManager.GetString("Connection_HealthCheckFailed"));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error during connection health check", ex);
-            await HandleConnectionTimeout($"Connection error: {ex.Message}");
+            _logger.LogError(LocalizationManager.GetString("Operation_HealthCheckError"), ex);
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError"), ex.Message));
         }
     }
 
@@ -112,8 +122,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
             // Show disconnected state
             SetUIConnectionState(false);
-            Browser.ShowProgress(true, "Connection lost - attempting to reconnect...");
-            _logger.LogError($"Connection timeout detected: {errorMessage}", null);
+            Browser.ShowProgress(true, LocalizationManager.GetString("Connection_Lost"));
+            _logger.LogError(string.Format(LocalizationManager.GetString("Operation_ConnectionTimeoutDetected"), errorMessage), null);
 
             // Show reconnection dialog
             var reconnectionDialog = new ReconnectionDialog(_contentDialogService, _server, errorMessage);
@@ -132,7 +142,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error handling connection timeout", ex);
+            _logger.LogError(LocalizationManager.GetString("Connection_HandleTimeoutError"), ex);
             Browser.ShowProgress(false);
             SetUIConnectionState(false);
         }
@@ -146,8 +156,8 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         try
         {
-            Browser.ShowProgress(true, $"Reconnecting to {_server.Name}...");
-            _logger.LogInfo($"Attempting to reconnect to {_server.Name}");
+            Browser.ShowProgress(true, string.Format(LocalizationManager.GetString("Connection_Reconnecting"), _server.Name));
+            _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_AttemptingTo"), _server.Name, _server.Host, _server.Port));
 
             await _connectionManager.ReconnectAsync();
 
@@ -171,15 +181,15 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Browser.ShowProgress(false);
             _connectionMonitorTimer?.Start();
 
-            _logger.LogInfo($"Successfully reconnected to {_server.Name}");
+            _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_SuccessfullyReconnected"), _server.Name));
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Reconnection failed", ex);
+            _logger.LogError(LocalizationManager.GetString("Connection_ReconnectionFailed"), ex);
             Browser.ShowProgress(false);
             
             // Show error and ask user what to do next
-            var errorDialog = new ReconnectionDialog(_contentDialogService, _server, $"Reconnection failed: {ex.Message}");
+            var errorDialog = new ReconnectionDialog(_contentDialogService, _server, string.Format(LocalizationManager.GetString("Connection_ReconnectionFailed"), ex.Message));
             var result = await errorDialog.ShowAsync();
             
             if (result == ContentDialogResult.Primary)
@@ -199,7 +209,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         try
         {
-            _logger.LogInfo("Closing current tab due to connection failure");
+            _logger.LogInfo(LocalizationManager.GetString("Operation_ClosingCurrentTab"));
             
             // Find and close the current tab
             var currentTab = SessionService.SelectedSession;
@@ -210,7 +220,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error closing current tab", ex);
+            _logger.LogError(LocalizationManager.GetString("Connection_ErrorClosingTab") ?? "Error closing current tab", ex);
         }
     }
 
@@ -223,22 +233,22 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (TimeoutException ex)
         {
-            await HandleConnectionTimeout($"Operation timeout: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout"), ex.Message));
             throw;
         }
         catch (System.Net.Sockets.SocketException ex)
         {
-            await HandleConnectionTimeout($"Network error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError"), ex.Message));
             throw;
         }
         catch (Renci.SshNet.Common.SshConnectionException ex)
         {
-            await HandleConnectionTimeout($"SSH connection error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError"), ex.Message));
             throw;
         }
         catch (Exception ex) when (ex.Message.Contains("timeout") || ex.Message.Contains("connection") || ex.Message.Contains("network"))
         {
-            await HandleConnectionTimeout($"Connection error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError"), ex.Message));
             throw;
         }
     }
@@ -251,22 +261,22 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (TimeoutException ex)
         {
-            await HandleConnectionTimeout($"Operation timeout: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout"), ex.Message));
             throw;
         }
         catch (System.Net.Sockets.SocketException ex)
         {
-            await HandleConnectionTimeout($"Network error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError"), ex.Message));
             throw;
         }
         catch (Renci.SshNet.Common.SshConnectionException ex)
         {
-            await HandleConnectionTimeout($"SSH connection error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError"), ex.Message));
             throw;
         }
         catch (Exception ex) when (ex.Message.Contains("timeout") || ex.Message.Contains("connection") || ex.Message.Contains("network"))
         {
-            await HandleConnectionTimeout($"Connection error: {ex.Message}");
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError"), ex.Message));
             throw;
         }
     }
@@ -278,23 +288,23 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             if (_isInitialized) return;
 
             // Update loading message
-            Browser.ShowProgress(true, $"Establishing connection to {_server.Name}...");
-            _logger.LogInfo($"Attempting to connect to {_server.Name} ({_server.Host}:{_server.Port})");
+            Browser.ShowProgress(true, string.Format(LocalizationManager.GetString("Connection_EstablishingConnection"), _server.Name));
+            _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_AttemptingTo"), _server.Name, _server.Host, _server.Port));
 
             await ExecuteWithTimeoutDetection(async () => await _connectionManager.ConnectAsync(_server));
             
             // Update loading message for initialization
-            Browser.ShowProgress(true, "Initializing file operations...");
+            Browser.ShowProgress(true, LocalizationManager.GetString("Connection_InitializingFileOps"));
             _fileOperationHandler.Initialize(_connectionManager.FileOperationService, _navigationManager);
             _connectionManager.FileOperationService.ProgressChanged += FileOperationServiceProgressChanged;
             SubscribeFileOperationClipboardEvents();
             
             // Update loading message for navigation setup
-            Browser.ShowProgress(true, "Setting up navigation...");
+            Browser.ShowProgress(true, LocalizationManager.GetString("Connection_SettingUpNavigation"));
             _navigationManager.Initialize(_connectionManager.Client, _pathAdapter, GetNavigationButtons());
             
             // Update loading message for directory loading
-            Browser.ShowProgress(true, "Loading home directory...");
+            Browser.ShowProgress(true, LocalizationManager.GetString("Connection_LoadingHomeDirectory"));
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.GoToFolderAsync("~"));
             
             // Connection successful - enable UI and hide progress
@@ -305,11 +315,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             _connectionMonitorTimer?.Start();
             
             _isInitialized = true;
-            _logger.LogInfo($"Successfully connected and initialized for {_server.Name}");
+            _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_SuccessfullyConnected"), _server.Name));
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error during control load", ex);
+            _logger.LogError(LocalizationManager.GetString("Connection_ErrorDuringControlLoad") ?? "Error during control load", ex);
             
             // Show error state in browser
             Browser.ShowProgress(false);
@@ -318,7 +328,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             // Add an error message item to the browser
             var errorItem = new BrowserItem
             {
-                Name = "Connection Failed",
+                Name = LocalizationManager.GetString("Connection_Failed"),
                 FullPath = "",
                 IsFolder = false,
                 LastUpdated = DateTime.Now,
@@ -327,7 +337,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             Browser.AddItem(errorItem);
             
             // Update path to show error
-            _pathAdapter.Text = $"Failed to connect to {_server.Host}:{_server.Port}";
+            _pathAdapter.Text = string.Format(LocalizationManager.GetString("Connection_FailedTo"), _server.Host, _server.Port);
             
             // Keep UI disabled on error
             SetUIConnectionState(false);
@@ -360,7 +370,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         SetUIConnectionState(true);
         UpdateClipboardUIState(); // Ensure paste reflects current clipboard
-        _logger.LogInfo("User interface enabled - ready for file operations");
+        _logger.LogInfo(LocalizationManager.GetString("Operation_UIEnabled"));
     }
 
     private void UpdateTerminalText(string logMessage)
@@ -378,7 +388,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Terminal update error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"{LocalizationManager.GetString("Terminal_UpdateError") ?? "Terminal update error"}: {ex.Message}");
         }
     }
 
@@ -407,37 +417,37 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     #region UI Event Handlers
 
-    private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+    private async void RefreshButtonClick(object sender, RoutedEventArgs e)
     {
         await _eventHandler.SafeExecuteAsync(async () => 
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.RefreshCurrentDirectoryAsync()));
     }
 
-    private async void BackButton_Click(object sender, RoutedEventArgs e)
+    private async void BackButtonClick(object sender, RoutedEventArgs e)
     {
         await _eventHandler.SafeExecuteAsync(async () => 
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateBackAsync()));
     }
 
-    private async void ForwardButton_Click(object sender, RoutedEventArgs e)
+    private async void ForwardButtonClick(object sender, RoutedEventArgs e)
     {
         await _eventHandler.SafeExecuteAsync(async () => 
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateForwardAsync()));
     }
 
-    private async void UpButton_Click(object sender, RoutedEventArgs e)
+    private async void UpButtonClick(object sender, RoutedEventArgs e)
     {
         await _eventHandler.SafeExecuteAsync(async () => 
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateUpAsync()));
     }
 
-    private async void PasteButton_Click(object sender, RoutedEventArgs e)
+    private async void PasteButtonClick(object sender, RoutedEventArgs e)
     {
         await _eventHandler.SafeExecuteAsync(async () =>
             await ExecuteWithTimeoutDetection(async () => await _fileOperationHandler.HandlePasteAsync(_pathAdapter.Text)));
     }
 
-    private void CreateFolderButton_Click(object sender, RoutedEventArgs e)
+    private void CreateFolderButtonClick(object sender, RoutedEventArgs e)
     {
         _eventHandler.SafeExecute(() => Browser.StartNewFolderCreation());
     }
@@ -447,7 +457,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         _eventHandler.SafeExecute(() =>
         {
             LogGrid.Visibility = Visibility.Visible;
-            _logger.LogInfo("Operation log panel opened");
+            _logger.LogInfo(LocalizationManager.GetString("Operation_LogPanelOpened"));
         });
     }
 
@@ -456,15 +466,15 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         _eventHandler.SafeExecute(() =>
         {
             LogGrid.Visibility = Visibility.Collapsed;
-            _logger.LogInfo("Operation log panel closed");
+            _logger.LogInfo(LocalizationManager.GetString("Operation_LogPanelClosed"));
         });
     }
 
-    private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+    private void FullScreenButtonClick(object sender, RoutedEventArgs e)
     {
         _eventHandler.SafeExecute(() =>
         {
-            _logger.LogInfo("Entering full screen mode");
+            _logger.LogInfo(LocalizationManager.GetString("Operation_EnteringFullscreen"));
             FullScreenButton.IsEnabled = false;
             BrowserContentControl.Content = null;
             var fullScreen = new FullScreenWindow(_contentDialogService, Browser, _server.Name);
@@ -473,7 +483,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             {
                 _eventHandler.SafeExecute(() =>
                 {
-                    _logger.LogInfo("Exiting full screen mode");
+                    _logger.LogInfo(LocalizationManager.GetString("Operation_ExitingFullscreen"));
                     BrowserContentControl.Content = Browser;
                     FullScreenButton.IsEnabled = true;
                 });
@@ -486,15 +496,15 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private void ShowInitialLoadingState()
     {
         // Show browser immediately with loading state
-        Browser.ShowProgress(true, $"Connecting to {_server.Name}...");
+        Browser.ShowProgress(true, string.Format(LocalizationManager.GetString("Connection_ConnectingTo"), _server.Name));
         
         // Disable UI buttons during connection
         SetUIConnectionState(false);
         
         // Set path to show server info
-        _pathAdapter.Text = $"Connecting to {_server.Host}:{_server.Port}...";
+        _pathAdapter.Text = string.Format(LocalizationManager.GetString("Connection_ConnectingTo"), $"{_server.Host}:{_server.Port}");
         
-        _logger.LogInfo($"Initializing connection to {_server.Name} ({_server.Host}:{_server.Port})");
+        _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_AttemptingTo"), _server.Name, _server.Host, _server.Port));
     }
 
     private void SetUIConnectionState(bool isConnected)
@@ -545,18 +555,22 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             {
                 svc.ClipboardStateChanged -= FileOperationClipboardStateChanged;
             }
-            _logger?.LogInfo("Starting cleanup and disconnection");
+            
+            // Unsubscribe from language changes
+            LocalizationManager.LanguageChanged -= OnLanguageChanged;
+            
+            _logger?.LogInfo(LocalizationManager.GetString("Operation_StartingCleanup"));
             _connectionMonitorTimer?.Stop();
             _connectionMonitorTimer = null;
             _connectionManager?.Dispose();
             _navigationManager?.Dispose();
             _fileOperationHandler?.Dispose();
             Browser?.Clear();
-            _logger?.LogInfo("Cleanup completed successfully");
+            _logger?.LogInfo(LocalizationManager.GetString("Operation_CleanupCompleted"));
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Critical error in Dispose: {ex.GetType().Name} - {ex.Message}");
+            System.Diagnostics.Debug.WriteLine(string.Format(LocalizationManager.GetString("Critical_ErrorInDispose") ?? "Critical error in Dispose: {0} - {1}", ex.GetType().Name, ex.Message));
         }
     }
 }

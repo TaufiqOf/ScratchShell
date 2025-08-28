@@ -486,43 +486,43 @@ public class SftpFileOperationService : ISftpFileOperationService
             var resolvedSourcePath = ResolveSftpPath(_clipboardPath);
             var resolvedDestinationPath = ResolveSftpPath(fullDestinationPath);
 
-            LogRequested?.Invoke(_clipboardIsCut ?
-                $"🚚 Moving file from {resolvedSourcePath} to {resolvedDestinationPath}" :
-                $"📋 Copying file from {resolvedSourcePath} to {resolvedDestinationPath}");
-
-            // Check if source is a directory
-            var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
-
-            if (sourceFile.IsDirectory)
+            // Attempt fast server-side cp/mv first
+            var fastResult = await TryServerSideSingleAsync(resolvedSourcePath, resolvedDestinationPath, _clipboardIsCut, cancellationToken);
+            if (fastResult.IsSuccess)
             {
-                await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath, cancellationToken);
+                LogRequested?.Invoke(_clipboardIsCut ?
+                    $"✅ Successfully moved {resolvedSourcePath} to {resolvedDestinationPath} (server-side)" :
+                    $"✅ Successfully copied {resolvedSourcePath} to {resolvedDestinationPath} (server-side)");
             }
             else
             {
-                using var ms = new MemoryStream();
-                await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
-                ms.Position = 0;
+                // Removed direct ternary interpolation to avoid parsing issues
+                var opWord = _clipboardIsCut ? "move" : "copy";
+                LogRequested?.Invoke($"⚠️ Server-side {opWord} failed ({fastResult.ErrorMessage}); falling back to SFTP transfer");
 
-                cancellationToken.ThrowIfCancellationRequested();
-                await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
-            }
-
-            if (_clipboardIsCut)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+                // Fallback legacy logic
+                var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
                 if (sourceFile.IsDirectory)
                 {
-                    await DeleteDirectoryRecursive(resolvedSourcePath, cancellationToken);
+                    await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath, cancellationToken);
                 }
                 else
                 {
-                    await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath), cancellationToken);
+                    using var ms = new MemoryStream();
+                    await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
+                    ms.Position = 0;
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
                 }
-                LogRequested?.Invoke($"✅ Successfully moved {resolvedSourcePath} to {resolvedDestinationPath}");
-            }
-            else
-            {
-                LogRequested?.Invoke($"✅ Successfully copied {resolvedSourcePath} to {resolvedDestinationPath}");
+                if (_clipboardIsCut)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var item = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
+                    if (item.IsDirectory)
+                        await DeleteDirectoryRecursive(resolvedSourcePath, cancellationToken);
+                    else
+                        await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath), cancellationToken);
+                }
             }
 
             // Clear clipboard after operation
@@ -549,32 +549,6 @@ public class SftpFileOperationService : ISftpFileOperationService
         }
     }
 
-    public void UpdateClipboard(string itemPath, bool isCut)
-    {
-        _clipboardPath = itemPath;
-        _clipboardPaths.Clear();
-        _clipboardPaths.Add(itemPath);
-        _clipboardIsCut = isCut;
-        ClipboardStateChanged?.Invoke();
-
-        LogRequested?.Invoke(isCut ?
-            $"✂️ Cut to clipboard: {itemPath}" :
-            $"📋 Copied to clipboard: {itemPath}");
-    }
-
-    public void UpdateMultiClipboard(List<string> itemPaths, bool isCut)
-    {
-        _clipboardPaths.Clear();
-        _clipboardPaths.AddRange(itemPaths);
-        _clipboardPath = itemPaths.FirstOrDefault(); // For backward compatibility
-        _clipboardIsCut = isCut;
-        ClipboardStateChanged?.Invoke();
-
-        var operation = isCut ? "Cut" : "Copied";
-        var itemCount = itemPaths.Count;
-        LogRequested?.Invoke($"{(isCut ? "✂️" : "📋")} {operation} {itemCount} item(s) to clipboard");
-    }
-
     public async Task<OperationResult> PasteMultiItemsAsync(string destinationPath, CancellationToken cancellationToken = default)
     {
         try
@@ -588,96 +562,82 @@ public class SftpFileOperationService : ISftpFileOperationService
                 return OperationResult.Failure("Clipboard is empty");
             }
 
-            var successCount = 0;
-            var failCount = 0;
-            var errors = new List<string>();
-            var currentIndex = 0;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            LogRequested?.Invoke($"🔄 Starting paste operation for {_clipboardPaths.Count} item(s)");
-
-            foreach (var sourcePath in _clipboardPaths)
+            // Attempt single server-side bulk cp/mv using directory destination
+            var resolvedDestDir = ResolveSftpPath(destinationPath);
+            var resolvedSources = _clipboardPaths.Select(p => ResolveSftpPath(p)).ToList();
+            var bulkResult = await TryServerSideBulkAsync(resolvedSources, resolvedDestDir, _clipboardIsCut, cancellationToken);
+            if (!bulkResult.IsSuccess)
             {
-                try
+                // Removed direct ternary interpolation to avoid parsing issues
+                var opWordBulk = _clipboardIsCut ? "move" : "copy";
+                LogRequested?.Invoke($"⚠️ Server-side bulk {opWordBulk} failed ({bulkResult.ErrorMessage}); falling back to per-item SFTP transfer");
+
+                var successCount = 0;
+                var failCount = 0;
+                var errors = new List<string>();
+                var currentIndex = 0;
+                foreach (var sourcePath in resolvedSources)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    currentIndex++;
-
-                    var fileName = Path.GetFileName(sourcePath);
-                    var fullDestinationPath = $"{destinationPath}/{fileName}";
-                    var resolvedSourcePath = ResolveSftpPath(sourcePath);
-                    var resolvedDestinationPath = ResolveSftpPath(fullDestinationPath);
-
-                    var itemOperation = _clipboardIsCut ? "Moving" : "Copying";
-                    ProgressChanged?.Invoke(true, $"{(_clipboardIsCut ? "🚚" : "📋")} {itemOperation} '{fileName}' ({currentIndex} of {_clipboardPaths.Count})", currentIndex, _clipboardPaths.Count);
-
-                    LogRequested?.Invoke(_clipboardIsCut ?
-                        $"🚚 Moving {fileName}" :
-                        $"📋 Copying {fileName}");
-
-                    // Check if source is a directory
-                    var sourceFile = await Task.Run(() => _sftpClient.Get(resolvedSourcePath), cancellationToken);
-
-                    if (sourceFile.IsDirectory)
-                    {
-                        await CopyDirectoryRecursive(resolvedSourcePath, resolvedDestinationPath, cancellationToken);
-                    }
-                    else
-                    {
-                        using var ms = new MemoryStream();
-                        await Task.Run(() => _sftpClient.DownloadFile(resolvedSourcePath, ms), cancellationToken);
-                        ms.Position = 0;
-
-                        cancellationToken.ThrowIfCancellationRequested();
-                        await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
-                    }
-
-                    if (_clipboardIsCut)
+                    try
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        currentIndex++;
+                        var fileName = Path.GetFileName(sourcePath);
+                        var resolvedDestinationPath = ResolveSftpPath($"{destinationPath}/{fileName}");
+                        ProgressChanged?.Invoke(true, $"{(_clipboardIsCut ? "🚚" : "📋")} {( _clipboardIsCut ? "Moving" : "Copying")} '{fileName}' ({currentIndex} of {_clipboardPaths.Count})", currentIndex, _clipboardPaths.Count);
+
+                        var sourceFile = await Task.Run(() => _sftpClient.Get(sourcePath), cancellationToken);
                         if (sourceFile.IsDirectory)
-                        {
-                            await DeleteDirectoryRecursive(resolvedSourcePath, cancellationToken);
-                        }
+                            await CopyDirectoryRecursive(sourcePath, resolvedDestinationPath, cancellationToken);
                         else
                         {
-                            await Task.Run(() => _sftpClient.DeleteFile(resolvedSourcePath), cancellationToken);
+                            using var ms = new MemoryStream();
+                            await Task.Run(() => _sftpClient.DownloadFile(sourcePath, ms), cancellationToken);
+                            ms.Position = 0;
+                            await Task.Run(() => _sftpClient.UploadFile(ms, resolvedDestinationPath), cancellationToken);
                         }
+                        if (_clipboardIsCut)
+                        {
+                            var itm = await Task.Run(() => _sftpClient.Get(sourcePath), cancellationToken);
+                            if (itm.IsDirectory)
+                                await DeleteDirectoryRecursive(sourcePath, cancellationToken);
+                            else
+                                await Task.Run(() => _sftpClient.DeleteFile(sourcePath), cancellationToken);
+                        }
+                        successCount++;
+                        LogRequested?.Invoke($"✅ Successfully {(_clipboardIsCut ? "moved" : "copied")} {fileName}");
                     }
-
-                    successCount++;
-                    LogRequested?.Invoke($"✅ Successfully {(_clipboardIsCut ? "moved" : "copied")} {fileName}");
+                    catch (OperationCanceledException)
+                    {
+                        LogRequested?.Invoke($"🚫 Multi-paste operation cancelled by user");
+                        return OperationResult.Failure("Operation was cancelled by user");
+                    }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        var fileName = Path.GetFileName(sourcePath);
+                        var errorMsg = $"Failed to {(_clipboardIsCut ? "move" : "copy")} {fileName}: {ex.Message}";
+                        errors.Add(errorMsg);
+                        LogRequested?.Invoke($"❌ {errorMsg}");
+                    }
                 }
-                catch (OperationCanceledException)
+                if (failCount > 0 && successCount == 0)
                 {
-                    LogRequested?.Invoke($"🚫 Multi-paste operation cancelled by user");
-                    return OperationResult.Failure("Operation was cancelled by user");
-                }
-                catch (Exception ex)
-                {
-                    failCount++;
-                    var fileName = Path.GetFileName(sourcePath);
-                    var errorMsg = $"Failed to {(_clipboardIsCut ? "move" : "copy")} {fileName}: {ex.Message}";
-                    errors.Add(errorMsg);
-                    LogRequested?.Invoke($"❌ {errorMsg}");
+                    return OperationResult.Failure($"Bulk operation failed: {string.Join("; ", errors)}");
                 }
             }
-
-            // Clear clipboard after operation if all succeeded or if it was a cut operation
-            if (failCount == 0 || _clipboardIsCut)
+            else
             {
-                _clipboardPaths.Clear();
-                _clipboardPath = null;
-                _clipboardIsCut = false;
-                ClipboardStateChanged?.Invoke();
+                LogRequested?.Invoke($"✅ Successfully completed server-side bulk {(_clipboardIsCut ? "move" : "copy")} operation");
             }
 
-            var summary = $"Operation completed: {successCount} successful, {failCount} failed";
-            LogRequested?.Invoke($"📊 {summary}");
-
-            if (failCount > 0)
-            {
-                return OperationResult.Failure($"{summary}. Errors: {string.Join("; ", errors)}");
-            }
+            // Clear clipboard after operation (always for cut; for copy keep? design chooses to clear like typical file managers after paste)
+            _clipboardPaths.Clear();
+            _clipboardPath = null;
+            _clipboardIsCut = false;
+            ClipboardStateChanged?.Invoke();
 
             return OperationResult.Success();
         }
@@ -1087,6 +1047,109 @@ public class SftpFileOperationService : ISftpFileOperationService
             return path;
         return path.Replace("~", _sftpClient.WorkingDirectory);
     }
+
+    // Implement interface clipboard update methods (restored after refactor)
+    public void UpdateClipboard(string itemPath, bool isCut)
+    {
+        _clipboardPath = itemPath;
+        _clipboardPaths.Clear();
+        _clipboardPaths.Add(itemPath);
+        _clipboardIsCut = isCut;
+        ClipboardStateChanged?.Invoke();
+        LogRequested?.Invoke(isCut ? $"✂️ Cut to clipboard: {itemPath}" : $"📋 Copied to clipboard: {itemPath}");
+    }
+
+    public void UpdateMultiClipboard(List<string> itemPaths, bool isCut)
+    {
+        _clipboardPaths.Clear();
+        if (itemPaths != null && itemPaths.Count > 0)
+        {
+            _clipboardPaths.AddRange(itemPaths);
+            _clipboardPath = itemPaths[0];
+        }
+        else
+        {
+            _clipboardPath = null;
+        }
+        _clipboardIsCut = isCut;
+        ClipboardStateChanged?.Invoke();
+        var count = itemPaths?.Count ?? 0;
+        LogRequested?.Invoke(isCut ? $"✂️ Cut {count} item(s) to clipboard" : $"📋 Copied {count} item(s) to clipboard");
+    }
+
+    // ===== Added helper methods for server-side cp/mv operations =====
+    private async Task<OperationResult> TryServerSideSingleAsync(string source, string destination, bool isMove, CancellationToken token)
+    {
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            // Determine destination parent directory to guard against self-copy into itself
+            if (IsSubPathOf(destination, source))
+            {
+                return OperationResult.Failure("Destination is inside source path");
+            }
+            string cmdText;
+            if (isMove)
+            {
+                cmdText = $"mv -- {Quote(source)} {Quote(destination)}";
+            }
+            else
+            {
+                cmdText = $"cp -a -- {Quote(source)} {Quote(destination)}";
+            }
+            return await RunSshCommandAsync(cmdText, token);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Failure(ex.Message);
+        }
+    }
+
+    private async Task<OperationResult> TryServerSideBulkAsync(List<string> sources, string destinationDir, bool isMove, CancellationToken token)
+    {
+        if (!sources.Any()) return OperationResult.Failure("No sources");
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            // basic safety
+            if (string.IsNullOrWhiteSpace(destinationDir)) return OperationResult.Failure("Invalid destination");
+            if (sources.Any(s => IsSubPathOf(destinationDir, s)))
+            {
+                return OperationResult.Failure("Destination is inside a source path");
+            }
+            var joinedSources = string.Join(' ', sources.Select(Quote));
+            string cmdText = isMove ? $"mv -- {joinedSources} {Quote(destinationDir)}" : $"cp -a -- {joinedSources} {Quote(destinationDir)}";
+            return await RunSshCommandAsync(cmdText, token);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult.Failure(ex.Message);
+        }
+    }
+
+    private async Task<OperationResult> RunSshCommandAsync(string command, CancellationToken token)
+    {
+        return await Task.Run(() =>
+        {
+            using var ssh = new SshClient(_sftpClient.ConnectionInfo);
+            ssh.Connect();
+            var cmd = ssh.CreateCommand(command);
+            var result = cmd.Execute();
+            var success = cmd.ExitStatus == 0;
+            ssh.Disconnect();
+            return success ? OperationResult.Success() : OperationResult.Failure($"Command failed (exit {cmd.ExitStatus}): {cmd.Error} {result}");
+        }, token);
+    }
+
+    private string Quote(string path) => "\"" + path.Replace("\"", "\\\"") + "\"";
+
+    private bool IsSubPathOf(string potentialParent, string potentialChild)
+    {
+        var parent = potentialParent.TrimEnd('/') + "/";
+        var child = potentialChild.TrimEnd('/') + "/";
+        return child.StartsWith(parent, StringComparison.Ordinal);
+    }
+    // ===== End helper methods =====
 }
 
 public class OperationResult

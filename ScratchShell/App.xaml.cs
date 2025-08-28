@@ -70,6 +70,9 @@ public partial class App
     /// </summary>
     private async void OnStartup(object sender, StartupEventArgs e)
     {
+        // Initialize localization system first
+        LocalizationManager.Initialize();
+        
         await _host.StartAsync();
         var theme = Settings.Default.CurrentTheme;
         if (string.IsNullOrEmpty(theme))

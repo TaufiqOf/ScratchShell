@@ -6,12 +6,13 @@
     xmlns:local="clr-namespace:ScratchShell.View.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="Server"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
+    Title="{helpers:Localized Server_Title}"
     d:DesignHeight="1000"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    CloseButtonText="Close"
-    PrimaryButtonText="Save"
+    CloseButtonText="{helpers:Localized General_Close}"
+    PrimaryButtonText="{helpers:Localized General_Save}"
     mc:Ignorable="d">
 
     <ui:ContentDialog.Resources>
@@ -41,7 +42,7 @@
         <StackPanel VerticalAlignment="Top">
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Server Name" />
+                <Run Text="{helpers:Localized Server_Name}" />
                 <Run Foreground="Red" Text="*" />
             </TextBlock>
             <TextBox x:Name="NameTextBox" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
@@ -52,13 +53,13 @@
                 Visibility="{Binding (Validation.HasError), ElementName=NameTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Host" />
+                <Run Text="{helpers:Localized Server_Host}" />
                 <Run Foreground="Red" Text="*" />
             </TextBlock>
             <TextBox
                 x:Name="HostTextBox"
                 Text="{Binding Host, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                ToolTip="Enter IP address (e.g., 192.168.1.100) or hostname (e.g., server.example.com)" />
+                ToolTip="{helpers:Localized Validation_HostTooltip}" />
             <TextBlock
                 x:Name="HostErrorText"
                 Style="{StaticResource ValidationErrorTextBlock}"
@@ -66,13 +67,13 @@
                 Visibility="{Binding (Validation.HasError), ElementName=HostTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Port" />
+                <Run Text="{helpers:Localized Server_Port}" />
                 <Run Foreground="Red" Text="*" />
             </TextBlock>
             <TextBox
                 x:Name="PortTextBox"
                 Text="{Binding Port, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                ToolTip="Enter port number (1-65535). Common ports: SSH=22, FTP=21, SFTP=22" />
+                ToolTip="{helpers:Localized Validation_PortTooltip}" />
             <TextBlock
                 x:Name="PortErrorText"
                 Style="{StaticResource ValidationErrorTextBlock}"
@@ -80,7 +81,7 @@
                 Visibility="{Binding (Validation.HasError), ElementName=PortTextBox, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Protocol" />
+                <Run Text="{helpers:Localized Server_Protocol}" />
                 <Run Foreground="Red" Text="*" />
             </TextBlock>
             <ComboBox
@@ -88,22 +89,22 @@
                 Margin="0,5,0,0"
                 ItemsSource="{Binding ProtocolTypes}"
                 SelectedItem="{Binding ProtocolType, Mode=TwoWay}"
-                ToolTip="Select the connection protocol" />
+                ToolTip="{helpers:Localized Validation_ProtocolTooltip}" />
             <TextBlock
                 Margin="0,2,0,0"
                 FontSize="10"
                 Foreground="Gray"
-                Text="SSH: Secure Shell for terminal access&#x0a;FTP: File Transfer Protocol&#x0a;SFTP: SSH File Transfer Protocol"
+                Text="{helpers:Localized Protocol_Description_Combined}"
                 TextWrapping="Wrap" />
 
             <TextBlock Style="{StaticResource RequiredFieldLabel}">
-                <Run Text="Username" />
+                <Run Text="{helpers:Localized UI_Username}" />
                 <Run Foreground="Red" Text="*" />
             </TextBlock>
             <TextBox
                 x:Name="UsernameTextBox"
                 Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
-                ToolTip="Enter your username for the server" />
+                ToolTip="{helpers:Localized Validation_UsernameTooltip}" />
             <TextBlock
                 x:Name="UsernameErrorText"
                 Style="{StaticResource ValidationErrorTextBlock}"
@@ -113,18 +114,18 @@
             <TextBlock
                 Margin="0,10,0,0"
                 FontWeight="SemiBold"
-                Text="Password" />
+                Text="{helpers:Localized UI_Password}" />
             <PasswordBox
                 x:Name="PasswordInput"
                 PasswordChanged="PasswordBox_PasswordChanged"
-                ToolTip="Enter your password (leave empty if using key file authentication)" />
+                ToolTip="{helpers:Localized Placeholder_ServerPassword}" />
 
             <StackPanel
                 Margin="8"
                 VerticalAlignment="Center"
                 Orientation="Horizontal">
                 <CheckBox IsChecked="{Binding UseKeyFile, Mode=TwoWay}" />
-                <TextBlock VerticalAlignment="Center" Text="Use Key File Authentication" />
+                <TextBlock VerticalAlignment="Center" Text="{helpers:Localized Server_UseKeyFileAuth}" />
             </StackPanel>
 
             <Grid Margin="0,10,0,0">
@@ -137,19 +138,19 @@
                     Grid.Column="0"
                     Margin="0,10,0,0"
                     FontWeight="SemiBold"
-                    Text="Public Key" />
+                    Text="{helpers:Localized Server_PublicKey}" />
                 <TextBox
                     Grid.Column="1"
                     IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
                     Text="{Binding PublicKeyFilePath, Mode=TwoWay}"
-                    ToolTip="Path to your public key file (.pub)" />
+                    ToolTip="{helpers:Localized Validation_PublicKeyTooltip}" />
                 <ui:Button
                     Grid.Column="2"
                     Click="PublicKeyFilePath_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=Open24}"
                     IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
-                    ToolTip="Browse for public key file" />
+                    ToolTip="{helpers:Localized Tooltip_BrowsePublicKey}" />
             </Grid>
 
             <Grid Margin="0,10,0,0">
@@ -162,30 +163,30 @@
                     Grid.Column="0"
                     Margin="0,10,0,0"
                     FontWeight="SemiBold"
-                    Text="Private Key" />
+                    Text="{helpers:Localized Server_PrivateKey}" />
                 <TextBox
                     Grid.Column="1"
                     IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
                     Text="{Binding PrivateKeyFilePath, Mode=TwoWay}"
-                    ToolTip="Path to your private key file (.pem, .key)" />
+                    ToolTip="{helpers:Localized Validation_PrivateKeyTooltip}" />
                 <ui:Button
                     Grid.Column="2"
                     Click="PrivateKeyFilePath_Click"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=Open24}"
                     IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
-                    ToolTip="Browse for private key file" />
+                    ToolTip="{helpers:Localized Tooltip_BrowsePrivateKey}" />
             </Grid>
 
             <TextBlock
                 Margin="0,10,0,0"
                 FontWeight="SemiBold"
-                Text="Key File Password" />
+                Text="{helpers:Localized Server_KeyFilePassword}" />
             <PasswordBox
                 x:Name="KeyFilePasswordInput"
                 IsEnabled="{Binding UseKeyFile, Mode=TwoWay}"
                 PasswordChanged="KeyFilePasswordBox_PasswordChanged"
-                ToolTip="Enter password for encrypted key file (leave empty if key is not encrypted)" />
+                ToolTip="{helpers:Localized Placeholder_KeyFilePassword}" />
 
             <!--  Validation summary  -->
             <Border
@@ -201,7 +202,7 @@
                     <TextBlock
                         FontWeight="Bold"
                         Foreground="Red"
-                        Text="Please fix the following errors:" />
+                        Text="{helpers:Localized Server_ValidationSummary}" />
                     <TextBlock
                         x:Name="ValidationSummaryText"
                         Foreground="Red"

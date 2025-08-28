@@ -1,4 +1,5 @@
 using ScratchShell.ViewModels.Models;
+using ScratchShell.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Controls;
@@ -87,6 +88,23 @@ public partial class SnippetUserControl : UserControl, INotifyPropertyChanged
     public SnippetUserControl()
     {
         InitializeComponent();
+        
+        // Subscribe to language changes
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Update any programmatically set localized strings if needed in the future
+        // Most strings are now localized in XAML and will update automatically
+    }
+
+    /// <summary>
+    /// Cleanup method to unsubscribe from language change events
+    /// </summary>
+    public void Dispose()
+    {
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
     }
 
     private void NewButton_Click(object sender, RoutedEventArgs e)

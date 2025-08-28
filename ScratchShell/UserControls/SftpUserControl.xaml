@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
@@ -50,10 +51,10 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="BackButton_Click"
+                    Click="BackButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=ArrowLeft20}"
-                    ToolTip="Back (Alt+Left Arrow)" />
+                    ToolTip="{helpers:Localized Tooltip_Back}" />
 
                 <ui:Button
                     x:Name="ForwardButton"
@@ -61,11 +62,11 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="ForwardButton_Click"
+                    Click="ForwardButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=ArrowRight20}"
                     IsEnabled="False"
-                    ToolTip="Forward (Alt+Right Arrow)" />
+                    ToolTip="{helpers:Localized Tooltip_Forward}" />
 
                 <ui:Button
                     x:Name="RefreshButton"
@@ -73,10 +74,10 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="RefreshButton_Click"
+                    Click="RefreshButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=ArrowClockwise20}"
-                    ToolTip="Refresh (F5)" />
+                    ToolTip="{helpers:Localized Tooltip_Refresh}" />
 
                 <ui:Button
                     x:Name="UpButton"
@@ -84,10 +85,10 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="UpButton_Click"
+                    Click="UpButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=FolderArrowUp20}"
-                    ToolTip="Up one level" />
+                    ToolTip="{helpers:Localized Tooltip_UpOneLevel}" />
 
                 <!--  Address bar  -->
                 <local:BreadcrumbAddressBar
@@ -104,10 +105,10 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="CreateFolderButton_Click"
+                    Click="CreateFolderButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=FolderAdd20}"
-                    ToolTip="Create new folder" />
+                    ToolTip="{helpers:Localized Tooltip_CreateNewFolder}" />
 
                 <!--  Paste button  -->
                 <ui:Button
@@ -116,11 +117,11 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="PasteButton_Click"
+                    Click="PasteButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=ClipboardPaste20}"
                     IsEnabled="False"
-                    ToolTip="Paste (Ctrl+V)" />
+                    ToolTip="{helpers:Localized Tooltip_Paste}" />
 
                 <!--  View and utility buttons  -->
                 <ui:Button
@@ -131,7 +132,7 @@
                     VerticalAlignment="Stretch"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=Options20}"
-                    ToolTip="View options" />
+                    ToolTip="{helpers:Localized Tooltip_ViewOptions}" />
 
                 <ui:Button
                     x:Name="FullScreenButton"
@@ -139,10 +140,10 @@
                     Margin="2"
                     Padding="8,6"
                     VerticalAlignment="Stretch"
-                    Click="FullScreenButton_Click"
+                    Click="FullScreenButtonClick"
                     FontSize="16"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
-                    ToolTip="Full screen mode" />
+                    ToolTip="{helpers:Localized Tooltip_FullScreenMode}" />
 
                 <!--  Log toggle button moved to the end  -->
                 <ToggleButton
@@ -153,7 +154,7 @@
                     VerticalAlignment="Stretch"
                     Checked="LogToggleButtonChecked"
                     FontSize="16"
-                    ToolTip="Show/hide log panel"
+                    ToolTip="{helpers:Localized Tooltip_ShowHideLogPanel}"
                     Unchecked="LogToggleButtonUnChecked">
                     <ui:SymbolIcon Symbol="TextBulletListSquare20" />
                 </ToggleButton>
@@ -205,7 +206,7 @@
                 <TextBlock
                     FontSize="12"
                     FontWeight="SemiBold"
-                    Text="Operation Log" />
+                    Text="{helpers:Localized UI_OperationLog}" />
             </Border>
 
             <!--  Terminal/Log  -->

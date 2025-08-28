@@ -11,6 +11,7 @@ using ScratchShell.Services.EventHandlers;
 using ScratchShell.Services.Navigation;
 using ScratchShell.UserControls.BrowserControl;
 using ScratchShell.Views.Dialog;
+using ScratchShell.Resources;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
 
@@ -102,7 +103,7 @@ namespace ScratchShell.Services.FileOperations
         {
             if (_fileOperationService?.HasClipboardContent != true)
             {
-                _logger.LogWarning("Clipboard is empty");
+                _logger.LogWarning(Langauge.FileOp_ClipboardEmpty);
                 return;
             }
             await ExecuteWithCancellationAsync(async (cancellationToken) =>
@@ -126,7 +127,7 @@ namespace ScratchShell.Services.FileOperations
             {
                 var openDialog = new OpenFileDialog
                 {
-                    Title = "Upload File",
+                    Title = Langauge.FileOp_UploadFile,
                     Multiselect = false
                 };
 
@@ -142,7 +143,7 @@ namespace ScratchShell.Services.FileOperations
                 }
                 else
                 {
-                    _logger.LogInfo("Upload cancelled by user");
+                    _logger.LogInfo(Langauge.FileOp_UploadCancelledByUser);
                 }
             }
             catch (Exception ex)
@@ -177,10 +178,11 @@ namespace ScratchShell.Services.FileOperations
 
         public async Task HandleDeleteAsync(BrowserItem item)
         {
-            var itemType = item.IsFolder ? "folder" : "file";
-            var message = $"Are you sure you want to delete '{item.Name}'?\n\nThis action cannot be undone.";
+            var itemType = item.IsFolder ? Langauge.General_Folder.ToLower() : Langauge.General_File.ToLower();
+            var title = string.Format(Langauge.FileOp_DeleteConfirmTitle, itemType);
+            var message = string.Format(Langauge.FileOp_DeleteConfirmMessage, item.Name);
             
-            if (await ShowConfirmationDialog($"Delete {itemType}?", message))
+            if (await ShowConfirmationDialog(title, message))
             {
                 _logger.LogInfo($"User confirmed deletion of: {item.Name}");
                 await ExecuteDeleteAsync(item);
@@ -255,13 +257,19 @@ namespace ScratchShell.Services.FileOperations
         {
             var itemCount = items.Count;
             var itemNames = string.Join(", ", items.Take(3).Select(item => item.Name));
-            var contentText = itemCount <= 3
-                ? $"Are you sure you want to delete the following {itemCount} item(s)?\n\n{itemNames}"
-                : $"Are you sure you want to delete {itemCount} selected items?\n\n{itemNames}... and {itemCount - 3} more";
+            var title = string.Format(Langauge.FileOp_DeleteMultiConfirmTitle, itemCount);
+            string contentText;
 
-            contentText += "\n\nThis action cannot be undone.";
+            if (itemCount <= 3)
+            {
+                contentText = string.Format(Langauge.FileOp_DeleteMultiConfirmMessage, itemCount, itemNames);
+            }
+            else
+            {
+                contentText = string.Format(Langauge.FileOp_DeleteMultiConfirmMessageMany, itemCount, itemNames, itemCount - 3);
+            }
 
-            if (await ShowConfirmationDialog($"Delete {itemCount} items?", contentText))
+            if (await ShowConfirmationDialog(title, contentText))
             {
                 _logger.LogInfo($"User confirmed deletion of {itemCount} items");
                 await ExecuteMultiDeleteAsync(items);
@@ -277,18 +285,21 @@ namespace ScratchShell.Services.FileOperations
         {
             if (files == null || files.Length == 0)
             {
-                _logger.LogWarning("No files provided for upload");
+                _logger.LogWarning(Langauge.FileOp_NoFilesForUpload);
                 return;
             }
 
-            _logger.LogInfo($"Drag and drop upload initiated for {files.Length} item(s)");
+            var statusMessage = string.Format(Langauge.FileOp_DragDropUploadInitiated, files.Length);
+            _logger.LogInfo(statusMessage);
+            
             foreach (var file in files)
             {
                 try
                 {
                     var isDirectory = Directory.Exists(file);
                     var fileName = Path.GetFileName(file);
-                    _logger.LogInfo($"{(isDirectory ? "Folder" : "File")}: {fileName}");
+                    var itemType = isDirectory ? Langauge.General_Folder : Langauge.General_File;
+                    _logger.LogInfo($"{itemType}: {fileName}");
                 }
                 catch (Exception ex)
                 {
@@ -324,11 +335,12 @@ namespace ScratchShell.Services.FileOperations
         {
             _logger.LogInfo($"Preparing to download directory: {folderItem.Name}");
 
+            var title = string.Format(Langauge.FileOp_SelectDestinationFolder, folderItem.Name);
             var dlg = new CommonOpenFileDialog
             {
                 IsFolderPicker = true,
                 Multiselect = false,
-                Title = $"Select destination folder for {folderItem.Name}",
+                Title = title,
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
 
@@ -344,7 +356,7 @@ namespace ScratchShell.Services.FileOperations
             }
             else
             {
-                _logger.LogInfo("Download cancelled by user");
+                _logger.LogInfo(Langauge.FileOp_DownloadCancelledByUser);
             }
         }
 
@@ -355,7 +367,7 @@ namespace ScratchShell.Services.FileOperations
             var saveDialog = new SaveFileDialog
             {
                 FileName = fileItem.Name,
-                Title = "Download File",
+                Title = Langauge.FileOp_DownloadFile,
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
             };
 
@@ -370,7 +382,7 @@ namespace ScratchShell.Services.FileOperations
             }
             else
             {
-                _logger.LogInfo("Download cancelled by user");
+                _logger.LogInfo(Langauge.FileOp_DownloadCancelledByUser);
             }
         }
 
@@ -435,7 +447,7 @@ namespace ScratchShell.Services.FileOperations
             catch (OperationCanceledException)
             {
                 _logger.LogInfo("Operation was cancelled by user");
-                return OperationResult.Failure("Operation cancelled");
+                return OperationResult.Failure(Langauge.FileOp_OperationCancelled);
             }
             catch (Exception ex)
             {

@@ -6,13 +6,14 @@
     xmlns:local="clr-namespace:ScratchShell.Views.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="Login"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
+    Title="{helpers:Localized Login_Title}"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    CloseButtonText="Cancel"
+    CloseButtonText="{helpers:Localized General_Cancel}"
     DefaultButton="Primary"
-    PrimaryButtonText="Login"
-    SecondaryButtonText="Register"
+    PrimaryButtonText="{helpers:Localized General_Login}"
+    SecondaryButtonText="{helpers:Localized General_Register}"
     mc:Ignorable="d">
     <ui:ContentDialog.Resources>
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:LoginDialog}" />
@@ -33,11 +34,11 @@
             Grid.Row="0"
             Margin="0,0,0,0"
             FontWeight="SemiBold"
-            Text="Username:" />
+            Text="{helpers:Localized Login_Username}" />
         <ui:TextBox
             x:Name="UsernameTextBox"
             Grid.Row="1"
-            PlaceholderText="Enter your username" />
+            PlaceholderText="{helpers:Localized Placeholder_Username}" />
 
         <!--  Password Section  -->
         <TextBlock
@@ -45,12 +46,12 @@
             Grid.Row="2"
             Margin="0,10,0,0"
             FontWeight="SemiBold"
-            Text="Password:" />
+            Text="{helpers:Localized Login_Password}" />
         <ui:PasswordBox
             x:Name="PasswordBox"
             Grid.Row="3"
             PasswordChar="*"
-            PlaceholderText="Enter your password" />
+            PlaceholderText="{helpers:Localized Placeholder_Password}" />
 
         <!--  Status Message  -->
         <TextBlock

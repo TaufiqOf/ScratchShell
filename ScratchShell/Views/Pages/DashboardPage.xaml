@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:ScratchShell.ViewModels.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     d:DataContext="{d:DesignInstance local:DashboardPage,
                                      IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
@@ -44,7 +45,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Orientation="Horizontal">
-                    <ui:Button Command="{Binding ViewModel.AddServerCommand, Mode=OneWay}" ToolTip="Add a new server to your list">
+                    <ui:Button Command="{Binding ViewModel.AddServerCommand, Mode=OneWay}" ToolTip="{helpers:Localized Tooltip_AddServer}">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -58,26 +59,26 @@
                         FontSize="25"
                         FontWeight="Bold"
                         Icon="{ui:SymbolIcon WindowConsole20}"
-                        ToolTip="Open a new terminal session (choose mode)">
+                        ToolTip="{helpers:Localized Tooltip_OpenTerminal}">
                         <ui:DropDownButton.Flyout>
                             <ContextMenu>
                                 <MenuItem
                                     Command="{Binding ViewModel.OpenTerminalCommand}"
                                     CommandParameter="Elevated"
-                                    Header="Elevated"
-                                    ToolTip="Open terminal with administrator privileges" />
+                                    Header="{helpers:Localized Terminal_Elevated}"
+                                    ToolTip="{helpers:Localized Terminal_ElevatedTooltip}" />
                                 <MenuItem
                                     Command="{Binding ViewModel.OpenTerminalCommand}"
                                     CommandParameter="Normal"
-                                    Header="Normal"
-                                    ToolTip="Open terminal with normal privileges" />
+                                    Header="{helpers:Localized Terminal_Normal}"
+                                    ToolTip="{helpers:Localized Terminal_NormalTooltip}" />
                             </ContextMenu>
                         </ui:DropDownButton.Flyout>
                     </ui:DropDownButton>
                     <ui:Button
                         Margin="10,0,0,0"
                         Command="{Binding ViewModel.ExportCommand, Mode=OneWay}"
-                        ToolTip="Export your server list to a file for backup or sharing">
+                        ToolTip="{helpers:Localized Tooltip_ExportServers}">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -86,7 +87,7 @@
                     <ui:Button
                         Margin="5,0,0,0"
                         Command="{Binding ViewModel.ImportCommand, Mode=OneWay}"
-                        ToolTip="Import servers from a file into your list">
+                        ToolTip="{helpers:Localized Tooltip_ImportServers}">
                         <ui:SymbolIcon
                             FontSize="20"
                             FontWeight="Bold"
@@ -98,9 +99,9 @@
                         Width="200"
                         ClearButtonEnabled="True"
                         Icon="{ui:SymbolIcon Symbol=Search24}"
-                        PlaceholderText="Search..."
+                        PlaceholderText="{helpers:Localized UI_Search}"
                         Text="{Binding ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        ToolTip="Search servers by name, host, or protocol" />
+                        ToolTip="{helpers:Localized Tooltip_SearchServers}" />
                 </StackPanel>
             </Grid>
             <Separator Grid.Row="1" Margin="0,5" />

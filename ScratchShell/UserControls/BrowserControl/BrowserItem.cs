@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Wpf.Ui.Controls;
+using ScratchShell.Services;
 
 namespace ScratchShell.UserControls.BrowserControl;
 
@@ -67,13 +68,69 @@ public class BrowserItem : INotifyPropertyChanged
     public bool IsFolder { get; set; }
     public long Size { get; set; }
 
-    public string SizeFormatted => IsFolder ? "N/A" : Size.Bytes().ToString();
+    public string SizeFormatted => IsFolder 
+        ? LocalizationManager.GetString("General_NotApplicable") ?? "N/A"
+        : Size.Bytes().ToString();
+    
     public DateTime LastUpdated { get; set; }
 
-    public string DisplayType => IsFolder ? "Folder" : System.IO.Path.GetExtension(Name) ?? "File";
+    public string DisplayType => IsFolder 
+        ? LocalizationManager.GetString("General_Folder") ?? "Folder"
+        : System.IO.Path.GetExtension(Name) ?? LocalizationManager.GetString("General_File") ?? "File";
 
     // Add Icon property for Windows Explorer-like appearance
     public SymbolRegular Icon => GetIcon();
+
+    // Static constructor to subscribe to language changes once for all instances
+    static BrowserItem()
+    {
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    public BrowserItem()
+    {
+        // Register this instance for language change notifications
+        lock (_instances)
+        {
+            _instances.Add(new WeakReference(this));
+        }
+    }
+
+    // Finalizer to clean up weak references (optional, GC will handle weak references)
+    ~BrowserItem()
+    {
+        // WeakReferences will be cleaned up automatically in OnLanguageChanged
+        // when their targets are no longer available, so no explicit cleanup needed
+    }
+
+    // Keep track of all instances using weak references to avoid memory leaks
+    private static readonly List<WeakReference> _instances = new();
+
+    private static void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Update all live instances when language changes
+        lock (_instances)
+        {
+            for (int i = _instances.Count - 1; i >= 0; i--)
+            {
+                var weakRef = _instances[i];
+                if (weakRef.Target is BrowserItem item)
+                {
+                    // Update localized properties on UI thread
+                    System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+                    {
+                        item.OnPropertyChanged(nameof(SizeFormatted));
+                        item.OnPropertyChanged(nameof(DisplayType));
+                    });
+                }
+                else
+                {
+                    // Remove dead weak references
+                    _instances.RemoveAt(i);
+                }
+            }
+        }
+    }
 
     private SymbolRegular GetIcon()
     {

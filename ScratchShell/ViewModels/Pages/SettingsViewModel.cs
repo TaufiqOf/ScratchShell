@@ -46,7 +46,11 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     [ObservableProperty]
     private string _syncStatusMessage = string.Empty;
 
+    [ObservableProperty]
+    private IEnumerable<LanguageInfo> _availableLanguages;
+
     private ShellType _shellType;
+    private LanguageInfo _selectedLanguage;
 
     public ShellType ShellType
     {
@@ -64,6 +68,24 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         }
     }
 
+    public LanguageInfo SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set
+        {
+            if (SetProperty(ref _selectedLanguage, value))
+            {
+                LocalizationManager.ChangeLanguage(value.Code);
+                
+                // Trigger cloud sync if enabled
+                _ = Task.Run(async () => await UserSettingsService.TriggerCloudSyncIfEnabled());
+                
+                // Show message about restart requirement
+                ShowLanguageChangeMessage();
+            }
+        }
+    }
+
     [ObservableProperty]
     private ApplicationTheme _currentTheme = ApplicationTheme.Unknown;
 
@@ -71,7 +93,24 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
     {
         _contentDialogService = contentDialogService;
         ShellTypes = Enum.GetValues(typeof(ShellType)).Cast<ShellType>();
+        AvailableLanguages = LocalizationManager.SupportedLanguages.Values;
+        _selectedLanguage = LocalizationManager.CurrentLanguageInfo;
+        
+        // Subscribe to language changes to ensure the UI stays updated
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+        
         InitializeCloudSync();
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Update the selected language if it was changed externally
+        var currentLanguage = LocalizationManager.CurrentLanguageInfo;
+        if (_selectedLanguage.Code != currentLanguage.Code)
+        {
+            _selectedLanguage = currentLanguage;
+            OnPropertyChanged(nameof(SelectedLanguage));
+        }
     }
 
     public Task OnNavigatedToAsync()
@@ -92,6 +131,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         Credit = ApplicationConstant.Credit;
         AppVersion = $"{ApplicationConstant.Name} - {GetAssemblyVersion()}";
         ShellType = CommonService.GetEnumValue<ShellType>(Settings.Default.DefaultShellType);
+        SelectedLanguage = LocalizationManager.CurrentLanguageInfo;
 
         RefreshUserInfo();
         RefreshCloudSyncInfo();
@@ -146,6 +186,35 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         else
         {
             LastSyncStatus = "Never synced";
+        }
+    }
+
+    private void ShowLanguageChangeMessage()
+    {
+        try
+        {
+            var message = LocalizationManager.GetString("Language_ChangeMessage");
+            var title = LocalizationManager.GetString("Settings_Language") + " Changed";
+            
+            // Show a simple message dialog
+            _ = Task.Run(async () =>
+            {
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    var messageDialog = new Wpf.Ui.Controls.MessageBox
+                    {
+                        Title = title,
+                        Content = message,
+                        PrimaryButtonText = "OK"
+                    };
+
+                    await messageDialog.ShowDialogAsync();
+                });
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error showing language change message: {ex.Message}");
         }
     }
 

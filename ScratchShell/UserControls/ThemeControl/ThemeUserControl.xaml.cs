@@ -1,6 +1,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ScratchShell.Services;
 
 namespace ScratchShell.UserControls.ThemeControl;
 
@@ -65,6 +66,23 @@ public partial class ThemeUserControl : UserControl
         
         // Initialize preview theme with defaults if no theme is available yet
         EnsurePreviewThemeExists();
+        
+        // Subscribe to language changes
+        LocalizationManager.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Update color palette tooltips with localized RGB and Hex text
+        UpdateColorPresetTooltips();
+    }
+
+    /// <summary>
+    /// Cleanup method to unsubscribe from language change events
+    /// </summary>
+    public void Dispose()
+    {
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
     }
 
     private void EnsurePreviewThemeExists()
@@ -175,7 +193,7 @@ public partial class ThemeUserControl : UserControl
                 Background = new SolidColorBrush(color),
                 BorderBrush = new SolidColorBrush(Colors.Gray),
                 BorderThickness = new Thickness(1),
-                ToolTip = $"RGB({color.R}, {color.G}, {color.B})\nHex: #{color.R:X2}{color.G:X2}{color.B:X2}",
+                ToolTip = CreateColorTooltip(color),
                 Style = null, // Remove any button styling
                 Cursor = Cursors.Hand
             };
@@ -202,6 +220,18 @@ public partial class ThemeUserControl : UserControl
 
             ColorPresetsPanel.Children.Add(colorButton);
         }
+    }
+
+    private string CreateColorTooltip(Color color)
+    {
+        return $"RGB({color.R}, {color.G}, {color.B})\nHex: #{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    private void UpdateColorPresetTooltips()
+    {
+        // Update tooltips for color preset buttons if needed
+        // For now, the RGB and Hex format is universal, so no localization needed
+        // This method is here for future extensibility if color formats need localization
     }
 
     private static void OnTerminalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

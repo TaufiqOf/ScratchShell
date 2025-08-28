@@ -15,6 +15,7 @@ using Wpf.Ui;
 using Wpf.Ui.Abstractions.Controls;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
+using ScratchShell.Resources;
 
 namespace ScratchShell.ViewModels.Pages;
 
@@ -162,9 +163,9 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
             await _contentDialogService.ShowSimpleDialogAsync(
                 new SimpleContentDialogCreateOptions
                 {
-                    Title = "Cancelled",
-                    Content = "SSH terminal was not opened (admin permission was declined).",
-                    CloseButtonText = "OK"
+                    Title = Langauge.General_Cancelled,
+                    Content = Langauge.Status_CancelledSSHTerminalUAC,
+                    CloseButtonText = Langauge.General_OK
                 });
         }
         catch (Exception ex)
@@ -172,9 +173,9 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
             await _contentDialogService.ShowSimpleDialogAsync(
                 new SimpleContentDialogCreateOptions
                 {
-                    Title = "Error",
+                    Title = Langauge.General_Error,
                     Content = ex.Message,
-                    CloseButtonText = "OK"
+                    CloseButtonText = Langauge.General_OK
                 });
         }
     }
@@ -192,9 +193,9 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
             await _contentDialogService.ShowSimpleDialogAsync(
                 new SimpleContentDialogCreateOptions
                 {
-                    Title = "Error",
+                    Title = Langauge.General_Error,
                     Content = ex.Message,
-                    CloseButtonText = "OK"
+                    CloseButtonText = Langauge.General_OK
                 });
         }
     }
@@ -205,7 +206,7 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
         try
         {
             var saveDialog = new OpenFileDialog();
-            saveDialog.Filter = "(*.ss)|*.ss|All Files (*.*)|*.*";
+            saveDialog.Filter = Langauge.FileFilter_ScratchShell;
             if (saveDialog.ShowDialog() == DialogResult.OK)
             {
                 var passwordDialog = new PasswordDialog(_contentDialogService);
@@ -223,9 +224,9 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
             await _contentDialogService.ShowSimpleDialogAsync(
                 new SimpleContentDialogCreateOptions
                 {
-                    Title = "Import",
-                    Content = "Invalid Password",
-                    CloseButtonText = "OK"
+                    Title = Langauge.Import_Title,
+                    Content = Langauge.Import_InvalidPassword,
+                    CloseButtonText = Langauge.General_OK
                 });
         }
         catch (Exception ex)
@@ -233,9 +234,9 @@ public partial class DashboardViewModel : ObservableObject, INavigationAware
             await _contentDialogService.ShowSimpleDialogAsync(
                 new SimpleContentDialogCreateOptions
                 {
-                    Title = "Error",
+                    Title = Langauge.General_Error,
                     Content = ex.Message,
-                    CloseButtonText = "OK"
+                    CloseButtonText = Langauge.General_OK
                 });
         }
     }

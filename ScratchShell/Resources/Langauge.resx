@@ -1,0 +1,1284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ContextMenu_Cut" xml:space="preserve">
+    <value>Cut</value>
+    <comment>Context menu item: Cut</comment>
+  </data>
+  <data name="ContextMenu_Copy" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Context menu item: Copy </comment>
+  </data>
+  <data name="ContextMenu_Paste" xml:space="preserve">
+    <value>Paste</value>
+    <comment>Context menu item: Paste</comment>
+  </data>
+  <data name="ContextMenu_Rename" xml:space="preserve">
+    <value>Rename</value>
+    <comment>Context menu item: Rename</comment>
+  </data>
+  <data name="ContextMenu_Upload" xml:space="preserve">
+    <value>Upload</value>
+    <comment>Context menu item: Upload</comment>
+  </data>
+  <data name="ContextMenu_Download" xml:space="preserve">
+    <value>Download</value>
+    <comment>Context menu item: Download</comment>
+  </data>
+  <data name="ContextMenu_NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+    <comment>Context menu item: Create new folder</comment>
+  </data>
+  <data name="General_NotApplicable" xml:space="preserve">
+    <value>N/A</value>
+    <comment>Generic not applicable abbreviation</comment>
+  </data>
+  <data name="General_Folder" xml:space="preserve">
+    <value>Folder</value>
+    <comment>Generic folder type label</comment>
+  </data>
+  <data name="General_File" xml:space="preserve">
+    <value>File</value>
+    <comment>Generic file type fallback label</comment>
+  </data>
+  <data name="General_Save" xml:space="preserve">
+    <value>Save</value>
+    <comment>Generic save button text</comment>
+  </data>
+  <data name="General_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Generic cancel button text</comment>
+  </data>
+  <data name="General_Close" xml:space="preserve">
+    <value>Close</value>
+    <comment>Generic close button text</comment>
+  </data>
+  <data name="General_Login" xml:space="preserve">
+    <value>Login</value>
+    <comment>Generic login button text</comment>
+  </data>
+  <data name="General_Register" xml:space="preserve">
+    <value>Register</value>
+    <comment>Generic register button text</comment>
+  </data>
+  <data name="General_Export" xml:space="preserve">
+    <value>Export</value>
+    <comment>Generic export button text</comment>
+  </data>
+  <data name="General_Import" xml:space="preserve">
+    <value>Import</value>
+    <comment>Generic import button text</comment>
+  </data>
+  <data name="General_Sync" xml:space="preserve">
+    <value>Sync</value>
+    <comment>Generic sync button text</comment>
+  </data>
+  <data name="General_Logout" xml:space="preserve">
+    <value>Logout</value>
+    <comment>Generic logout button text</comment>
+  </data>
+  <data name="General_Edit" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Generic edit action</comment>
+  </data>
+  <data name="General_Delete" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Generic delete action</comment>
+  </data>
+  <data name="General_OK" xml:space="preserve">
+    <value>OK</value>
+    <comment>Generic OK button text</comment>
+  </data>
+  <data name="General_Error" xml:space="preserve">
+    <value>Error</value>
+    <comment>Generic error title</comment>
+  </data>
+  <data name="General_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+    <comment>Generic cancelled status</comment>
+  </data>
+  <data name="General_Yes" xml:space="preserve">
+    <value>Yes</value>
+    <comment>Generic yes button text</comment>
+  </data>
+  <data name="General_No" xml:space="preserve">
+    <value>No</value>
+    <comment>Generic no button text</comment>
+  </data>
+  <data name="Connection_EstablishingConnection" xml:space="preserve">
+    <value>Establishing connection to {0}...</value>
+    <comment>Connection status message template: server name</comment>
+  </data>
+  <data name="Connection_ConnectingTo" xml:space="preserve">
+    <value>Connecting to {0}...</value>
+    <comment>Connection status message template: server name</comment>
+  </data>
+  <data name="Connection_InitializingFileOps" xml:space="preserve">
+    <value>Initializing file operations...</value>
+    <comment>Connection initialization step message</comment>
+  </data>
+  <data name="Connection_SettingUpNavigation" xml:space="preserve">
+    <value>Setting up navigation...</value>
+    <comment>Navigation setup step message</comment>
+  </data>
+  <data name="Connection_LoadingHomeDirectory" xml:space="preserve">
+    <value>Loading home directory...</value>
+    <comment>Home directory loading step message</comment>
+  </data>
+  <data name="Connection_Failed" xml:space="preserve">
+    <value>Connection Failed</value>
+    <comment>Connection failure status</comment>
+  </data>
+  <data name="Connection_Lost" xml:space="preserve">
+    <value>Connection lost - attempting to reconnect...</value>
+    <comment>Connection lost status message</comment>
+  </data>
+  <data name="Connection_Reconnecting" xml:space="preserve">
+    <value>Reconnecting to {0}...</value>
+    <comment>Reconnection status message template: server name</comment>
+  </data>
+  <data name="Connection_FailedTo" xml:space="preserve">
+    <value>Failed to connect to {0}:{1}</value>
+    <comment>Connection failure message template: host, port</comment>
+  </data>
+  <data name="Connection_AttemptingTo" xml:space="preserve">
+    <value>Attempting to connect to {0} ({1}:{2})</value>
+    <comment>Connection attempt message template: server name, host, port</comment>
+  </data>
+  <data name="Connection_SuccessfullyConnected" xml:space="preserve">
+    <value>Successfully connected and initialized for {0}</value>
+    <comment>Connection success message template: server name</comment>
+  </data>
+  <data name="Connection_SuccessfullyReconnected" xml:space="preserve">
+    <value>Successfully reconnected to {0}</value>
+    <comment>Reconnection success message template: server name</comment>
+  </data>
+  <data name="Connection_HealthCheckFailed" xml:space="preserve">
+    <value>Connection health check failed - connection appears to be lost</value>
+    <comment>Health check failure message</comment>
+  </data>
+  <data name="Connection_ReconnectionFailed" xml:space="preserve">
+    <value>Reconnection failed: {0}</value>
+    <comment>Reconnection failure message template: error details</comment>
+  </data>
+  <data name="Operation_Timeout" xml:space="preserve">
+    <value>Operation timeout: {0}</value>
+    <comment>Operation timeout message template: error details</comment>
+  </data>
+  <data name="Operation_NetworkError" xml:space="preserve">
+    <value>Network error: {0}</value>
+    <comment>Network error message template: error details</comment>
+  </data>
+  <data name="Operation_SSHConnectionError" xml:space="preserve">
+    <value>SSH connection error: {0}</value>
+    <comment>SSH connection error message template: error details</comment>
+  </data>
+  <data name="Operation_ConnectionError" xml:space="preserve">
+    <value>Connection error: {0}</value>
+    <comment>Generic connection error message template: error details</comment>
+  </data>
+  <data name="Operation_HealthCheckError" xml:space="preserve">
+    <value>Error during connection health check</value>
+    <comment>Health check error message</comment>
+  </data>
+  <data name="Operation_ConnectionTimeoutDetected" xml:space="preserve">
+    <value>Connection timeout detected: {0}</value>
+    <comment>Connection timeout detection message template: error details</comment>
+  </data>
+  <data name="Operation_LogPanelOpened" xml:space="preserve">
+    <value>Operation log panel opened</value>
+    <comment>Log panel opened status</comment>
+  </data>
+  <data name="Operation_LogPanelClosed" xml:space="preserve">
+    <value>Operation log panel closed</value>
+    <comment>Log panel closed status</comment>
+  </data>
+  <data name="Operation_EnteringFullscreen" xml:space="preserve">
+    <value>Entering full screen mode</value>
+    <comment>Full screen mode entry message</comment>
+  </data>
+  <data name="Operation_ExitingFullscreen" xml:space="preserve">
+    <value>Exiting full screen mode</value>
+    <comment>Full screen mode exit message</comment>
+  </data>
+  <data name="Operation_UIEnabled" xml:space="preserve">
+    <value>User interface enabled - ready for file operations</value>
+    <comment>UI enabled after connection message</comment>
+  </data>
+  <data name="Operation_StartingCleanup" xml:space="preserve">
+    <value>Starting cleanup and disconnection</value>
+    <comment>Cleanup process start message</comment>
+  </data>
+  <data name="Operation_CleanupCompleted" xml:space="preserve">
+    <value>Cleanup completed successfully</value>
+    <comment>Cleanup process completion message</comment>
+  </data>
+  <data name="Operation_ClosingCurrentTab" xml:space="preserve">
+    <value>Closing current tab due to connection failure</value>
+    <comment>Tab closing due to connection failure message</comment>
+  </data>
+  <data name="Navigation_NavigatingToParent" xml:space="preserve">
+    <value>Navigating to parent directory: {0}</value>
+    <comment>Parent directory navigation message template: path</comment>
+  </data>
+  <data name="Navigation_NavigatingToFolder" xml:space="preserve">
+    <value>Navigating to folder: {0}</value>
+    <comment>Folder navigation message template: path</comment>
+  </data>
+  <data name="Navigation_OpeningFile" xml:space="preserve">
+    <value>Opening file: {0}</value>
+    <comment>File opening message template: filename</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperation" xml:space="preserve">
+    <value>Multi-select operation requested for {0} selected item(s)</value>
+    <comment>Multi-select operation message template: count</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailed" xml:space="preserve">
+    <value>Multi-select operation failed: No items selected</value>
+    <comment>Multi-select operation failure - no items</comment>
+  </data>
+  <data name="Navigation_MultiSelectOperationFailedValid" xml:space="preserve">
+    <value>Multi-select operation failed: No valid items selected</value>
+    <comment>Multi-select operation failure - no valid items</comment>
+  </data>
+  <data name="Navigation_ErrorGettingParentPath" xml:space="preserve">
+    <value>Error getting parent path for {0}</value>
+    <comment>Parent path error message template: current path</comment>
+  </data>
+  <data name="CloudSync_UserNotAuthenticated" xml:space="preserve">
+    <value>User not authenticated</value>
+    <comment>Cloud sync authentication error</comment>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailable" xml:space="preserve">
+    <value>Cloud encryption keys not available. Please re-enter your password to enable cloud sync.</value>
+    <comment>Cloud sync encryption keys not available message</comment>
+  </data>
+  <data name="CloudSync_EncryptionKeysNotAvailableLogin" xml:space="preserve">
+    <value>Cloud encryption keys not available. Please login again to enable cloud sync.</value>
+    <comment>Cloud sync encryption keys not available - login required</comment>
+  </data>
+  <data name="CloudSync_SyncConflictDetected" xml:space="preserve">
+    <value>Sync conflict detected</value>
+    <comment>Cloud sync conflict detected message</comment>
+  </data>
+  <data name="CloudSync_SettingsSyncedToCloud" xml:space="preserve">
+    <value>Settings synced to cloud successfully</value>
+    <comment>Cloud sync to cloud success message</comment>
+  </data>
+  <data name="CloudSync_SyncFailed" xml:space="preserve">
+    <value>Sync failed</value>
+    <comment>Cloud sync failure message</comment>
+  </data>
+  <data name="CloudSync_SyncFailedWithStatus" xml:space="preserve">
+    <value>Sync failed: {0}</value>
+    <comment>Cloud sync failure message with status template</comment>
+  </data>
+  <data name="CloudSync_SyncError" xml:space="preserve">
+    <value>Sync error: {0}</value>
+    <comment>Cloud sync error message template</comment>
+  </data>
+  <data name="CloudSync_NoCloudSettingsFound" xml:space="preserve">
+    <value>No cloud settings found</value>
+    <comment>No cloud settings available message</comment>
+  </data>
+  <data name="CloudSync_LocalChangesDetected" xml:space="preserve">
+    <value>Local changes detected. Resolve conflicts first.</value>
+    <comment>Local changes conflict message</comment>
+  </data>
+  <data name="CloudSync_SettingsDownloadedFromCloud" xml:space="preserve">
+    <value>Settings downloaded from cloud successfully</value>
+    <comment>Cloud sync download success message</comment>
+  </data>
+  <data name="CloudSync_FailedToGetCloudSettings" xml:space="preserve">
+    <value>Failed to get cloud settings</value>
+    <comment>Failed to get cloud settings message</comment>
+  </data>
+  <data name="CloudSync_DownloadFailed" xml:space="preserve">
+    <value>Download failed: {0}</value>
+    <comment>Cloud sync download failure message template</comment>
+  </data>
+  <data name="CloudSync_DownloadError" xml:space="preserve">
+    <value>Download error: {0}</value>
+    <comment>Cloud sync download error message template </comment>
+  </data>
+  <data name="CloudSync_CustomSettingsNotProvided" xml:space="preserve">
+    <value>Custom settings not provided</value>
+    <comment>Custom settings not provided error</comment>
+  </data>
+  <data name="CloudSync_InvalidResolutionOption" xml:space="preserve">
+    <value>Invalid resolution option</value>
+    <comment>Invalid conflict resolution option error</comment>
+  </data>
+  <data name="CloudSync_ConflictResolutionError" xml:space="preserve">
+    <value>Conflict resolution error: {0}</value>
+    <comment>Conflict resolution error message template </comment>
+  </data>
+  <data name="CloudSync_CloudSettingsDeletedSuccessfully" xml:space="preserve">
+    <value>Cloud settings deleted successfully</value>
+    <comment>Cloud settings deletion success message</comment>
+  </data>
+  <data name="CloudSync_DeleteFailed" xml:space="preserve">
+    <value>Delete failed: {0}</value>
+    <comment>Cloud settings deletion failure message template</comment>
+  </data>
+  <data name="CloudSync_DeleteError" xml:space="preserve">
+    <value>Delete error: {0}</value>
+    <comment>Cloud settings deletion error message template</comment>
+  </data>
+  <data name="UI_Username" xml:space="preserve">
+    <value>Username</value>
+    <comment>Username label</comment>
+  </data>
+  <data name="UI_Password" xml:space="preserve">
+    <value>Password</value>
+    <comment>Password label</comment>
+  </data>
+  <data name="UI_Search" xml:space="preserve">
+    <value>Search...</value>
+    <comment>Search placeholder text</comment>
+  </data>
+  <data name="UI_SelectAll" xml:space="preserve">
+    <value>Select All</value>
+    <comment>Select All checkbox text</comment>
+  </data>
+  <data name="Server_Name" xml:space="preserve">
+    <value>Server Name</value>
+    <comment>Server name field label</comment>
+  </data>
+  <data name="Server_Host" xml:space="preserve">
+    <value>Host</value>
+    <comment>Server host field label</comment>
+  </data>
+  <data name="Server_Port" xml:space="preserve">
+    <value>Port</value>
+    <comment>Server port field label</comment>
+  </data>
+  <data name="Server_Protocol" xml:space="preserve">
+    <value>Protocol</value>
+    <comment>Server protocol field label</comment>
+  </data>
+  <data name="Server_Title" xml:space="preserve">
+    <value>Server</value>
+    <comment>Server dialog title</comment>
+  </data>
+  <data name="Server_PublicKey" xml:space="preserve">
+    <value>Public Key</value>
+    <comment>Public key field label</comment>
+  </data>
+  <data name="Server_PrivateKey" xml:space="preserve">
+    <value>Private Key</value>
+    <comment>Private key field label</comment>
+  </data>
+  <data name="Server_KeyFilePassword" xml:space="preserve">
+    <value>Key File Password</value>
+    <comment>Key file password field label</comment>
+  </data>
+  <data name="Server_UseKeyFileAuth" xml:space="preserve">
+    <value>Use Key File Authentication</value>
+    <comment>Use key file authentication checkbox text</comment>
+  </data>
+  <data name="Server_ValidationSummary" xml:space="preserve">
+    <value>Please fix the following errors:</value>
+    <comment>Validation summary header</comment>
+  </data>
+  <data name="Server_Actions" xml:space="preserve">
+    <value>Server Actions</value>
+    <comment>Server actions dropdown tooltip</comment>
+  </data>
+  <data name="Snippet_DeleteConfirmTitle" xml:space="preserve">
+    <value>Delete this snippet?</value>
+    <comment>Snippet delete confirmation dialog title</comment>
+  </data>
+  <data name="Snippet_DeleteConfirmMessage" xml:space="preserve">
+    <value>Are you sure you want to delete {0}?</value>
+    <comment>Snippet delete confirmation message template</comment>
+  </data>
+  <data name="Snippet_SystemSnippets" xml:space="preserve">
+    <value>System Snippets ({0})</value>
+    <comment>System snippets submenu label with count</comment>
+  </data>
+  <data name="Snippet_UserSnippets" xml:space="preserve">
+    <value>User Snippets ({0})</value>
+    <comment>User snippets submenu label with count</comment>
+  </data>
+  <data name="FileOp_UploadFile" xml:space="preserve">
+    <value>Upload File</value>
+    <comment>Upload file dialog title</comment>
+  </data>
+  <data name="FileOp_DownloadFile" xml:space="preserve">
+    <value>Download File</value>
+    <comment>Download file dialog title</comment>
+  </data>
+  <data name="FileOp_SelectDestinationFolder" xml:space="preserve">
+    <value>Select destination folder for {0}</value>
+    <comment>Folder download destination dialog title template</comment>
+  </data>
+  <data name="FileOp_DeleteConfirmTitle" xml:space="preserve">
+    <value>Delete {0}?</value>
+    <comment>Delete confirmation dialog title template (file/folder)</comment>
+  </data>
+  <data name="FileOp_DeleteConfirmMessage" xml:space="preserve">
+    <value>Are you sure you want to delete '{0}'?
+
+This action cannot be undone.</value>
+    <comment>Delete confirmation dialog message template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmTitle" xml:space="preserve">
+    <value>Delete {0} items?</value>
+    <comment>Multi-delete confirmation dialog title template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessage" xml:space="preserve">
+    <value>Are you sure you want to delete the following {0} item(s)?
+
+{1}
+
+This action cannot be undone.</value>
+    <comment>Multi-delete confirmation dialog message template</comment>
+  </data>
+  <data name="FileOp_DeleteMultiConfirmMessageMany" xml:space="preserve">
+    <value>Are you sure you want to delete {0} selected items?
+
+{1}... and {2} more
+
+This action cannot be undone.</value>
+    <comment>Multi-delete confirmation dialog message template for many items</comment>
+  </data>
+  <data name="FileOp_UploadCancelledByUser" xml:space="preserve">
+    <value>Upload cancelled by user</value>
+    <comment>Upload cancelled status message</comment>
+  </data>
+  <data name="FileOp_DownloadCancelledByUser" xml:space="preserve">
+    <value>Download cancelled by user</value>
+    <comment>Download cancelled status message</comment>
+  </data>
+  <data name="FileOp_OperationCancelled" xml:space="preserve">
+    <value>Operation cancelled</value>
+    <comment>Generic operation cancelled message</comment>
+  </data>
+  <data name="FileOp_ClipboardEmpty" xml:space="preserve">
+    <value>Clipboard is empty</value>
+    <comment>Empty clipboard warning message</comment>
+  </data>
+  <data name="FileOp_NoFilesForUpload" xml:space="preserve">
+    <value>No files provided for upload</value>
+    <comment>No files selected for upload warning</comment>
+  </data>
+  <data name="FileOp_DragDropUploadInitiated" xml:space="preserve">
+    <value>Drag and drop upload initiated for {0} item(s)</value>
+    <comment>Drag drop upload status message</comment>
+  </data>
+  <data name="Tooltip_AddServer" xml:space="preserve">
+    <value>Add a new server to your list</value>
+    <comment>Add server button tooltip</comment>
+  </data>
+  <data name="Tooltip_OpenTerminal" xml:space="preserve">
+    <value>Open a new terminal session (choose mode)</value>
+    <comment>Open terminal dropdown tooltip</comment>
+  </data>
+  <data name="Tooltip_ExportServers" xml:space="preserve">
+    <value>Export your server list to a file for backup or sharing</value>
+    <comment>Export servers button tooltip</comment>
+  </data>
+  <data name="Tooltip_ImportServers" xml:space="preserve">
+    <value>Import servers from a file into your list</value>
+    <comment>Import servers button tooltip</comment>
+  </data>
+  <data name="Tooltip_SearchServers" xml:space="preserve">
+    <value>Search servers by name, host, or protocol</value>
+    <comment>Search textbox tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowseFile" xml:space="preserve">
+    <value>Browse for file</value>
+    <comment>Generic browse file button tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowsePublicKey" xml:space="preserve">
+    <value>Browse for public key file</value>
+    <comment>Browse public key file tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowsePrivateKey" xml:space="preserve">
+    <value>Browse for private key file</value>
+    <comment>Browse private key file tooltip</comment>
+  </data>
+  <data name="Tooltip_BrowseExportLocation" xml:space="preserve">
+    <value>Browse for export file location</value>
+    <comment>Browse export location tooltip</comment>
+  </data>
+  <data name="Tooltip_CloseTab" xml:space="preserve">
+    <value>Close tab</value>
+    <comment>Close tab button tooltip</comment>
+  </data>
+  <data name="Placeholder_Username" xml:space="preserve">
+    <value>Enter your username</value>
+    <comment>Username textbox placeholder</comment>
+  </data>
+  <data name="Placeholder_Password" xml:space="preserve">
+    <value>Enter your password</value>
+    <comment>Password textbox placeholder</comment>
+  </data>
+  <data name="Placeholder_ExportPassword" xml:space="preserve">
+    <value>Enter password to encrypt the export file</value>
+    <comment>Export password placeholder</comment>
+  </data>
+  <data name="Placeholder_KeyFilePassword" xml:space="preserve">
+    <value>Enter password for encrypted key file (leave empty if key is not encrypted)</value>
+    <comment>Key file password placeholder</comment>
+  </data>
+  <data name="Placeholder_ServerPassword" xml:space="preserve">
+    <value>Enter your password (leave empty if using key file authentication)</value>
+    <comment>Server password placeholder</comment>
+  </data>
+  <data name="Terminal_Elevated" xml:space="preserve">
+    <value>Elevated</value>
+    <comment>Elevated terminal mode</comment>
+  </data>
+  <data name="Terminal_Normal" xml:space="preserve">
+    <value>Normal</value>
+    <comment>Normal terminal mode</comment>
+  </data>
+  <data name="Terminal_ElevatedTooltip" xml:space="preserve">
+    <value>Open terminal with administrator privileges</value>
+    <comment>Elevated terminal tooltip</comment>
+  </data>
+  <data name="Terminal_NormalTooltip" xml:space="preserve">
+    <value>Open terminal with normal privileges</value>
+    <comment>Normal terminal tooltip</comment>
+  </data>
+  <data name="Export_Title" xml:space="preserve">
+    <value>Export Servers</value>
+    <comment>Export dialog title</comment>
+  </data>
+  <data name="Export_SelectServers" xml:space="preserve">
+    <value>Select servers to export:</value>
+    <comment>Export dialog instruction</comment>
+  </data>
+  <data name="Export_ToFile" xml:space="preserve">
+    <value>Export to file</value>
+    <comment>Export file path label</comment>
+  </data>
+  <data name="Import_Title" xml:space="preserve">
+    <value>Import</value>
+    <comment>Import dialog title</comment>
+  </data>
+  <data name="Import_InvalidPassword" xml:space="preserve">
+    <value>Invalid Password</value>
+    <comment>Import invalid password message</comment>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>Login</value>
+    <comment>Login dialog title</comment>
+  </data>
+  <data name="Login_Username" xml:space="preserve">
+    <value>Username:</value>
+    <comment>Login username label</comment>
+  </data>
+  <data name="Login_Password" xml:space="preserve">
+    <value>Password:</value>
+    <comment>Login password label</comment>
+  </data>
+  <data name="Settings_Personalization" xml:space="preserve">
+    <value>Personalization</value>
+    <comment>Settings personalization section</comment>
+  </data>
+  <data name="Settings_Theme" xml:space="preserve">
+    <value>Theme</value>
+    <comment>Settings theme label</comment>
+  </data>
+  <data name="Settings_Light" xml:space="preserve">
+    <value>Light</value>
+    <comment>Light theme option</comment>
+  </data>
+  <data name="Settings_Dark" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Dark theme option</comment>
+  </data>
+  <data name="Settings_DefaultShell" xml:space="preserve">
+    <value>Default Shell</value>
+    <comment>Default shell setting</comment>
+  </data>
+  <data name="Settings_Account" xml:space="preserve">
+    <value>Account</value>
+    <comment>Settings account section</comment>
+  </data>
+  <data name="Settings_CloudSync" xml:space="preserve">
+    <value>Cloud Sync</value>
+    <comment>Settings cloud sync section</comment>
+  </data>
+  <data name="Settings_EnableCloudSync" xml:space="preserve">
+    <value>Enable Cloud Sync</value>
+    <comment>Enable cloud sync checkbox</comment>
+  </data>
+  <data name="Settings_AutoSyncStartup" xml:space="preserve">
+    <value>Auto-sync on startup</value>
+    <comment>Auto sync on startup checkbox</comment>
+  </data>
+  <data name="Settings_AutoSyncChanges" xml:space="preserve">
+    <value>Auto-sync on changes</value>
+    <comment>Auto sync on changes checkbox</comment>
+  </data>
+  <data name="Settings_LastSync" xml:space="preserve">
+    <value>Last sync: {0}</value>
+    <comment>Last sync status template</comment>
+  </data>
+  <data name="Settings_DeleteCloudData" xml:space="preserve">
+    <value>Delete Cloud Data</value>
+    <comment>Delete cloud data button</comment>
+  </data>
+  <data name="Settings_About" xml:space="preserve">
+    <value>About</value>
+    <comment>Settings about section</comment>
+  </data>
+  <data name="Status_CancelledSSHTerminalUAC" xml:space="preserve">
+    <value>SSH terminal was not opened (admin permission was declined).</value>
+    <comment>Status message when UAC is cancelled for elevated terminal</comment>
+  </data>
+  <data name="App_DeveloperCredit" xml:space="preserve">
+    <value>by Taufiq Abdur Rahman</value>
+    <comment>Developer credit line in main window</comment>
+  </data>
+  <data name="Protocol_SSH_Description" xml:space="preserve">
+    <value>SSH: Secure Shell for terminal access</value>
+    <comment>SSH protocol description</comment>
+  </data>
+  <data name="Protocol_FTP_Description" xml:space="preserve">
+    <value>FTP: File Transfer Protocol</value>
+    <comment>FTP protocol description</comment>
+  </data>
+  <data name="Protocol_SFTP_Description" xml:space="preserve">
+    <value>SFTP: SSH File Transfer Protocol</value>
+    <comment>SFTP protocol description</comment>
+  </data>
+  <data name="Protocol_Description_Combined" xml:space="preserve">
+    <value>SSH: Secure Shell for terminal access
+FTP: File Transfer Protocol
+SFTP: SSH File Transfer Protocol</value>
+    <comment>Combined protocol descriptions</comment>
+  </data>
+  <data name="Validation_HostTooltip" xml:space="preserve">
+    <value>Enter IP address (e.g., 192.168.1.100) or hostname (e.g., server.example.com)</value>
+    <comment>Host field validation tooltip</comment>
+  </data>
+  <data name="Validation_PortTooltip" xml:space="preserve">
+    <value>Enter port number (1-65535). Common ports: SSH=22, FTP=21, SFTP=22</value>
+    <comment>Port field validation tooltip</comment>
+  </data>
+  <data name="Validation_ProtocolTooltip" xml:space="preserve">
+    <value>Select the connection protocol</value>
+    <comment>Protocol field tooltip</comment>
+  </data>
+  <data name="Validation_UsernameTooltip" xml:space="preserve">
+    <value>Enter your username for the server</value>
+    <comment>Username field tooltip</comment>
+  </data>
+  <data name="Validation_PublicKeyTooltip" xml:space="preserve">
+    <value>Path to your public key file (.pub)</value>
+    <comment>Public key path tooltip</comment>
+  </data>
+  <data name="Validation_PrivateKeyTooltip" xml:space="preserve">
+    <value>Path to your private key file (.pem, .key)</value>
+    <comment>Private key path tooltip</comment>
+  </data>
+  <data name="FileFilter_ScratchShell" xml:space="preserve">
+    <value>(*.ss)|*.ss|All Files (*.*)|*.*</value>
+    <comment>ScratchShell file filter</comment>
+  </data>
+  <data name="FileFilter_PublicKey" xml:space="preserve">
+    <value>Public Key Files (*.pub)|*.pub|All Files (*.*)|*.*</value>
+    <comment>Public key file filter</comment>
+  </data>
+  <data name="FileFilter_PrivateKey" xml:space="preserve">
+    <value>Private Key Files (*.pem;*.key)|*.pem;*.key|All Files (*.*)|*.*</value>
+    <comment>Private key file filter</comment>
+  </data>
+  <data name="Dialog_Reconnect_ConnectionTimedOutTemplate" xml:space="preserve">
+    <value>Connection to '{0}' ({1}:{2}) has timed out.</value>
+    <comment>Reconnection dialog timeout message template: server name, host, port</comment>
+  </data>
+  <data name="Dialog_Reconnect_Title" xml:space="preserve">
+    <value>Connection Lost</value>
+    <comment>Reconnection dialog window title</comment>
+  </data>
+  <data name="Dialog_Reconnect_PrimaryButton" xml:space="preserve">
+    <value>Reconnect</value>
+    <comment>Reconnect button text</comment>
+  </data>
+  <data name="Dialog_Reconnect_CloseButton" xml:space="preserve">
+    <value>Close Tab</value>
+    <comment>Close tab button text</comment>
+  </data>
+  <data name="Dialog_Reconnect_Header" xml:space="preserve">
+    <value>Connection Timeout</value>
+    <comment>Header text inside reconnection dialog</comment>
+  </data>
+  <data name="Dialog_Reconnect_DefaultInfo" xml:space="preserve">
+    <value>Connection to server has timed out.</value>
+    <comment>Default info text before formatting</comment>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsLabel" xml:space="preserve">
+    <value>Error Details:</value>
+    <comment>Label for error details section</comment>
+  </data>
+  <data name="Dialog_Reconnect_ErrorDetailsDefault" xml:space="preserve">
+    <value>The connection has been lost due to network timeout or server unavailability.</value>
+    <comment>Default error details description</comment>
+  </data>
+  <data name="Dialog_Reconnect_Question" xml:space="preserve">
+    <value>What would you like to do?</value>
+    <comment>Prompt asking user what action to take</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnect" xml:space="preserve">
+    <value>Reconnect</value>
+    <comment>Reconnect action title </comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionReconnectDescription" xml:space="preserve">
+    <value>Attempt to reconnect to the server and resume your session</value>
+    <comment>Description of reconnect action</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionClose" xml:space="preserve">
+    <value>Close Tab</value>
+    <comment>Close tab action title</comment>
+  </data>
+  <data name="Dialog_Reconnect_ActionCloseDescription" xml:space="preserve">
+    <value>Close this connection tab and return to the dashboard</value>
+    <comment>Description of close action</comment>
+  </data>
+  <data name="EventHandler_EditCancelled" xml:space="preserve">
+    <value>Edit cancelled for: {0}</value>
+    <comment>Edit operation cancellation message template</comment>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupSuccess" xml:space="preserve">
+    <value>Browser events set up successfully</value>
+    <comment>Browser events setup success message</comment>
+  </data>
+  <data name="EventHandler_BrowserEventsSetupError" xml:space="preserve">
+    <value>Error setting up browser events</value>
+    <comment>Browser events setup error message</comment>
+  </data>
+  <data name="EventHandler_SafeExecuteError" xml:space="preserve">
+    <value>Error in safe execute</value>
+    <comment>Safe execute error message</comment>
+  </data>
+  <data name="EventHandler_SafeExecuteAsyncError" xml:space="preserve">
+    <value>Error in safe execute async</value>
+    <comment>Safe execute async error message</comment>
+  </data>
+  <data name="EventHandler_ExceptionIn" xml:space="preserve">
+    <value>Exception in {0}</value>
+    <comment>Exception in handler message template</comment>
+  </data>
+  <data name="EventHandler_CriticalErrorInExceptionHandler" xml:space="preserve">
+    <value>Critical error in exception handler: {0}</value>
+    <comment>Critical error in exception handler message template</comment>
+  </data>
+  <data name="Terminal_UpdateError" xml:space="preserve">
+    <value>Terminal update error: {0}</value>
+    <comment>Terminal update error message template</comment>
+  </data>
+  <data name="Critical_ErrorInDispose" xml:space="preserve">
+    <value>Critical error in Dispose: {0} - {1}</value>
+    <comment>Critical error in dispose message template: exception type, message</comment>
+  </data>
+  <data name="Connection_HandleTimeoutError" xml:space="preserve">
+    <value>Error handling connection timeout</value>
+    <comment>Error handling connection timeout message</comment>
+  </data>
+  <data name="Connection_ErrorClosingTab" xml:space="preserve">
+    <value>Error closing current tab</value>
+    <comment>Error closing tab message</comment>
+  </data>
+  <data name="Connection_ErrorDuringControlLoad" xml:space="preserve">
+    <value>Error during control load</value>
+    <comment>Error during control load message</comment>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Language</value>
+    <comment>Language setting label</comment>
+  </data>
+  <data name="Language_English" xml:space="preserve">
+    <value>English</value>
+    <comment>English language option</comment>
+  </data>
+  <data name="Language_Bangla" xml:space="preserve">
+    <value>বাংলা</value>
+    <comment>Bangla language option</comment>
+  </data>
+  <data name="Language_ChangeMessage" xml:space="preserve">
+    <value>Please restart the application for the language change to take full effect.</value>
+    <comment>Message about restarting app for language change</comment>
+  </data>
+  <data name="Navigation_Home" xml:space="preserve">
+    <value>Home</value>
+    <comment>Navigation menu item: Home</comment>
+  </data>
+  <data name="Navigation_Session" xml:space="preserve">
+    <value>Session</value>
+    <comment>Navigation menu item: Session</comment>
+  </data>
+  <data name="Navigation_Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Navigation menu item: Settings</comment>
+  </data>
+  <data name="UI_Name" xml:space="preserve">
+    <value>Name</value>
+    <comment>Column header: Name</comment>
+  </data>
+  <data name="UI_Size" xml:space="preserve">
+    <value>Size</value>
+    <comment>Column header: Size</comment>
+  </data>
+  <data name="UI_Type" xml:space="preserve">
+    <value>Type</value>
+    <comment>Column header: Type</comment>
+  </data>
+  <data name="UI_Date" xml:space="preserve">
+    <value>Date</value>
+    <comment>Column header: Date</comment>
+  </data>
+  <data name="UI_DateModified" xml:space="preserve">
+    <value>Date Modified</value>
+    <comment>Column header: Date Modified</comment>
+  </data>
+  <data name="UI_SortAscending" xml:space="preserve">
+    <value>Sort ascending (click to sort descending)</value>
+    <comment>Sort ascending tooltip</comment>
+  </data>
+  <data name="UI_SortDescending" xml:space="preserve">
+    <value>Sort descending (click to sort ascending)</value>
+    <comment>Sort descending tooltip</comment>
+  </data>
+  <data name="Operation_InProgress" xml:space="preserve">
+    <value>Operation in progress...</value>
+    <comment>Default progress message</comment>
+  </data>
+  <data name="Operation_Cancelling" xml:space="preserve">
+    <value>Cancelling operation...</value>
+    <comment>Operation cancelling message</comment>
+  </data>
+  <data name="DragDrop_DropHere" xml:space="preserve">
+    <value>Drop {0} '{1}' here to upload</value>
+    <comment>Drag drop message template: type, filename</comment>
+  </data>
+  <data name="DragDrop_FolderRecursive" xml:space="preserve">
+    <value>Folder contents will be uploaded recursively</value>
+    <comment>Drag drop folder description</comment>
+  </data>
+  <data name="DragDrop_FileToDirectory" xml:space="preserve">
+    <value>File will be uploaded to current directory</value>
+    <comment>Drag drop file description</comment>
+  </data>
+  <data name="DragDrop_DropMultiple" xml:space="preserve">
+    <value>Drop {0} item(s) here to upload</value>
+    <comment>Drag drop multiple items message template: count</comment>
+  </data>
+  <data name="DragDrop_FilesAndFolders" xml:space="preserve">
+    <value>{0} file(s) and {1} folder(s) will be uploaded</value>
+    <comment>Drag drop mixed content description template: file count, folder count</comment>
+  </data>
+  <data name="DragDrop_FoldersOnly" xml:space="preserve">
+    <value>{0} folder(s) will be uploaded recursively</value>
+    <comment>Drag drop folders only description template: folder count</comment>
+  </data>
+  <data name="DragDrop_FilesOnly" xml:space="preserve">
+    <value>{0} file(s) will be uploaded</value>
+    <comment>Drag drop files only description template: file count</comment>
+  </data>
+  <data name="UI_GridView" xml:space="preserve">
+    <value>Grid View</value>
+    <comment>Grid view button tooltip</comment>
+  </data>
+  <data name="UI_ListView" xml:space="preserve">
+    <value>List View</value>
+    <comment>List view button tooltip</comment>
+  </data>
+  <data name="UI_SortBy" xml:space="preserve">
+    <value>Sort by:</value>
+    <comment>Sort by label text</comment>
+  </data>
+  <data name="UI_SortOptions" xml:space="preserve">
+    <value>Sort options</value>
+    <comment>Sort dropdown tooltip</comment>
+  </data>
+  <data name="UI_ToggleSortDirection" xml:space="preserve">
+    <value>Toggle sort direction</value>
+    <comment>Toggle sort direction button tooltip</comment>
+  </data>
+  <data name="UI_SortNameAZ" xml:space="preserve">
+    <value>Name (A to Z)</value>
+    <comment>Sort by name ascending menu item</comment>
+  </data>
+  <data name="UI_SortNameZA" xml:space="preserve">
+    <value>Name (Z to A)</value>
+    <comment>Sort by name descending menu item</comment>
+  </data>
+  <data name="UI_SortSizeSmallest" xml:space="preserve">
+    <value>Size (Smallest first)</value>
+    <comment>Sort by size ascending menu item</comment>
+  </data>
+  <data name="UI_SortSizeLargest" xml:space="preserve">
+    <value>Size (Largest first)</value>
+    <comment>Sort by size descending menu item</comment>
+  </data>
+  <data name="UI_SortTypeAZ" xml:space="preserve">
+    <value>Type (A to Z)</value>
+    <comment>Sort by type ascending menu item</comment>
+  </data>
+  <data name="UI_SortTypeZA" xml:space="preserve">
+    <value>Type (Z to A)</value>
+    <comment>Sort by type descending menu item</comment>
+  </data>
+  <data name="UI_SortDateOldest" xml:space="preserve">
+    <value>Date (Oldest first)</value>
+    <comment>Sort by date ascending menu item</comment>
+  </data>
+  <data name="UI_SortDateNewest" xml:space="preserve">
+    <value>Date (Newest first)</value>
+    <comment>Sort by date descending menu item</comment>
+  </data>
+  <data name="UI_CancelOperation" xml:space="preserve">
+    <value>Cancel current operation</value>
+    <comment>Cancel operation button tooltip</comment>
+  </data>
+  <data name="UI_DragDropDefault" xml:space="preserve">
+    <value>Drop files and folders here to upload</value>
+    <comment>Default drag drop overlay text</comment>
+  </data>
+  <data name="UI_DragDropSupport" xml:space="preserve">
+    <value>Multiple files and folders are supported</value>
+    <comment>Drag drop support subtext</comment>
+  </data>
+  <data name="Tooltip_Back" xml:space="preserve">
+    <value>Back (Alt+Left Arrow)</value>
+    <comment>Back navigation button tooltip</comment>
+  </data>
+  <data name="Tooltip_Forward" xml:space="preserve">
+    <value>Forward (Alt+Right Arrow)</value>
+    <comment>Forward navigation button tooltip</comment>
+  </data>
+  <data name="Tooltip_Refresh" xml:space="preserve">
+    <value>Refresh (F5)</value>
+    <comment>Refresh button tooltip</comment>
+  </data>
+  <data name="Tooltip_UpOneLevel" xml:space="preserve">
+    <value>Up one level</value>
+    <comment>Up button tooltip</comment>
+  </data>
+  <data name="Tooltip_CreateNewFolder" xml:space="preserve">
+    <value>Create new folder</value>
+    <comment>Create folder button tooltip</comment>
+  </data>
+  <data name="Tooltip_Paste" xml:space="preserve">
+    <value>Paste (Ctrl+V)</value>
+    <comment>Paste button tooltip</comment>
+  </data>
+  <data name="Tooltip_ViewOptions" xml:space="preserve">
+    <value>View options</value>
+    <comment>View options button tooltip</comment>
+  </data>
+  <data name="Tooltip_FullScreenMode" xml:space="preserve">
+    <value>Full screen mode</value>
+    <comment>Full screen button tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideLogPanel" xml:space="preserve">
+    <value>Show/hide log panel</value>
+    <comment>Log panel toggle button tooltip</comment>
+  </data>
+  <data name="UI_OperationLog" xml:space="preserve">
+    <value>Operation Log</value>
+    <comment>Operation log panel header</comment>
+  </data>
+  <data name="Tooltip_CopyFromTerminal" xml:space="preserve">
+    <value>Copy selected text from terminal (Ctrl+Left Click)</value>
+    <comment>Copy from terminal tooltip</comment>
+  </data>
+  <data name="Tooltip_PasteToTerminal" xml:space="preserve">
+    <value>Paste text into terminal (Alt+Left Click)</value>
+    <comment>Paste to terminal tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideSnippets" xml:space="preserve">
+    <value>Show/hide command snippets panel</value>
+    <comment>Show/hide snippets panel tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideThemes" xml:space="preserve">
+    <value>Show/hide theming panel</value>
+    <comment>Show/hide theming panel tooltip</comment>
+  </data>
+  <data name="Tooltip_ToggleFullScreenTerminal" xml:space="preserve">
+    <value>Toggle full screen mode for terminal</value>
+    <comment>Toggle full screen terminal tooltip</comment>
+  </data>
+  <data name="ContextMenu_SelectAll" xml:space="preserve">
+    <value>Select All</value>
+    <comment>Context menu item: Select All</comment>
+  </data>
+  <data name="Terminal_ConnectingTo" xml:space="preserve">
+    <value>Connecting to {0}...</value>
+    <comment>Terminal connecting status message template: server name</comment>
+  </data>
+  <data name="Terminal_ConnectionFailed" xml:space="preserve">
+    <value>Failed to connect to {0}: {1}</value>
+    <comment>Terminal connection failed message template: server name, error</comment>
+  </data>
+  <data name="Terminal_ServerNotInitialized" xml:space="preserve">
+    <value>Server is not initialized.</value>
+    <comment>Terminal server not initialized message</comment>
+  </data>
+  <data name="Terminal_ResizeFailed" xml:space="preserve">
+    <value>Failed to resize terminal: {0}</value>
+    <comment>Terminal resize failed message template: error</comment>
+  </data>
+  <data name="Terminal_Error" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>Generic terminal error message template: error</comment>
+  </data>
+  <data name="Terminal_AutoCompleteError" xml:space="preserve">
+    <value>AutoComplete error: {0}</value>
+    <comment>Terminal autocomplete error message template: error</comment>
+  </data>
+  <data name="Tooltip_CreateSnippet" xml:space="preserve">
+    <value>Create a new snippet</value>
+    <comment>Create snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_EditSnippet" xml:space="preserve">
+    <value>Edit selected snippet</value>
+    <comment>Edit snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_DeleteSnippet" xml:space="preserve">
+    <value>Delete selected snippet</value>
+    <comment>Delete snippet button tooltip</comment>
+  </data>
+  <data name="Tooltip_ShowHideSystemSnippets" xml:space="preserve">
+    <value>Show/Hide System Snippet</value>
+    <comment>Toggle system snippets visibility tooltip</comment>
+  </data>
+  <data name="Tooltip_RunSnippet" xml:space="preserve">
+    <value>Run this snippet in the terminal</value>
+    <comment>Run snippet button tooltip</comment>
+  </data>
+  <data name="Placeholder_SearchSnippets" xml:space="preserve">
+    <value>Search snippets...</value>
+    <comment>Search snippets textbox placeholder</comment>
+  </data>
+  <data name="Theme_TerminalTheme" xml:space="preserve">
+    <value>Terminal Theme</value>
+    <comment>Terminal theme header text</comment>
+  </data>
+  <data name="Theme_Apply" xml:space="preserve">
+    <value>Apply</value>
+    <comment>Apply theme button text</comment>
+  </data>
+  <data name="Theme_PredefinedThemes" xml:space="preserve">
+    <value>Predefined Themes:</value>
+    <comment>Predefined themes section label</comment>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Dark theme button text</comment>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Light</value>
+    <comment>Light theme button text</comment>
+  </data>
+  <data name="Theme_Monokai" xml:space="preserve">
+    <value>Monokai</value>
+    <comment>Monokai theme button text</comment>
+  </data>
+  <data name="Theme_Reset" xml:space="preserve">
+    <value>Reset</value>
+    <comment>Reset theme button text</comment>
+  </data>
+  <data name="Theme_FontSettings" xml:space="preserve">
+    <value>Font Settings</value>
+    <comment>Font settings section header</comment>
+  </data>
+  <data name="Theme_FontFamily" xml:space="preserve">
+    <value>Family:</value>
+    <comment>Font family label</comment>
+  </data>
+  <data name="Theme_FontSize" xml:space="preserve">
+    <value>Size:</value>
+    <comment>Font size label</comment>
+  </data>
+  <data name="Theme_ColorSettings" xml:space="preserve">
+    <value>Color Settings</value>
+    <comment>Color settings section header</comment>
+  </data>
+  <data name="Theme_ColorEditing" xml:space="preserve">
+    <value>Editing:</value>
+    <comment>Color editing selection label</comment>
+  </data>
+  <data name="Theme_TextColor" xml:space="preserve">
+    <value>Text Color</value>
+    <comment>Text color option</comment>
+  </data>
+  <data name="Theme_BackgroundColor" xml:space="preserve">
+    <value>Background Color</value>
+    <comment>Background color option</comment>
+  </data>
+  <data name="Theme_SelectionColor" xml:space="preserve">
+    <value>Selection Color</value>
+    <comment>Selection color option</comment>
+  </data>
+  <data name="Theme_CursorColor" xml:space="preserve">
+    <value>Cursor Color</value>
+    <comment>Cursor color option</comment>
+  </data>
+  <data name="Theme_CopyHighlightColor" xml:space="preserve">
+    <value>Copy Highlight Color</value>
+    <comment>Copy highlight color option</comment>
+  </data>
+  <data name="Theme_Text" xml:space="preserve">
+    <value>Text</value>
+    <comment>Text color preview label</comment>
+  </data>
+  <data name="Theme_Background" xml:space="preserve">
+    <value>Background</value>
+    <comment>Background color preview label</comment>
+  </data>
+  <data name="Theme_Selection" xml:space="preserve">
+    <value>Selection</value>
+    <comment>Selection color preview label</comment>
+  </data>
+  <data name="Theme_Cursor" xml:space="preserve">
+    <value>Cursor</value>
+    <comment>Cursor color preview label</comment>
+  </data>
+  <data name="Theme_Copy" xml:space="preserve">
+    <value>Copy</value>
+    <comment>Copy color preview label</comment>
+  </data>
+  <data name="Theme_TerminalPresets" xml:space="preserve">
+    <value>Terminal Presets:</value>
+    <comment>Terminal color presets section label</comment>
+  </data>
+  <data name="Tooltip_PreviewDarkTheme" xml:space="preserve">
+    <value>Preview dark theme</value>
+    <comment>Preview dark theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_PreviewLightTheme" xml:space="preserve">
+    <value>Preview light theme</value>
+    <comment>Preview light theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_PreviewMonokaiTheme" xml:space="preserve">
+    <value>Preview Monokai theme</value>
+    <comment>Preview Monokai theme button tooltip</comment>
+  </data>
+  <data name="Tooltip_ResetTheme" xml:space="preserve">
+    <value>Reset theme to default values</value>
+    <comment>Reset theme button tooltip</comment>
+  </data>
+</root>
