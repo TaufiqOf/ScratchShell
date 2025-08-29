@@ -1197,7 +1197,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             PlacementTarget = this,
             Placement = PlacementMode.Relative,
             StaysOpen = false,
-            AllowsTransparency = true,
             Focusable = false
         };
         _autoCompletePopup.Closed += (s, e) => _isAutoCompleteVisible = false;

@@ -82,7 +82,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         // Monitor connection every 30 seconds
         _connectionMonitorTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(30)
+            Interval = TimeSpan.FromSeconds(10)
         };
         _connectionMonitorTimer.Tick += async (s, e) => await CheckConnectionHealth();
     }
@@ -221,35 +221,6 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         catch (Exception ex)
         {
             _logger.LogError(LocalizationManager.GetString("Connection_ErrorClosingTab") ?? "Error closing current tab", ex);
-        }
-    }
-
-    // Wrap existing operations with timeout detection
-    private async Task<T> ExecuteWithTimeoutDetection<T>(Func<Task<T>> operation)
-    {
-        try
-        {
-            return await operation();
-        }
-        catch (TimeoutException ex)
-        {
-            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout"), ex.Message));
-            throw;
-        }
-        catch (System.Net.Sockets.SocketException ex)
-        {
-            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError"), ex.Message));
-            throw;
-        }
-        catch (Renci.SshNet.Common.SshConnectionException ex)
-        {
-            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError"), ex.Message));
-            throw;
-        }
-        catch (Exception ex) when (ex.Message.Contains("timeout") || ex.Message.Contains("connection") || ex.Message.Contains("network"))
-        {
-            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError"), ex.Message));
-            throw;
         }
     }
 

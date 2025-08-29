@@ -43,7 +43,8 @@ internal static class SessionService
     {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            Sessions.Remove(tabViewModel);
+            var tab = Sessions.FirstOrDefault(q => q.Id == tabViewModel.Id);
+            Sessions.Remove(tab);
             tabViewModel.Dispose();
         });
     }

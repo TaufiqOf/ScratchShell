@@ -28,10 +28,6 @@ public class SshAutoCompleteService : ITerminalAutoCompleteService
     {
         _currentWorkingDirectory = workingDirectory;
 
-        if (string.IsNullOrEmpty(currentLine) || cursorPosition < 0)
-        {
-            return new AutoCompleteResult();
-        }
 
         // Find the token at cursor position
         var tokenInfo = GetTokenAtCursor(currentLine, cursorPosition);
@@ -254,9 +250,6 @@ public class SshAutoCompleteService : ITerminalAutoCompleteService
 
     private TokenInfo? GetTokenAtCursor(string line, int cursorPosition)
     {
-        if (string.IsNullOrEmpty(line))
-            return null;
-
         // Find token boundaries
         var tokens = SplitIntoTokens(line);
         var currentCharIndex = 0;

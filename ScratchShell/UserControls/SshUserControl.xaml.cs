@@ -15,6 +15,8 @@ using Wpf.Ui;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
+using System.Net.Sockets; // Added for reconnection exception handling
+using System.Windows; // Added for Visibility
 
 namespace ScratchShell.UserControls;
 
@@ -41,6 +43,11 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private bool _lastClipboardState = false;
     private bool _cachedClipboardState = false;
     private System.Windows.Threading.DispatcherTimer _clipboardTimer;
+
+    // Reconnection / monitoring
+    private DispatcherTimer? _connectionMonitorTimer; // monitors connection health
+    private bool _isReconnecting = false;
+    private string? _lastKnownWorkingDirectory; // store to restore after reconnection
 
     public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
     {
@@ -69,175 +76,202 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         // Set up selection change monitoring
         SetupSelectionMonitoring();
         
+        // Setup connection monitoring
+        SetupConnectionMonitoring();
+        
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
-        // Update any UI elements that might need refreshing when language changes
-        // Most localized strings are now in XAML and will update automatically
-        // This is mainly for any programmatically set strings if needed in the future
+        // Currently no dynamic text to update beyond localization of dialogs
     }
 
-    private void SetupCommandBindings()
+    private void SetupConnectionMonitoring()
     {
-        // Create command bindings for Copy and Paste
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
-
-        // Set up keyboard shortcuts
-        InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
-        InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
-        InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
-    }
-
-    private void SetupSelectionMonitoring()
-    {
-        // Hook into terminal events if possible
-        if (Terminal is GPTTerminalUserControl terminalControl)
+        _connectionMonitorTimer = new DispatcherTimer
         {
-            // Monitor mouse events that can change selection
-            terminalControl.MouseUp += (s, e) => 
-            {
-                // Delay slightly to allow selection to be finalized
-                Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
-            };
-            terminalControl.KeyUp += (s, e) => 
-            {
-                // Some keys might clear selection
-                if (e.Key == Key.Escape || e.Key == Key.Delete)
-                {
-                    Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
-                }
-            };
-        }
-        
-        // Set up periodic clipboard monitoring (less frequently)
-        _clipboardTimer = new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1) // Check clipboard every second
+            Interval = TimeSpan.FromSeconds(10)
         };
-        _clipboardTimer.Tick += (s, e) => UpdateClipboardState();
-        _clipboardTimer.Start();
-        
-        // Initial state update
-        UpdateSelectionState();
-        UpdateClipboardState();
+        _connectionMonitorTimer.Tick += async (s, e) => await CheckConnectionHealth();
     }
 
-    private void UpdateClipboardState()
+    private async Task CheckConnectionHealth()
     {
+        if (_isReconnecting || !_isInitialized)
+            return;
+
         try
         {
-            // Cache clipboard state to avoid expensive repeated calls
-            bool hasClipboard = Clipboard.ContainsText();
-            if (hasClipboard != _lastClipboardState)
+            if (_sshClient == null || !_sshClient.IsConnected)
             {
-                _lastClipboardState = hasClipboard;
-                _cachedClipboardState = hasClipboard;
-                CommandManager.InvalidateRequerySuggested();
-            }
-        }
-        catch (Exception)
-        {
-            // If clipboard access fails, assume no text
-            _cachedClipboardState = false;
-        }
-    }
-
-    private void UpdateSelectionState()
-    {
-        bool hasSelection = HasSelectedText();
-        
-        // Only invalidate commands if selection state actually changed
-        if (hasSelection != _lastSelectionState)
-        {
-            _lastSelectionState = hasSelection;
-            CommandManager.InvalidateRequerySuggested();
-        }
-    }
-
-    private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        // Use cached selection state - this must be fast and side-effect free
-        e.CanExecute = Terminal != null && _lastSelectionState;
-    }
-
-    private void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        CopySelectedText();
-        // Update selection state after copy (selection might be cleared)
-        UpdateSelectionState();
-    }
-
-    private void PasteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        // Use cached clipboard state to avoid expensive Clipboard.ContainsText() calls
-        e.CanExecute = Terminal != null && !Terminal.IsReadOnly && _cachedClipboardState;
-    }
-
-    private void PasteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        PasteFromClipboard();
-    }
-
-    private void SelectAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = Terminal != null;
-    }
-
-    private void SelectAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        Terminal?.SelectAll();
-    }
-
-    private bool HasSelectedText()
-    {
-        if (Terminal is GPTTerminalUserControl terminalControl)
-        {
-            return terminalControl.HasSelection();
-        }
-        return false;
-    }
-
-    private void CopySelectedText()
-    {
-        if (Terminal is GPTTerminalUserControl terminalControl)
-        {
-            terminalControl.CopySelection();
-        }
-    }
-
-    private void PasteFromClipboard()
-    {
-        if (Terminal != null && !Terminal.IsReadOnly && Clipboard.ContainsText())
-        {
-            if (Terminal is GPTTerminalUserControl terminalControl)
-            {
-                // Use the terminal's paste method first
-                terminalControl.PasteFromClipboard();
+                await HandleConnectionTimeout(LocalizationManager.GetString("Connection_HealthCheckFailed") ?? "Connection lost");
             }
             else
             {
-                // Fallback for other terminal implementations
-                string clipboardText = Clipboard.GetText();
-                if (!string.IsNullOrEmpty(clipboardText))
+                // Optionally perform a lightweight keep-alive command (noop). Some servers ignore this so swallow exceptions.
+                try
                 {
-                    // Send the clipboard text directly to the shell stream
-                    if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
-                    {
-                        _shellStream.Write(clipboardText);
-                    }
-                    else
-                    {
-                        // Fallback: use Terminal.AddInput if shell stream is not available
-                        Terminal.AddInput(clipboardText);
-                    }
+                    // Sending a simple ignore packet isn't exposed; we can request a dummy exec if needed.
+                    // For now rely on IsConnected.
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError") ?? "Connection error: {0}", ex.Message));
+        }
+    }
+
+    private async Task HandleConnectionTimeout(string errorMessage)
+    {
+        if (_isReconnecting)
+            return;
+
+        try
+        {
+            _isReconnecting = true;
+            _connectionMonitorTimer?.Stop();
+
+            // Store current working directory for restoration
+            _lastKnownWorkingDirectory = _currentWorkingDirectory;
+
+            Terminal.IsReadOnly = true;
+            Progress.IsIndeterminate = true;
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Operation_ConnectionTimeoutDetected") ?? "Connection timeout detected: {0}", errorMessage));
+
+            var reconnectionDialog = new Views.Dialog.ReconnectionDialog(_contentDialogService, _server, errorMessage);
+            var result = await reconnectionDialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                await AttemptReconnection();
+            }
+            else
+            {
+                await CloseCurrentTab();
+            }
+        }
+        catch (Exception ex)
+        {
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Connection_HandleTimeoutError") ?? "Error handling timeout: {0}", ex.Message));
+        }
+        finally
+        {
+            _isReconnecting = false;
+        }
+    }
+
+    private async Task AttemptReconnection()
+    {
+        try
+        {
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Connection_Reconnecting") ?? "Reconnecting to {0}...", _server.Name));
+            Progress.IsIndeterminate = true;
+            Terminal.IsReadOnly = true;
+
+            await ReconnectAsync();
+
+            // Restore working directory if possible (send cd command)
+            var restoreDir = !string.IsNullOrEmpty(_lastKnownWorkingDirectory) ? _lastKnownWorkingDirectory : "~";
+            try
+            {
+                if (_sshClient != null && _sshClient.IsConnected && !string.IsNullOrWhiteSpace(restoreDir) && restoreDir != "~")
+                {
+                    _shellStream.WriteLine($"cd {restoreDir}");
+                    _currentWorkingDirectory = restoreDir;
                 }
             }
-            Terminal.Focus();
+            catch { }
+
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Connection_SuccessfullyReconnected") ?? "Successfully reconnected to {0}", _server.Name));
+            Terminal.IsReadOnly = false;
+            Progress.IsIndeterminate = false;
+            _connectionMonitorTimer?.Start();
+        }
+        catch (Exception ex)
+        {
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Connection_ReconnectionFailed") ?? "Reconnection failed: {0}", ex.Message));
+            Progress.IsIndeterminate = false;
+            Terminal.IsReadOnly = true;
+
+            // Ask again
+            var errorDialog = new Views.Dialog.ReconnectionDialog(_contentDialogService, _server, ex.Message);
+            var result = await errorDialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                await AttemptReconnection();
+            }
+            else
+            {
+                await CloseCurrentTab();
+            }
+        }
+    }
+
+    private async Task CloseCurrentTab()
+    {
+        try
+        {
+            var currentTab = SessionService.SelectedSession;
+            if (currentTab != null && currentTab.Content == this)
+            {
+                await Task.Run(() => SessionService.RemoveSession(currentTab));
+            }
+        }
+        catch (Exception ex)
+        {
+            Terminal.AddOutput(string.Format(LocalizationManager.GetString("Connection_ErrorClosingTab") ?? "Error closing tab: {0}", ex.Message));
+        }
+    }
+
+    private async Task ReconnectAsync()
+    {
+        try
+        {
+            // Dispose old resources
+            try
+            {
+                _shellStream?.Dispose();
+                _sshClient?.Disconnect();
+                _sshClient?.Dispose();
+            }
+            catch { }
+
+            await ConnectToServer(_server);
+        }
+        catch
+        {
+            throw;
+        }
+    }
+
+    private async Task ExecuteWithTimeoutDetection(Func<Task> operation)
+    {
+        try
+        {
+            await operation();
+        }
+        catch (TimeoutException ex)
+        {
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout") ?? "Timeout: {0}", ex.Message));
+            throw;
+        }
+        catch (SocketException ex)
+        {
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError") ?? "Network error: {0}", ex.Message));
+            throw;
+        }
+        catch (Renci.SshNet.Common.SshConnectionException ex)
+        {
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError") ?? "SSH connection error: {0}", ex.Message));
+            throw;
+        }
+        catch (Exception ex) when (ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("network", StringComparison.OrdinalIgnoreCase))
+        {
+            await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError") ?? "Connection error: {0}", ex.Message));
+            throw;
         }
     }
 
@@ -282,10 +316,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             Terminal.AddOutput(LocalizationManager.GetString("Terminal_ServerNotInitialized") ?? "Server is not initialized.");
             return;
         }
-        // Here you would typically initiate the SSH connection using the server details.
-        // For example, you might call a method to connect to the server.
-        Terminal.Focus(); // Ensure terminal gets focus when loaded
-        await ConnectToServer(_server);
+        Terminal.Focus();
+        await ExecuteWithTimeoutDetection(async () => await ConnectToServer(_server));
     }
 
     private async Task ConnectToServer(ServerViewModel server)
@@ -294,7 +326,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         Progress.IsIndeterminate = true;
         if (server.UseKeyFile)
         {
-            // Use key file authentication
             var privateKey = new PrivateKeyFile(server.PrivateKeyFilePath, server.KeyFilePassword);
             var keyFiles = new[] { privateKey };
             var connectionInfo = new ConnectionInfo(server.Host, server.Port, server.Username, new PrivateKeyAuthenticationMethod(server.Username, keyFiles));
@@ -302,7 +333,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         }
         else
         {
-            // Use password authentication
             var connectionInfo = new ConnectionInfo(server.Host, server.Port, server.Username, new PasswordAuthenticationMethod(server.Username, server.Password));
             _sshClient = new SshClient(connectionInfo);
         }
@@ -315,10 +345,12 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var pixelHeight = (uint)Terminal.Height;
             _shellStream = await Task.Run(()=> _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
 
-            // Initialize autocomplete service after SSH connection is established
             _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
 
             StartReadLoop();
+
+            // Start monitoring only after successful connection
+            _connectionMonitorTimer?.Start();
         }
         catch (Exception ex)
         {
@@ -326,7 +358,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 LocalizationManager.GetString("Terminal_ConnectionFailed") ?? "Failed to connect to {0}: {1}", 
                 server.Name, ex.Message);
             Terminal.AddOutput(errorMessage);
-            return;
+            throw; // Ensure caller can trigger reconnection flow if needed
         }
         Terminal.IsReadOnly = false;
         Progress.IsIndeterminate = false;
@@ -336,16 +368,27 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         await Task.Run(() =>
         {
-            while (_sshClient is not null && _sshClient.IsConnected)
+            try
             {
-                string output = _shellStream.Read();
-                if (!string.IsNullOrEmpty(output))
+                while (_sshClient is not null && _sshClient.IsConnected)
                 {
-                    Application.Current.Dispatcher.Invoke(async () =>
+                    string output = _shellStream.Read();
+                    if (!string.IsNullOrEmpty(output))
                     {
-                        Terminal.AddOutput(output.ToString());
-                    });
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            Terminal.AddOutput(output.ToString());
+                        });
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // If read loop fails due to disconnection, trigger reconnection
+                Application.Current.Dispatcher.Invoke(async () =>
+                {
+                    await HandleConnectionTimeout(ex.Message);
+                });
             }
         });
     }
@@ -354,11 +397,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
         {
-            // Estimate character cell size (adjust as needed for your font)
-            double charWidth = 8.0;   // Typical width for Consolas 12pt
-            double charHeight = 16.0; // Typical height for Consolas 12pt
-
-            // Calculate columns and rows that fit in the new size
+            double charWidth = 8.0;
+            double charHeight = 16.0;
             UInt32 cols = (UInt32)Math.Max(10, (int)(newSize.Width / charWidth));
             UInt32 rows = (UInt32)Math.Max(2, (int)(newSize.Height / charHeight));
             var pixelWidth = (uint)newSize.Width;
@@ -366,19 +406,15 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
             try
             {
-                // Use reflection to access the internal _channel field
                 var channelField = _shellStream.GetType()
                     .GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance);
                 var channel = channelField?.GetValue(_shellStream);
-
-                // Call SendWindowChangeRequest on the channel
                 var method = channel?.GetType()
                     .GetMethod("SendWindowChangeRequest", BindingFlags.Public | BindingFlags.Instance);
                 method?.Invoke(channel, new object[] { cols, rows, pixelWidth, pixelHeight });
             }
             catch (Exception ex)
             {
-                // Log or handle the error if reflection fails
                 var errorMessage = string.Format(
                     LocalizationManager.GetString("Terminal_ResizeFailed") ?? "Failed to resize terminal: {0}", 
                     ex.Message);
@@ -391,7 +427,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         try
         {
-            // If command is empty or whitespace, just send a carriage return for a new prompt
             if (string.IsNullOrWhiteSpace(command))
             {
                 _shellStream.Write("\r");
@@ -399,106 +434,187 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             else
             {
                 _shellStream.WriteLine(command);
+                // Track potential working directory changes (simple heuristic: cd commands)
+                if (command.StartsWith("cd ", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parts = command.Split(' ', 2);
+                    if (parts.Length == 2)
+                    {
+                        _currentWorkingDirectory = parts[1].Trim();
+                      }
+                  }
+              }
+          }
+          catch (Exception ex)
+          {
+              var errorMessage = string.Format(
+                  LocalizationManager.GetString("Terminal_Error") ?? "Error: {0}", 
+                  ex.Message);
+              Terminal.AddOutput(errorMessage);
+              // Attempt reconnection if likely connection related
+              if (ex is TimeoutException || ex is SocketException || ex is Renci.SshNet.Common.SshConnectionException || ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase))
+              {
+                  _ = HandleConnectionTimeout(ex.Message);
+              }
+          }
+      }
+
+      private async void TerminalTabCompletionRequested(ITerminal obj, TabCompletionEventArgs args)
+      {
+          if (_autoCompleteService == null)
+          {
+              args.Handled = false;
+              return;
+          }
+
+          try
+          {
+              args.WorkingDirectory = _currentWorkingDirectory;
+              
+              var result = await _autoCompleteService.GetAutoCompleteAsync(
+                  args.CurrentLine, 
+                  args.CursorPosition, 
+                  args.WorkingDirectory);
+
+              if (result.HasSuggestions)
+              {
+                  Terminal.ShowAutoCompleteResults(result);
+                  args.Handled = true;
+              }
+              else
+              {
+                  Terminal.HideAutoComplete();
+                  args.Handled = false;
+              }
+          }
+          catch (Exception ex)
+          {
+              var errorMessage = string.Format(
+                  LocalizationManager.GetString("Terminal_AutoCompleteError") ?? "AutoComplete error: {0}", 
+                  ex.Message);
+              System.Diagnostics.Debug.WriteLine(errorMessage);
+              Terminal.HideAutoComplete();
+              args.Handled = false;
+          }
+      }
+
+      public void Dispose()
+      {
+          if (_clipboardTimer != null)
+          {
+              _clipboardTimer.Stop();
+              _clipboardTimer = null;
+          }
+          LocalizationManager.LanguageChanged -= OnLanguageChanged;
+          _connectionMonitorTimer?.Stop();
+          _connectionMonitorTimer = null;
+          if (_sshClient is not null)
+          {
+              try { _shellStream?.Dispose(); } catch { }
+              try { _sshClient.Disconnect(); } catch { }
+              _sshClient.Dispose();
+          }
+      }
+
+    // === Existing selection & clipboard methods remain unchanged ===
+    private void SetupCommandBindings()
+    {
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
+    }
+
+    private void SetupSelectionMonitoring()
+    {
+        if (Terminal is GPTTerminalUserControl terminalControl)
+        {
+            terminalControl.MouseUp += (s, e) => 
+            {
+                Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
+            };
+            terminalControl.KeyUp += (s, e) => 
+            {
+                if (e.Key == Key.Escape || e.Key == Key.Delete)
+                {
+                    Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
+                }
+            };
+        }
+        _clipboardTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _clipboardTimer.Tick += (s, e) => UpdateClipboardState();
+        _clipboardTimer.Start();
+        UpdateSelectionState();
+        UpdateClipboardState();
+    }
+
+    private void UpdateClipboardState()
+    {
+        try
+        {
+            bool hasClipboard = Clipboard.ContainsText();
+            if (hasClipboard != _lastClipboardState)
+            {
+                _lastClipboardState = hasClipboard;
+                _cachedClipboardState = hasClipboard;
+                CommandManager.InvalidateRequerySuggested();
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            var errorMessage = string.Format(
-                LocalizationManager.GetString("Terminal_Error") ?? "Error: {0}", 
-                ex.Message);
-            Terminal.AddOutput(errorMessage);
+            _cachedClipboardState = false;
         }
     }
 
-    private async void TerminalTabCompletionRequested(ITerminal obj, TabCompletionEventArgs args)
+    private void UpdateSelectionState()
     {
-        if (_autoCompleteService == null)
+        bool hasSelection = HasSelectedText();
+        if (hasSelection != _lastSelectionState)
         {
-            args.Handled = false;
-            return;
+            _lastSelectionState = hasSelection;
+            CommandManager.InvalidateRequerySuggested();
         }
+    }
 
-        try
+    private void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = Terminal != null && _lastSelectionState;
+    private void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs e) { CopySelectedText(); UpdateSelectionState(); }
+    private void PasteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = Terminal != null && !Terminal.IsReadOnly && _cachedClipboardState;
+    private void PasteCommand_Executed(object sender, ExecutedRoutedEventArgs e) => PasteFromClipboard();
+    private void SelectAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = Terminal != null;
+    private void SelectAllCommand_Executed(object sender, ExecutedRoutedEventArgs e) => Terminal?.SelectAll();
+    private bool HasSelectedText() => Terminal is GPTTerminalUserControl terminalControl && terminalControl.HasSelection();
+    private void CopySelectedText() { if (Terminal is GPTTerminalUserControl terminalControl) terminalControl.CopySelection(); }
+
+    private void PasteFromClipboard()
+    {
+        if (Terminal != null && !Terminal.IsReadOnly && Clipboard.ContainsText())
         {
-            args.WorkingDirectory = _currentWorkingDirectory;
-            
-            var result = await _autoCompleteService.GetAutoCompleteAsync(
-                args.CurrentLine, 
-                args.CursorPosition, 
-                args.WorkingDirectory);
-
-            if (result.HasSuggestions)
+            if (Terminal is GPTTerminalUserControl terminalControl)
             {
-                Terminal.ShowAutoCompleteResults(result);
-                args.Handled = true;
+                terminalControl.PasteFromClipboard();
             }
             else
             {
-                Terminal.HideAutoComplete();
-                args.Handled = false;
+                string clipboardText = Clipboard.GetText();
+                if (!string.IsNullOrEmpty(clipboardText))
+                {
+                    if (_shellStream != null && _sshClient != null && _sshClient.IsConnected)
+                    {
+                        _shellStream.Write(clipboardText);
+                    }
+                    else
+                    {
+                        Terminal.AddInput(clipboardText);
+                    }
+                }
             }
+            Terminal.Focus();
         }
-        catch (Exception ex)
-        {
-            // Log error but don't crash
-            var errorMessage = string.Format(
-                LocalizationManager.GetString("Terminal_AutoCompleteError") ?? "AutoComplete error: {0}", 
-                ex.Message);
-            System.Diagnostics.Debug.WriteLine(errorMessage);
-            Terminal.HideAutoComplete();
-            args.Handled = false;
-        }
-    }
-
-    public void Dispose()
-    {
-        // Stop clipboard monitoring timer
-        if (_clipboardTimer != null)
-        {
-            _clipboardTimer.Stop();
-            _clipboardTimer = null;
-        }
-        
-        // Unsubscribe from language changes
-        LocalizationManager.LanguageChanged -= OnLanguageChanged;
-        
-        if (_sshClient is not null)
-        {
-            this._sshClient.Disconnect();
-            this._sshClient.Dispose();
-        }
-    }
-
-    private void SnippetToggleButtonChecked(object sender, RoutedEventArgs e)
-    {
-        SnippetControl.Visibility = Visibility.Visible;
-        ThemeControl.Visibility = Visibility.Collapsed;
-        if (ThemeToggleButton.IsChecked == true)
-            ThemeToggleButton.IsChecked = false;
-    }
-
-    private void SnippetToggleButtonUnchecked(object sender, RoutedEventArgs e)
-    {
-        SnippetControl.Visibility = Visibility.Collapsed;
-    }
-
-    private void ThemeToggleButtonChecked(object sender, RoutedEventArgs e)
-    {
-        ThemeControl.Visibility = Visibility.Visible;
-        SnippetControl.Visibility = Visibility.Collapsed;
-        if (SnippetToggleButton.IsChecked == true)
-            SnippetToggleButton.IsChecked = false;
-
-        // Set the terminal reference programmatically to avoid binding issues
-        if (Terminal != null)
-        {
-            ThemeControl.Terminal = Terminal;
-        }
-    }
-
-    private void ThemeToggleButtonUnchecked(object sender, RoutedEventArgs e)
-    {
-        ThemeControl.Visibility = Visibility.Collapsed;
     }
 
     private async Task SnippetControlOnNewSnippet(SnippetUserControl obj)
@@ -509,7 +625,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             if (_contentDialogService is not null)
             {
                 var snippetContentDialog = new SnippetContentDialog(_contentDialogService.GetDialogHost(), snippetViewModel);
-
                 var contentDialogResult = await snippetContentDialog.ShowAsync();
                 if (contentDialogResult == ContentDialogResult.Primary)
                 {
@@ -529,7 +644,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             if (_contentDialogService is not null)
             {
                 var snippetContentDialog = new SnippetContentDialog(_contentDialogService.GetDialogHost(), snippetViewModel);
-
                 var contentDialogResult = await snippetContentDialog.ShowAsync();
                 if (contentDialogResult == ContentDialogResult.Primary)
                 {
@@ -571,7 +685,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             return;
         }
         Terminal.AddInput(snippet.Code);
-        Terminal.Focus(); // Ensure terminal gets focus when executing snippet
+        Terminal.Focus();
         await Task.CompletedTask;
     }
 
@@ -585,9 +699,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         _FullScreen.Show();
         _FullScreen.Closed += (s, args) =>
         {
-            // Reinitialize the terminal when exiting full screen
             _FullScreen.RootContentDialog.Content = null;
-
             TerminalContentControl.Content = Terminal;
             _FullScreen = null;
             FullScreenButton.IsEnabled = true;
@@ -613,46 +725,30 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         };
 
         var ctx = new ContextMenu();
-
-        // Set maximum height for the context menu to enable scrolling
-        ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6; // 60% of screen height
-
-        // Get the available snippets
+        ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6; 
         var snippets = SnippetControl.Snippets.ToList();
-
-        // If there are many snippets, organize them intelligently
         if (snippets.Count > 15)
         {
-            // Group snippets by categories for better organization
             var systemSnippets = snippets.Where(s => s.IsSystemSnippet).ToList();
             var userSnippets = snippets.Where(s => !s.IsSystemSnippet).ToList();
-
-            // Add system snippets submenu if any exist
             if (systemSnippets.Any())
             {
                 var systemSubmenuLabel = string.Format(
                     LocalizationManager.GetString("Snippet_SystemSnippets") ?? "System Snippets ({0})", 
                     systemSnippets.Count);
                 var systemSubmenu = new MenuItem { Header = systemSubmenuLabel };
-
-                // If too many system snippets, create sub-categories
                 if (systemSnippets.Count > 25)
                 {
-                    // Group by command type (based on first word of the command)
                     var groupedSnippets = systemSnippets
                         .GroupBy(s => s.GetCommandCategory())
                         .OrderBy(g => g.Key);
-
                     foreach (var group in groupedSnippets)
                     {
                         var categorySubmenu = new MenuItem { Header = $"{group.Key} ({group.Count()})" };
-                        foreach (var snippet in group.Take(20)) // Limit per category
+                        foreach (var snippet in group.Take(20))
                         {
                             var menu = new MenuItem { Header = snippet.Name };
-                            menu.Click += (s, args) =>
-                            {
-                                Terminal.AddInput(snippet.Code);
-                            };
+                            menu.Click += (s, args) => { Terminal.AddInput(snippet.Code); };
                             categorySubmenu.Items.Add(menu);
                         }
                         systemSubmenu.Items.Add(categorySubmenu);
@@ -660,21 +756,15 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 }
                 else
                 {
-                    // Add directly if not too many
                     foreach (var snippet in systemSnippets)
                     {
                         var menu = new MenuItem { Header = snippet.Name };
-                        menu.Click += (s, args) =>
-                        {
-                            Terminal.AddInput(snippet.Code);
-                        };
+                        menu.Click += (s, args) => { Terminal.AddInput(snippet.Code); };
                         systemSubmenu.Items.Add(menu);
                     }
                 }
                 ctx.Items.Add(systemSubmenu);
             }
-
-            // Add user snippets submenu if any exist
             if (userSnippets.Any())
             {
                 var userSubmenuLabel = string.Format(
@@ -684,21 +774,14 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                 foreach (var snippet in userSnippets)
                 {
                     var menu = new MenuItem { Header = snippet.Name };
-                    menu.Click += (s, args) =>
-                    {
-                        Terminal.AddInput(snippet.Code);
-                    };
+                    menu.Click += (s, args) => { Terminal.AddInput(snippet.Code); };
                     userSubmenu.Items.Add(menu);
                 }
                 ctx.Items.Add(userSubmenu);
             }
-
-            // Add separator and quick access to most recent/common snippets
             if (systemSnippets.Any() || userSnippets.Any())
             {
                 ctx.Items.Add(new Separator());
-
-                // Add a few quick access items (first 5 snippets)
                 var quickAccess = snippets.Take(5);
                 foreach (var snippet in quickAccess)
                 {
@@ -707,25 +790,17 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                         Header = $"⚡ {snippet.Name}",
                         FontWeight = FontWeights.SemiBold
                     };
-                    menu.Click += (s, args) =>
-                    {
-                        Terminal.AddInput(snippet.Code);
-                    };
+                    menu.Click += (s, args) => { Terminal.AddInput(snippet.Code); };
                     ctx.Items.Add(menu);
                 }
             }
         }
         else
         {
-            // For smaller lists, add items directly
             foreach (var item in snippets)
             {
                 var menu = new MenuItem { Header = item.Name };
-                menu.Click += (s, args) =>
-                {
-                    // Execute the snippet code
-                    Terminal.AddInput(item.Code);
-                };
+                menu.Click += (s, args) => { Terminal.AddInput(item.Code); };
                 ctx.Items.Add(menu);
             }
         }
@@ -736,8 +811,35 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         return menuPanel;
     }
 
-    private void SelectAll_Click(object sender, RoutedEventArgs e)
+    private void SelectAll_Click(object sender, RoutedEventArgs e) => Terminal?.SelectAll();
+
+    private void SnippetToggleButtonChecked(object sender, RoutedEventArgs e)
     {
-        Terminal?.SelectAll();
+        SnippetControl.Visibility = Visibility.Visible;
+        ThemeControl.Visibility = Visibility.Collapsed;
+        if (ThemeToggleButton.IsChecked == true)
+            ThemeToggleButton.IsChecked = false;
+    }
+
+    private void SnippetToggleButtonUnchecked(object sender, RoutedEventArgs e)
+    {
+        SnippetControl.Visibility = Visibility.Collapsed;
+    }
+
+    private void ThemeToggleButtonChecked(object sender, RoutedEventArgs e)
+    {
+        ThemeControl.Visibility = Visibility.Visible;
+        SnippetControl.Visibility = Visibility.Collapsed;
+        if (SnippetToggleButton.IsChecked == true)
+            SnippetToggleButton.IsChecked = false;
+        if (Terminal != null)
+        {
+            ThemeControl.Terminal = Terminal;
+        }
+    }
+
+    private void ThemeToggleButtonUnchecked(object sender, RoutedEventArgs e)
+    {
+        ThemeControl.Visibility = Visibility.Collapsed;
     }
 }
