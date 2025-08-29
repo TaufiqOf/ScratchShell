@@ -60,10 +60,10 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         Terminal.CommandEntered += TerminalCommandEntered;
         Terminal.TerminalSizeChanged += TerminalSizeChanged;
         Terminal.TabCompletionRequested += TerminalTabCompletionRequested;
-        
+
         // Initialize autocomplete services
         _pathCompletionService = new PathCompletionService();
-        
+
         Loaded += ControlLoaded;
         SnippetControl.OnDeleteSnippet += SnippetControlOnDeleteSnippet;
         SnippetControl.OnEditSnippet += SnippetControlOnEditSnippet;
@@ -72,13 +72,13 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         // Set up command bindings for copy/paste
         SetupCommandBindings();
-        
+
         // Set up selection change monitoring
         SetupSelectionMonitoring();
-        
+
         // Setup connection monitoring
         SetupConnectionMonitoring();
-        
+
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
@@ -343,7 +343,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var rows = (uint)Math.Max(1, Terminal.Height / 16);
             var pixelWidth = (uint)Terminal.Width;
             var pixelHeight = (uint)Terminal.Height;
-            _shellStream = await Task.Run(()=> _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+            _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
 
             _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
 
@@ -355,7 +355,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         catch (Exception ex)
         {
             var errorMessage = string.Format(
-                LocalizationManager.GetString("Terminal_ConnectionFailed") ?? "Failed to connect to {0}: {1}", 
+                LocalizationManager.GetString("Terminal_ConnectionFailed") ?? "Failed to connect to {0}: {1}",
                 server.Name, ex.Message);
             Terminal.AddOutput(errorMessage);
             throw; // Ensure caller can trigger reconnection flow if needed
@@ -416,7 +416,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             catch (Exception ex)
             {
                 var errorMessage = string.Format(
-                    LocalizationManager.GetString("Terminal_ResizeFailed") ?? "Failed to resize terminal: {0}", 
+                    LocalizationManager.GetString("Terminal_ResizeFailed") ?? "Failed to resize terminal: {0}",
                     ex.Message);
                 Terminal.AddOutput(errorMessage);
             }
@@ -441,80 +441,80 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                     if (parts.Length == 2)
                     {
                         _currentWorkingDirectory = parts[1].Trim();
-                      }
-                  }
-              }
-          }
-          catch (Exception ex)
-          {
-              var errorMessage = string.Format(
-                  LocalizationManager.GetString("Terminal_Error") ?? "Error: {0}", 
-                  ex.Message);
-              Terminal.AddOutput(errorMessage);
-              // Attempt reconnection if likely connection related
-              if (ex is TimeoutException || ex is SocketException || ex is Renci.SshNet.Common.SshConnectionException || ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase))
-              {
-                  _ = HandleConnectionTimeout(ex.Message);
-              }
-          }
-      }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = string.Format(
+                LocalizationManager.GetString("Terminal_Error") ?? "Error: {0}",
+                ex.Message);
+            Terminal.AddOutput(errorMessage);
+            // Attempt reconnection if likely connection related
+            if (ex is TimeoutException || ex is SocketException || ex is Renci.SshNet.Common.SshConnectionException || ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase))
+            {
+                _ = HandleConnectionTimeout(ex.Message);
+            }
+        }
+    }
 
-      private async void TerminalTabCompletionRequested(ITerminal obj, TabCompletionEventArgs args)
-      {
-          if (_autoCompleteService == null)
-          {
-              args.Handled = false;
-              return;
-          }
+    private async void TerminalTabCompletionRequested(ITerminal obj, TabCompletionEventArgs args)
+    {
+        if (_autoCompleteService == null)
+        {
+            args.Handled = false;
+            return;
+        }
 
-          try
-          {
-              args.WorkingDirectory = _currentWorkingDirectory;
-              
-              var result = await _autoCompleteService.GetAutoCompleteAsync(
-                  args.CurrentLine, 
-                  args.CursorPosition, 
-                  args.WorkingDirectory);
+        try
+        {
+            args.WorkingDirectory = _currentWorkingDirectory;
 
-              if (result.HasSuggestions)
-              {
-                  Terminal.ShowAutoCompleteResults(result);
-                  args.Handled = true;
-              }
-              else
-              {
-                  Terminal.HideAutoComplete();
-                  args.Handled = false;
-              }
-          }
-          catch (Exception ex)
-          {
-              var errorMessage = string.Format(
-                  LocalizationManager.GetString("Terminal_AutoCompleteError") ?? "AutoComplete error: {0}", 
-                  ex.Message);
-              System.Diagnostics.Debug.WriteLine(errorMessage);
-              Terminal.HideAutoComplete();
-              args.Handled = false;
-          }
-      }
+            var result = await _autoCompleteService.GetAutoCompleteAsync(
+                args.CurrentLine,
+                args.CursorPosition,
+                args.WorkingDirectory);
 
-      public void Dispose()
-      {
-          if (_clipboardTimer != null)
-          {
-              _clipboardTimer.Stop();
-              _clipboardTimer = null;
-          }
-          LocalizationManager.LanguageChanged -= OnLanguageChanged;
-          _connectionMonitorTimer?.Stop();
-          _connectionMonitorTimer = null;
-          if (_sshClient is not null)
-          {
-              try { _shellStream?.Dispose(); } catch { }
-              try { _sshClient.Disconnect(); } catch { }
-              _sshClient.Dispose();
-          }
-      }
+            if (result.HasSuggestions)
+            {
+                Terminal.ShowAutoCompleteResults(result);
+                args.Handled = true;
+            }
+            else
+            {
+                Terminal.HideAutoComplete();
+                args.Handled = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = string.Format(
+                LocalizationManager.GetString("Terminal_AutoCompleteError") ?? "AutoComplete error: {0}",
+                ex.Message);
+            System.Diagnostics.Debug.WriteLine(errorMessage);
+            Terminal.HideAutoComplete();
+            args.Handled = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_clipboardTimer != null)
+        {
+            _clipboardTimer.Stop();
+            _clipboardTimer = null;
+        }
+        LocalizationManager.LanguageChanged -= OnLanguageChanged;
+        _connectionMonitorTimer?.Stop();
+        _connectionMonitorTimer = null;
+        if (_sshClient is not null)
+        {
+            try { _shellStream?.Dispose(); } catch { }
+            try { _sshClient.Disconnect(); } catch { }
+            _sshClient.Dispose();
+        }
+    }
 
     // === Existing selection & clipboard methods remain unchanged ===
     private void SetupCommandBindings()
@@ -531,11 +531,11 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         if (Terminal is GPTTerminalUserControl terminalControl)
         {
-            terminalControl.MouseUp += (s, e) => 
+            terminalControl.MouseUp += (s, e) =>
             {
                 Dispatcher.BeginInvoke(() => UpdateSelectionState(), DispatcherPriority.Background);
             };
-            terminalControl.KeyUp += (s, e) => 
+            terminalControl.KeyUp += (s, e) =>
             {
                 if (e.Key == Key.Escape || e.Key == Key.Delete)
                 {
@@ -658,7 +658,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         if (_contentDialogService is not null)
         {
             var message = string.Format(
-                LocalizationManager.GetString("Snippet_DeleteConfirmMessage") ?? "Are you sure you want to delete {0}?", 
+                LocalizationManager.GetString("Snippet_DeleteConfirmMessage") ?? "Are you sure you want to delete {0}?",
                 snippet?.Name);
             ContentDialogResult result = await _contentDialogService.ShowSimpleDialogAsync(
                     new SimpleContentDialogCreateOptions()
@@ -725,7 +725,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         };
 
         var ctx = new ContextMenu();
-        ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6; 
+        ctx.MaxHeight = SystemParameters.PrimaryScreenHeight * 0.6;
         var snippets = SnippetControl.Snippets.ToList();
         if (snippets.Count > 15)
         {
@@ -734,7 +734,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             if (systemSnippets.Any())
             {
                 var systemSubmenuLabel = string.Format(
-                    LocalizationManager.GetString("Snippet_SystemSnippets") ?? "System Snippets ({0})", 
+                    LocalizationManager.GetString("Snippet_SystemSnippets") ?? "System Snippets ({0})",
                     systemSnippets.Count);
                 var systemSubmenu = new MenuItem { Header = systemSubmenuLabel };
                 if (systemSnippets.Count > 25)
@@ -768,7 +768,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             if (userSnippets.Any())
             {
                 var userSubmenuLabel = string.Format(
-                    LocalizationManager.GetString("Snippet_UserSnippets") ?? "User Snippets ({0})", 
+                    LocalizationManager.GetString("Snippet_UserSnippets") ?? "User Snippets ({0})",
                     userSnippets.Count);
                 var userSubmenu = new MenuItem { Header = userSubmenuLabel };
                 foreach (var snippet in userSnippets)
