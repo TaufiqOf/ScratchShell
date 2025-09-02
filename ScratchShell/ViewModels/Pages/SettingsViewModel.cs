@@ -2,6 +2,7 @@ using ScratchShell.Constants;
 using ScratchShell.Enums;
 using ScratchShell.Properties;
 using ScratchShell.Services;
+using System.Diagnostics;
 using System.Net.Http;
 using Wpf.Ui;
 using Wpf.Ui.Abstractions.Controls;
@@ -214,7 +215,7 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
                     var result = await messageDialog.ShowDialogAsync();
                     if(result == Wpf.Ui.Controls.MessageBoxResult.Primary)
                     {
-                        Application.Current.Shutdown();
+                        RestartApp();
                     }
                 });
             });
@@ -223,6 +224,24 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         {
             System.Diagnostics.Debug.WriteLine($"Error showing language change message: {ex.Message}");
         }
+    }
+    private static void RestartApp()
+    {
+        try
+        {
+            var exePath = Process.GetCurrentProcess().MainModule!.FileName!; 
+            var args = Environment.GetCommandLineArgs().Skip(1); 
+            var psi = new ProcessStartInfo(exePath)
+            {
+                UseShellExecute = true,
+                Arguments = string.Join(" ", args.Select(a => a.Contains(' ') ? "\"" + a.Replace("\"", "\"") + "\"" : a)) 
+            }; 
+            Process.Start(psi); 
+        } catch {
+            /* log if desired */ 
+        } finally { 
+            Application.Current.Shutdown(); 
+        } 
     }
 
     private string GetAssemblyVersion()
