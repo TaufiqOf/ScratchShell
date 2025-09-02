@@ -54,6 +54,12 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         InitializeComponent();
         Terminal = new GPTTerminalUserControl();
         TerminalContentControl.Content = Terminal;
+        // Reattach context menu defined on the ContentControl directly to the terminal control
+        if (TerminalContentControl.ContextMenu != null && Terminal is FrameworkElement fe)
+        {
+            fe.ContextMenu = TerminalContentControl.ContextMenu;
+            TerminalContentControl.ContextMenu = null; // prevent double visual parent issues
+        }
         _server = server;
         _contentDialogService = contentDialogService;
         Terminal.InputLineSyntax = "";
@@ -63,6 +69,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         // Initialize autocomplete services
         _pathCompletionService = new PathCompletionService();
+
 
         Loaded += ControlLoaded;
         SnippetControl.OnDeleteSnippet += SnippetControlOnDeleteSnippet;
@@ -82,6 +89,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
+
+
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
@@ -519,12 +528,31 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     // === Existing selection & clipboard methods remain unchanged ===
     private void SetupCommandBindings()
     {
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute));
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute));
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute));
+        // Create bindings once so we can add them to both this control and the terminal control.
+        var copyBinding = new CommandBinding(ApplicationCommands.Copy, CopyCommand_Executed, CopyCommand_CanExecute);
+        var pasteBinding = new CommandBinding(ApplicationCommands.Paste, PasteCommand_Executed, PasteCommand_CanExecute);
+        var selectAllBinding = new CommandBinding(ApplicationCommands.SelectAll, SelectAllCommand_Executed, SelectAllCommand_CanExecute);
+
+        CommandBindings.Add(copyBinding);
+        CommandBindings.Add(pasteBinding);
+        CommandBindings.Add(selectAllBinding);
         InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
+
+        // Also attach to the terminal control itself. When the terminal is moved into a fullscreen window,
+        // it leaves this UserControl's visual tree, so routed commands would otherwise not find the bindings
+        // (resulting in disabled context menu items). By placing bindings directly on the terminal UI element
+        // they remain active regardless of reparenting.
+        if (Terminal is UIElement uiTerminal)
+        {
+            uiTerminal.CommandBindings.Add(copyBinding);
+            uiTerminal.CommandBindings.Add(pasteBinding);
+            uiTerminal.CommandBindings.Add(selectAllBinding);
+            uiTerminal.InputBindings.Add(new KeyBinding(ApplicationCommands.Copy, Key.C, ModifierKeys.Control));
+            uiTerminal.InputBindings.Add(new KeyBinding(ApplicationCommands.Paste, Key.V, ModifierKeys.Control));
+            uiTerminal.InputBindings.Add(new KeyBinding(ApplicationCommands.SelectAll, Key.A, ModifierKeys.Control));
+        }
     }
 
     private void SetupSelectionMonitoring()

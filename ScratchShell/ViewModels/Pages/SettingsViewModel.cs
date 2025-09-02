@@ -222,14 +222,14 @@ public partial class SettingsViewModel : ObservableObject, INavigationAware
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error showing language change message: {ex.Message}");
+            Debug.WriteLine($"Error showing language change message: {ex.Message}");
         }
     }
     private static void RestartApp()
     {
         try
         {
-            var exePath = Process.GetCurrentProcess().MainModule!.FileName!; 
+            var exePath = Environment.ProcessPath!; 
             var args = Environment.GetCommandLineArgs().Skip(1); 
             var psi = new ProcessStartInfo(exePath)
             {
