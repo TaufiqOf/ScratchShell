@@ -668,19 +668,57 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void PasteAtInputArea(string text)
     {
-        if (_terminal == null || IsReadOnly) return;
+        if (_terminal == null || IsReadOnly || string.IsNullOrEmpty(text)) return;
         var buffer = _terminal.Buffer;
-        int row = buffer.Y + buffer.YBase; int col = buffer.X;
+        int row = buffer.Y + buffer.YBase;
+        int promptEnd = GetPromptEndCol();
+
+        // Ensure tracking for this line is initialized
+        if (_currentInputLineAbsRow != row)
+        {
+            _currentInputLineAbsRow = row;
+            _currentPromptEndCol = promptEnd;
+            _currentInputEndCol = Math.Max(promptEnd, GetEditableEndCol(promptEnd));
+        }
+        else
+        {
+            // Update current end in case external changes happened
+            _currentInputEndCol = Math.Max(_currentInputEndCol, GetEditableEndCol(promptEnd));
+        }
+
+        int insertCol = buffer.X;
         var line = buffer.Lines[row];
+
+        // If inserting in the middle of existing editable content, shift remainder right
+        if (insertCol < _currentInputEndCol)
+        {
+            int remainderLength = _currentInputEndCol - insertCol;
+            int needed = text.Length;
+            // Shift characters to the right (truncate if exceeds line length)
+            for (int i = _currentInputEndCol - 1; i >= insertCol && i < line.Length; i--)
+            {
+                int target = i + needed;
+                if (target >= line.Length) continue; // overflow truncated
+                line[target] = line[i];
+            }
+        }
+
+        // Write pasted characters
         foreach (char c in text)
         {
-            if (col < line.Length)
+            if (insertCol < line.Length)
             {
-                var cell = line[col]; cell.Code = c; line[col] = cell;
+                var cell = line[insertCol];
+                cell.Code = c;
+                line[insertCol] = cell;
             }
-            col++;
+            insertCol++;
         }
-        buffer.X = col;
+
+        buffer.X = insertCol;
+        // Update editable end tracking
+        _currentInputEndCol = Math.Max(_currentInputEndCol, buffer.X);
+
         if (!_fullRedrawPending) _dirtyLines.Add(row);
         RedrawTerminal(onlyRow: row);
     }
