@@ -70,4 +70,21 @@ public class TerminalTheme : INotifyPropertyChanged
         OnPropertyChanged(propertyName);
         return true;
     }
+
+    /// <summary>
+    /// Creates a deep copy of the terminal theme
+    /// </summary>
+    public TerminalTheme Clone()
+    {
+        return new TerminalTheme
+        {
+            FontFamily = FontFamily,
+            FontSize = FontSize,
+            Foreground = Foreground,
+            Background = Background,
+            SelectionColor = SelectionColor,
+            CursorColor = CursorColor,
+            CopySelectionColor = CopySelectionColor
+        };
+    }
 }

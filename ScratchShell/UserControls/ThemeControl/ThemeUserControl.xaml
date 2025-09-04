@@ -2,370 +2,232 @@
     x:Class="ScratchShell.UserControls.ThemeControl.ThemeUserControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:colorPicker="clr-namespace:ColorPicker;assembly=ColorPicker"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:helpers="clr-namespace:ScratchShell.Helpers"
     mc:Ignorable="d">
 
-    <ScrollViewer
-        CanContentScroll="False"
-        HorizontalScrollBarVisibility="Disabled"
-        PanningMode="VerticalOnly"
-        VerticalScrollBarVisibility="Auto">
-        <ui:Card
-            Margin="0,0,16,0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top"
-            VerticalContentAlignment="Top">
-            <StackPanel VerticalAlignment="Top">
-                <!--  Header  -->
-                <Grid Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon
-                            Margin="0,0,8,0"
-                            FontSize="20"
-                            Symbol="Settings24" />
+    <UserControl.Resources>
+        <!--  Value Converters  -->
+        <local:NullToBooleanConverter x:Key="NullToBooleanConverter" />
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <local:ThemeCanDeleteConverter x:Key="ThemeCanDeleteConverter" />
+        <local:ThemeIsSelectedConverter x:Key="ThemeIsSelectedConverter" />
+        <local:ThemeIsSelectedToVisibilityConverter x:Key="ThemeIsSelectedToVisibilityConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <!--  Custom brush for selected state with fallback  -->
+        <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="#40007ACC" />
+        <SolidColorBrush x:Key="SelectedBorderBrush" Color="#FF0078D4" />
+
+        <!--  Theme template data template  -->
+        <DataTemplate x:Key="ThemeTemplateItemTemplate" DataType="{x:Type local:ThemeTemplate}">
+            <Border
+                Margin="0,0,0,0"
+                Padding="15"
+                Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                MouseLeftButtonDown="PreviewControl_Click">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Value="True">
+                                <DataTrigger.Binding>
+                                    <MultiBinding Converter="{StaticResource ThemeIsSelectedConverter}">
+                                        <Binding />
+                                        <Binding Path="DataContext.SelectedTemplate" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                    </MultiBinding>
+                                </DataTrigger.Binding>
+                                <Setter Property="BorderBrush" Value="{StaticResource SelectedBorderBrush}" />
+                                <Setter Property="BorderThickness" Value="3" />
+                                <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}" />
+                                <Setter Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect
+                                            BlurRadius="8"
+                                            Opacity="0.3"
+                                            ShadowDepth="2"
+                                            Color="#0078D4" />
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!--  Theme Name and Default Badge  -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
                         <TextBlock
-                            VerticalAlignment="Center"
+                            Grid.Column="0"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Text="{helpers:Localized Theme_TerminalTheme}" />
+                            Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+
+                        <ui:Badge
+                            Grid.Column="1"
+                            Margin="8,0,4,0"
+                            Appearance="Info"
+                            Content="Default"
+                            Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                        <ui:Badge
+                            Grid.Column="2"
+                            Margin="4,0,8,0"
+                            Appearance="Success"
+                            Content="SELECTED">
+                            <ui:Badge.Visibility>
+                                <MultiBinding Converter="{StaticResource ThemeIsSelectedToVisibilityConverter}">
+                                    <Binding />
+                                    <Binding Path="DataContext.SelectedTemplate" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                </MultiBinding>
+                            </ui:Badge.Visibility>
+                        </ui:Badge>
+
+                        <ui:Button
+                            Grid.Column="3"
+                            Appearance="Primary"
+                            Click="ApplyThemeItem_Click"
+                            Icon="{ui:SymbolIcon Checkmark24}" />
+                    </Grid>
+
+                    <!--  Theme Description  -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,0,0,12"
+                        FontSize="12"
+                        Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{Binding Description}"
+                        TextWrapping="Wrap" />
+
+                    <!--  Terminal Preview  -->
+                    <Border
+                        Grid.Row="2"
+                        Margin="0,0,0,12"
+                        Background="{ui:ThemeResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{ui:ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Cursor="Hand">
+                        <local:TerminalPreviewControl Height="165" Theme="{Binding Theme}" />
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="{ui:ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        <Setter Property="BorderThickness" Value="2" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+
+                    <!--  Theme Metadata  -->
+                    <StackPanel
+                        Grid.Row="3"
+                        Margin="0,0,0,12"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            FontSize="10"
+                            Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                            Text="{Binding ModifiedDate, StringFormat='Modified: {0:MM/dd/yyyy}'}" />
                     </StackPanel>
-                    <ui:Button
-                        x:Name="ApplyButton"
-                        Grid.Column="1"
-                        Appearance="Primary"
-                        Click="ApplyButton_Click"
-                        Content="{helpers:Localized Theme_Apply}"
-                        Icon="{ui:SymbolIcon Checkmark24}" />
+
+                    <!--  Apply Button  -->
+
                 </Grid>
-                <!--  Preview Section  -->
-                <ui:Card Margin="0,0,0,12" Padding="12">
-                    <StackPanel>
-                        <!--  Theme Presets  -->
-                        <TextBlock
-                            Margin="0,0,0,8"
-                            FontSize="12"
-                            FontWeight="Medium"
-                            Text="{helpers:Localized Theme_PredefinedThemes}" />
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <ui:Button
-                                x:Name="DarkThemeButton"
-                                Grid.Column="0"
-                                Margin="0,0,4,0"
-                                Appearance="Secondary"
-                                Click="DarkThemeButton_Click"
-                                Content="{helpers:Localized Theme_Dark}"
-                                Icon="{ui:SymbolIcon WeatherMoon16}"
-                                ToolTip="{helpers:Localized Tooltip_PreviewDarkTheme}" />
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
 
 
-                            <ui:Button
-                                x:Name="LightThemeButton"
-                                Grid.Column="1"
-                                Margin="2,0,2,0"
-                                Appearance="Secondary"
-                                Click="LightThemeButton_Click"
-                                Content="{helpers:Localized Theme_Light}"
-                                Icon="{ui:SymbolIcon WeatherSunny16}"
-                                ToolTip="{helpers:Localized Tooltip_PreviewLightTheme}" />
+
+    <ui:Card
+        Margin="0,0,0,0"
+        Padding="5"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Top"
+        VerticalContentAlignment="Top">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!--  Header Section  -->
+            <Grid Grid.Row="0" Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
 
-                            <ui:Button
-                                x:Name="MonokaiThemeButton"
-                                Grid.Column="2"
-                                Margin="4,0,0,0"
-                                Appearance="Secondary"
-                                Click="MonokaiThemeButton_Click"
-                                Content="{helpers:Localized Theme_Monokai}"
-                                Icon="{ui:SymbolIcon ColorBackground20}"
-                                ToolTip="{helpers:Localized Tooltip_PreviewMonokaiTheme}" />
-                        </Grid>
+                <!--  Action Buttons  -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ui:Button
+                        Margin="0,0,5,0"
+                        Appearance="Primary"
+                        Click="NewTheme_Click"
+                        Icon="{ui:SymbolIcon Add24}" />
 
-                        <!--  Enhanced Terminal Preview  -->
-                        <local:TerminalPreviewControl
-                            x:Name="TerminalPreview"
-                            Height="180"
-                            Margin="0,10"
-                            Theme="{Binding PreviewTheme, RelativeSource={RelativeSource AncestorType=local:ThemeUserControl}}" />
+                    <ui:Button
+                        Margin="0,0,5,0"
+                        Click="EditTheme_Click"
+                        Icon="{ui:SymbolIcon Edit24}"
+                        IsEnabled="{Binding SelectedTemplate, Converter={StaticResource NullToBooleanConverter}}" />
 
-                        <!--  Preview Controls  -->
-                        <Grid Margin="0,0,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-
-                            <ui:Button
-                                x:Name="ResetThemeButton"
-                                Grid.Column="1"
-                                Appearance="Secondary"
-                                Click="ResetThemeButton_Click"
-                                Content="{helpers:Localized Theme_Reset}"
-                                Icon="{ui:SymbolIcon ArrowReset20}"
-                                ToolTip="{helpers:Localized Tooltip_ResetTheme}" />
-                        </Grid>
-                    </StackPanel>
-                </ui:Card>
-                <!--  Font Settings Section  -->
-                <ui:Card Margin="0,0,0,12" Padding="12">
-                    <StackPanel>
-                        <TextBlock
-                            Margin="0,0,0,12"
-                            FontSize="14"
-                            FontWeight="Medium"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{helpers:Localized Theme_FontSettings}" />
-
-                        <!--  Font Family  -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontWeight="Medium"
-                                Text="{helpers:Localized Theme_FontFamily}" />
-                            <ComboBox
-                                x:Name="FontFamilyComboBox"
-                                Grid.Column="1"
-                                SelectionChanged="FontFamilyComboBox_SelectionChanged" />
-                        </Grid>
-
-                        <!--  Font Size  -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontWeight="Medium"
-                                Text="{helpers:Localized Theme_FontSize}" />
-                            <ComboBox
-                                x:Name="FontSizeComboBox"
-                                Grid.Column="1"
-                                SelectionChanged="FontSizeComboBox_SelectionChanged">
-                                <ComboBoxItem Content="8" />
-                                <ComboBoxItem Content="9" />
-                                <ComboBoxItem Content="10" />
-                                <ComboBoxItem Content="11" />
-                                <ComboBoxItem Content="12" />
-                                <ComboBoxItem Content="14" />
-                                <ComboBoxItem Content="16" />
-                                <ComboBoxItem Content="18" />
-                                <ComboBoxItem Content="20" />
-                                <ComboBoxItem Content="22" />
-                                <ComboBoxItem Content="24" />
-                                <ComboBoxItem Content="26" />
-                                <ComboBoxItem Content="28" />
-                                <ComboBoxItem Content="32" />
-                                <ComboBoxItem Content="36" />
-                                <ComboBoxItem Content="48" />
-                                <ComboBoxItem Content="72" />
-                            </ComboBox>
-                        </Grid>
-                    </StackPanel>
-                </ui:Card>
-
-                <!--  Color Settings Section  -->
-                <ui:Card Margin="0,0,0,12" Padding="12">
-                    <StackPanel>
-                        <TextBlock
-                            Margin="0,0,0,12"
-                            FontSize="14"
-                            FontWeight="Medium"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{helpers:Localized Theme_ColorSettings}" />
-
-                        <!--  Color Type Selection  -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                FontWeight="Medium"
-                                Text="{helpers:Localized Theme_ColorEditing}" />
-                            <ComboBox
-                                x:Name="ColorTypeComboBox"
-                                Grid.Column="1"
-                                SelectionChanged="ColorTypeComboBox_SelectionChanged">
-                                <ComboBoxItem Content="{helpers:Localized Theme_TextColor}" Tag="Foreground" />
-                                <ComboBoxItem Content="{helpers:Localized Theme_BackgroundColor}" Tag="Background" />
-                                <ComboBoxItem Content="{helpers:Localized Theme_SelectionColor}" Tag="Selection" />
-                                <ComboBoxItem Content="{helpers:Localized Theme_CursorColor}" Tag="Cursor" />
-                                <ComboBoxItem Content="{helpers:Localized Theme_CopyHighlightColor}" Tag="CopySelection" />
-                            </ComboBox>
-                        </Grid>
-
-                        <!--  Color Previews  -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <!--  Foreground Preview  -->
-                            <StackPanel Grid.Column="0" Margin="0,0,2,0">
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="{helpers:Localized Theme_Text}" />
-                                <Border
-                                    x:Name="ForegroundPreview"
-                                    Height="32"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="ForegroundPreview_MouseLeftButtonDown">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="9"
-                                        FontWeight="Medium"
-                                        Text="Sample" />
-                                </Border>
-                            </StackPanel>
-
-                            <!--  Background Preview  -->
-                            <StackPanel Grid.Column="1" Margin="1,0,1,0">
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="{helpers:Localized Theme_Background}" />
-                                <Border
-                                    x:Name="BackgroundPreview"
-                                    Height="32"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="BackgroundPreview_MouseLeftButtonDown" />
-                            </StackPanel>
-
-                            <!--  Selection Preview  -->
-                            <StackPanel Grid.Column="2" Margin="1,0,1,0">
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="{helpers:Localized Theme_Selection}" />
-                                <Border
-                                    x:Name="SelectionPreview"
-                                    Height="32"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="SelectionPreview_MouseLeftButtonDown">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="9"
-                                        FontWeight="Medium"
-                                        Foreground="White"
-                                        Text="Selected" />
-                                </Border>
-                            </StackPanel>
-
-                            <!--  Cursor Preview  -->
-                            <StackPanel Grid.Column="3" Margin="1,0,1,0">
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="{helpers:Localized Theme_Cursor}" />
-                                <Border
-                                    x:Name="CursorPreview"
-                                    Height="32"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="CursorPreview_MouseLeftButtonDown">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="9"
-                                        FontWeight="Medium"
-                                        Foreground="Black"
-                                        Text="?" />
-                                </Border>
-                            </StackPanel>
-
-                            <!--  Copy Selection Preview  -->
-                            <StackPanel Grid.Column="4" Margin="2,0,0,0">
-                                <TextBlock
-                                    Margin="0,0,0,4"
-                                    HorizontalAlignment="Center"
-                                    FontSize="10"
-                                    Text="{helpers:Localized Theme_Copy}" />
-                                <Border
-                                    x:Name="CopySelectionPreview"
-                                    Height="32"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4"
-                                    Cursor="Hand"
-                                    MouseLeftButtonDown="CopySelectionPreview_MouseLeftButtonDown">
-                                    <TextBlock
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontSize="9"
-                                        FontWeight="Medium"
-                                        Foreground="White"
-                                        Text="Copied" />
-                                </Border>
-                            </StackPanel>
-                        </Grid>
-
-                        <!--  Color Picker  -->
-                        <colorPicker:StandardColorPicker
-                            x:Name="MainColorPicker"
-                            Width="300"
-                            Height="280"
-                            Margin="0,8,0,0"
-                            HorizontalAlignment="Center"
-                            ColorChanged="MainColorPicker_ColorChanged"
-                            ShowAlpha="False" />
-
-                        <!--  Terminal Color Presets  -->
-                        <TextBlock
-                            Margin="0,12,0,8"
-                            FontSize="12"
-                            FontWeight="Medium"
-                            Text="{helpers:Localized Theme_TerminalPresets}" />
-                        <WrapPanel x:Name="ColorPresetsPanel" />
-
-
-                    </StackPanel>
-                </ui:Card>
-
-
-            </StackPanel>
-        </ui:Card>
-    </ScrollViewer>
+                    <ui:Button Click="DeleteTheme_Click" Icon="{ui:SymbolIcon Delete24}">
+                        <ui:Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource ThemeCanDeleteConverter}">
+                                <Binding Path="SelectedTemplate" />
+                                <Binding Path="SelectedTemplate.IsDefault" />
+                            </MultiBinding>
+                        </ui:Button.IsEnabled>
+                    </ui:Button>
+                </StackPanel>
+            </Grid>
+            <Separator
+                Grid.Row="1"
+                Height="2"
+                Margin="0,0,0,0" />
+            <!--  Theme Templates List  -->
+            <ScrollViewer
+                Grid.Row="2"
+                Margin="0,5,0,0"
+                CanContentScroll="False"
+                HorizontalScrollBarVisibility="Disabled"
+                PanningMode="VerticalOnly"
+                VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemTemplate="{StaticResource ThemeTemplateItemTemplate}" ItemsSource="{Binding ThemeTemplates}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </ui:Card>
 </UserControl>
