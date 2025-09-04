@@ -62,6 +62,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         }
         _server = server;
         _contentDialogService = contentDialogService;
+        ThemeControl.ContentDialogService = contentDialogService;
+
         Terminal.InputLineSyntax = "";
         Terminal.CommandEntered += TerminalCommandEntered;
         Terminal.TerminalSizeChanged += TerminalSizeChanged;
@@ -76,6 +78,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         SnippetControl.OnEditSnippet += SnippetControlOnEditSnippet;
         SnippetControl.OnNewSnippet += SnippetControlOnNewSnippet;
         SnippetManager.OnSnippetInitialized += SnippetManagerOnSnippetInitialized;
+
 
         // Set up command bindings for copy/paste
         SetupCommandBindings();

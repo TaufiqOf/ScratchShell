@@ -56,5 +56,11 @@
     <Setting Name="MainWindowMaximized" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="CurrentTerminalTheme" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Default Dark</Value>
+    </Setting>
+    <Setting Name="SavedTerminalThemes" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -238,5 +238,29 @@ namespace ScratchShell.Properties {
                 this["MainWindowMaximized"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default Dark")]
+        public string CurrentTerminalTheme {
+            get {
+                return ((string)(this["CurrentTerminalTheme"]));
+            }
+            set {
+                this["CurrentTerminalTheme"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SavedTerminalThemes {
+            get {
+                return ((string)(this["SavedTerminalThemes"]));
+            }
+            set {
+                this["SavedTerminalThemes"] = value;
+            }
+        }
     }
 }

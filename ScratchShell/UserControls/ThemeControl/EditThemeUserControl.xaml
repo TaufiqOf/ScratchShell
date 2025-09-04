@@ -1,4 +1,4 @@
-<UserControl
+<ui:ContentDialog
     x:Class="ScratchShell.UserControls.ThemeControl.EditThemeUserControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -9,7 +9,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     mc:Ignorable="d">
-
+    <ui:ContentDialog.Resources>
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:EditThemeUserControl}" />
+    </ui:ContentDialog.Resources>
     <ScrollViewer
         CanContentScroll="False"
         HorizontalScrollBarVisibility="Disabled"
@@ -26,6 +28,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon
@@ -38,9 +41,19 @@
                             FontWeight="SemiBold"
                             Text="{helpers:Localized Theme_TerminalTheme}" />
                     </StackPanel>
+
+                    <ui:Button
+                        x:Name="CancelButton"
+                        Grid.Column="1"
+                        Margin="0,0,8,0"
+                        Appearance="Secondary"
+                        Click="CancelButton_Click"
+                        Content="{helpers:Localized Theme_Cancel}"
+                        Icon="{ui:SymbolIcon Dismiss24}" />
+
                     <ui:Button
                         x:Name="ApplyButton"
-                        Grid.Column="1"
+                        Grid.Column="2"
                         Appearance="Primary"
                         Click="ApplyButton_Click"
                         Content="{helpers:Localized Theme_Apply}"
@@ -100,7 +113,7 @@
                             x:Name="TerminalPreview"
                             Height="180"
                             Margin="0,10"
-                            Theme="{Binding PreviewTheme, RelativeSource={RelativeSource AncestorType=local:ThemeUserControl}}" />
+                            Theme="{Binding PreviewTheme, RelativeSource={RelativeSource AncestorType=local:EditThemeUserControl}}" />
 
                         <!--  Preview Controls  -->
                         <Grid Margin="0,0,0,0">
@@ -368,4 +381,4 @@
             </StackPanel>
         </ui:Card>
     </ScrollViewer>
-</UserControl>
+</ui:ContentDialog>
