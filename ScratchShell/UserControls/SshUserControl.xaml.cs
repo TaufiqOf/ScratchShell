@@ -375,7 +375,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
     private async Task StartReadLoop()
     {
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             try
             {
@@ -384,8 +384,10 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
                     string output = _shellStream.Read();
                     if (!string.IsNullOrEmpty(output))
                     {
+                        await Task.Delay(200);
                         Application.Current.Dispatcher.Invoke(() =>
                         {
+
                             Terminal.AddOutput(output.ToString());
                         });
                     }
@@ -394,7 +396,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             catch (Exception ex)
             {
                 // If read loop fails due to disconnection, trigger reconnection
-                Application.Current.Dispatcher.Invoke(async () =>
+                _ = Application.Current.Dispatcher.Invoke(async () =>
                 {
                     await HandleConnectionTimeout(ex.Message);
                 });
