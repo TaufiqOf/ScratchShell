@@ -71,32 +71,16 @@
                     <!--  Theme Name and Default Badge  -->
                     <Grid Grid.Row="0" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-
-                        <TextBlock
+                        <ui:Badge
                             Grid.Column="0"
-                            FontSize="16"
-                            FontWeight="SemiBold"
-                            Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
-                            Text="{Binding Name}"
-                            TextTrimming="CharacterEllipsis" />
-
-                        <ui:Badge
-                            Grid.Column="1"
-                            Margin="8,0,4,0"
-                            Appearance="Info"
-                            Content="Default"
-                            Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                        <ui:Badge
-                            Grid.Column="2"
                             Margin="4,0,8,0"
                             Appearance="Success"
-                            Content="SELECTED">
+                            Content="{ui:SymbolIcon Symbol=Check24}">
                             <ui:Badge.Visibility>
                                 <MultiBinding Converter="{StaticResource ThemeIsSelectedToVisibilityConverter}">
                                     <Binding />
@@ -104,6 +88,23 @@
                                 </MultiBinding>
                             </ui:Badge.Visibility>
                         </ui:Badge>
+
+                        <TextBlock
+                            Grid.Column="1"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
+                            Text="{Binding Name}"
+                            TextTrimming="CharacterEllipsis" />
+
+                        <ui:Badge
+                            Grid.Column="2"
+                            Margin="8,0,4,0"
+                            Appearance="Success"
+                            Content="{ui:SymbolIcon Symbol=Settings28}"
+                            Visibility="{Binding IsDefault, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+
 
                         <ui:Button
                             Grid.Column="3"

@@ -18,6 +18,14 @@ public partial class EditThemeUserControl : ContentDialog
         nameof(PreviewTheme), typeof(TerminalTheme), typeof(EditThemeUserControl),
         new PropertyMetadata(null));
 
+    public static readonly DependencyProperty ThemeTemplateProperty = DependencyProperty.Register(
+        nameof(ThemeTemplate), typeof(ThemeTemplate), typeof(EditThemeUserControl),
+        new PropertyMetadata(null, OnThemeTemplateChanged));
+
+    public static readonly DependencyProperty IsNewThemeProperty = DependencyProperty.Register(
+        nameof(IsNewTheme), typeof(bool), typeof(EditThemeUserControl),
+        new PropertyMetadata(false));
+
     public ITerminal Terminal
     {
         get => (ITerminal)GetValue(TerminalProperty);
@@ -30,13 +38,29 @@ public partial class EditThemeUserControl : ContentDialog
         set => SetValue(PreviewThemeProperty, value);
     }
 
+    public ThemeTemplate ThemeTemplate
+    {
+        get => (ThemeTemplate)GetValue(ThemeTemplateProperty);
+        set => SetValue(ThemeTemplateProperty, value);
+    }
+
+    public bool IsNewTheme
+    {
+        get => (bool)GetValue(IsNewThemeProperty);
+        set => SetValue(IsNewThemeProperty, value);
+    }
+
     private TerminalTheme _theme => Terminal?.Theme;
     
     // Separate preview theme that doesn't affect the main terminal until Apply is pressed
     private TerminalTheme _previewTheme;
 
     // Event to notify completion of theme editing
-    public event Action<TerminalTheme?, bool>? ThemeEditCompleted;
+    public event Action<ThemeTemplate?, bool>? ThemeEditCompleted;
+
+    // Result property to return the edited theme
+    public ThemeTemplate? ResultTheme { get; private set; }
+    public bool WasCancelled { get; private set; }
 
     // Predefined color palette for quick selection with terminal-focused colors
     private readonly Color[] _colorPalette = new Color[]
@@ -74,6 +98,23 @@ public partial class EditThemeUserControl : ContentDialog
         EnsurePreviewThemeExists();
     }
 
+    private static void OnThemeTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is EditThemeUserControl ctrl && e.NewValue is ThemeTemplate template)
+        {
+            ctrl.InitializeFromTemplate(template);
+        }
+    }
+
+    private void InitializeFromTemplate(ThemeTemplate template)
+    {
+        if (template?.Theme != null)
+        {
+            _previewTheme = template.Theme.Clone();
+            UpdatePreviewThemeBinding();
+        }
+    }
+
     private void EnsurePreviewThemeExists()
     {
         if (_previewTheme == null)
@@ -104,21 +145,37 @@ public partial class EditThemeUserControl : ContentDialog
         // Set default color type selection
         ColorTypeComboBox.SelectedIndex = 0;
 
-        // Initialize from the PreviewTheme property if set
-        if (PreviewTheme != null)
+        // Initialize theme details if we have a template
+        if (ThemeTemplate != null)
         {
-            _previewTheme = PreviewTheme.Clone();
+            ThemeNameTextBox.Text = ThemeTemplate.Name;
+            ThemeDescriptionTextBox.Text = ThemeTemplate.Description;
+            
+            _previewTheme = ThemeTemplate.Theme.Clone();
             UpdatePreviewThemeBinding();
         }
         else
         {
-            // Ensure we have a preview theme
-            EnsurePreviewThemeExists();
-
-            if (_theme != null)
+            // Set default values for new theme
+            ThemeNameTextBox.Text = IsNewTheme ? "New Theme" : "";
+            ThemeDescriptionTextBox.Text = IsNewTheme ? "Custom theme" : "";
+            
+            // Initialize from the PreviewTheme property if set
+            if (PreviewTheme != null)
             {
-                // Initialize preview theme as a copy of the current theme
-                InitializePreviewTheme();
+                _previewTheme = PreviewTheme.Clone();
+                UpdatePreviewThemeBinding();
+            }
+            else
+            {
+                // Ensure we have a preview theme
+                EnsurePreviewThemeExists();
+
+                if (_theme != null)
+                {
+                    // Initialize preview theme as a copy of the current theme
+                    InitializePreviewTheme();
+                }
             }
         }
         
@@ -401,16 +458,19 @@ public partial class EditThemeUserControl : ContentDialog
         }
     }
 
-    private void ApplyButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Notify completion with the current preview theme
-        ThemeEditCompleted?.Invoke(_previewTheme?.Clone(), false);
-    }
 
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    private TerminalTheme CreateDefaultTheme()
     {
-        // Notify completion with cancellation
-        ThemeEditCompleted?.Invoke(null, true);
+        return new TerminalTheme
+        {
+            FontFamily = new FontFamily("Consolas"),
+            FontSize = 16.0,
+            Foreground = Brushes.LightGray,
+            Background = Brushes.Black,
+            SelectionColor = Color.FromArgb(80, 0, 120, 255),
+            CursorColor = Brushes.LightGray,
+            CopySelectionColor = Color.FromArgb(180, 144, 238, 144)
+        };
     }
 
     private void ResetThemeButton_Click(object sender, RoutedEventArgs e)
@@ -546,5 +606,30 @@ public partial class EditThemeUserControl : ContentDialog
         // Update UI to reflect the changes
         UpdateUIFromTheme();
         UpdatePreview();
+    }
+
+    protected override void OnButtonClick(ContentDialogButton button)
+    {
+        if (button == ContentDialogButton.Primary)
+        {
+            // Validate theme name
+            if (string.IsNullOrWhiteSpace(ThemeNameTextBox?.Text))
+            {
+                // Show error message or focus on name field
+                ThemeNameTextBox?.Focus();
+                return;
+            }
+            ResultTheme = new ThemeTemplate
+            {
+                Id = ThemeTemplate.Id,
+                Name = ThemeNameTextBox.Text.Trim(),
+                Description = ThemeDescriptionTextBox?.Text?.Trim() ?? string.Empty,
+                Theme = _previewTheme?.Clone() ?? CreateDefaultTheme(),
+                IsDefault = false,
+                CreatedDate = IsNewTheme ? DateTime.Now : (ThemeTemplate?.CreatedDate ?? DateTime.Now),
+                ModifiedDate = DateTime.Now
+            };
+        }
+        base.OnButtonClick(button);
     }
 }

@@ -185,10 +185,11 @@ public class ThemeManager : INotifyPropertyChanged
         try
         {
             // Check if theme already exists
-            var existingTheme = _themeTemplates.FirstOrDefault(t => t.Name == template.Name && !t.IsDefault);
+            var existingTheme = _themeTemplates.FirstOrDefault(t => t.Id == template.Id && !t.IsDefault);
             if (existingTheme != null)
             {
                 // Update existing theme
+                existingTheme.Name = template.Name;
                 existingTheme.Description = template.Description;
                 existingTheme.Theme = template.Theme.Clone();
                 existingTheme.ModifiedDate = DateTime.Now;
@@ -196,6 +197,7 @@ public class ThemeManager : INotifyPropertyChanged
             else
             {
                 // Add new theme
+                existingTheme.Name = template.Name;
                 template.IsDefault = false;
                 template.CreatedDate = DateTime.Now;
                 template.ModifiedDate = DateTime.Now;

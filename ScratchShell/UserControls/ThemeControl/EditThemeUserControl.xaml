@@ -8,6 +8,7 @@
     xmlns:local="clr-namespace:ScratchShell.UserControls.ThemeControl"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    PrimaryButtonText="Save"
     mc:Ignorable="d">
     <ui:ContentDialog.Resources>
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:EditThemeUserControl}" />
@@ -41,24 +42,51 @@
                             FontWeight="SemiBold"
                             Text="{helpers:Localized Theme_TerminalTheme}" />
                     </StackPanel>
-
-                    <ui:Button
-                        x:Name="CancelButton"
-                        Grid.Column="1"
-                        Margin="0,0,8,0"
-                        Appearance="Secondary"
-                        Click="CancelButton_Click"
-                        Content="{helpers:Localized Theme_Cancel}"
-                        Icon="{ui:SymbolIcon Dismiss24}" />
-
-                    <ui:Button
-                        x:Name="ApplyButton"
-                        Grid.Column="2"
-                        Appearance="Primary"
-                        Click="ApplyButton_Click"
-                        Content="{helpers:Localized Theme_Apply}"
-                        Icon="{ui:SymbolIcon Checkmark24}" />
                 </Grid>
+
+                <!--  Theme Details Section  -->
+                <ui:Card Margin="0,0,0,12" Padding="12">
+                    <StackPanel>
+                        <TextBlock
+                            Margin="0,0,0,12"
+                            FontSize="14"
+                            FontWeight="Medium"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{helpers:Localized Theme_ThemeDetails}" />
+
+                        <!--  Theme Name  -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="Medium"
+                                Text="Name:" />
+                            <ui:TextBox
+                                x:Name="ThemeNameTextBox"
+                                Grid.Column="1"
+                                PlaceholderText="Enter theme name" />
+                        </Grid>
+
+                        <!--  Theme Description  -->
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontWeight="Medium"
+                                Text="Description:" />
+                            <ui:TextBox
+                                x:Name="ThemeDescriptionTextBox"
+                                Grid.Column="1"
+                                PlaceholderText="Enter theme description" />
+                        </Grid>
+                    </StackPanel>
+                </ui:Card>
                 <!--  Preview Section  -->
                 <ui:Card Margin="0,0,0,12" Padding="12">
                     <StackPanel>

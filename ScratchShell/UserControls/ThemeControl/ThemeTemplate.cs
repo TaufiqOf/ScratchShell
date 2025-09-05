@@ -12,7 +12,7 @@ public class ThemeTemplate : INotifyPropertyChanged
     private string _description = string.Empty;
     private TerminalTheme _theme = new();
     private bool _isDefault;
-
+    public string Id { get; set; } = Ulid.NewUlid().ToString();
     public string Name
     {
         get => _name;
@@ -62,6 +62,7 @@ public class ThemeTemplate : INotifyPropertyChanged
     {
         return new ThemeTemplate
         {
+            Id = Id,
             Name = Name,
             Description = Description,
             Theme = CloneTheme(Theme),

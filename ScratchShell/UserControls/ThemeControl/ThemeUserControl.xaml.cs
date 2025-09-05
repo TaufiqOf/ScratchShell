@@ -59,7 +59,7 @@ public partial class ThemeUserControl : UserControl, INotifyPropertyChanged
     {
         _themeManager = ThemeManager.Instance;
         _themeManager.PropertyChanged += ThemeManager_PropertyChanged;
-        
+
         InitializeComponent();
         DataContext = this;
         Loaded += ThemeUserControl_Loaded;
@@ -73,16 +73,20 @@ public partial class ThemeUserControl : UserControl, INotifyPropertyChanged
             UpdateButtonStates();
         }
     }
-
+    private bool _hasLoaded = false;
     private void ThemeUserControl_Loaded(object sender, RoutedEventArgs e)
     {
         UpdateButtonStates();
-        
+        if (_hasLoaded)
+            return;
+
         // Apply current theme to terminal if available
         if (Terminal != null && _themeManager.CurrentTheme != null)
         {
             _themeManager.ApplyThemeToTerminal(Terminal, _themeManager.CurrentTheme);
         }
+        _hasLoaded = true;
+
     }
 
     private static void OnTerminalChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -166,6 +170,7 @@ public partial class ThemeUserControl : UserControl, INotifyPropertyChanged
     {
         var newTemplate = new ThemeTemplate
         {
+            Id = Ulid.NewUlid().ToString(),
             Name = "New Theme",
             Description = "Custom theme",
             Theme = Terminal?.Theme != null ? CloneTerminalTheme(Terminal.Theme) : CreateDefaultTheme()
@@ -200,13 +205,29 @@ public partial class ThemeUserControl : UserControl, INotifyPropertyChanged
 
     private async Task ShowThemeEditorAsync(ThemeTemplate template, bool isNew)
     {
-        if (ContentDialogService is not null)
+        if (ContentDialogService != null)
         {
-            if (ContentDialogService is not null)
+            var editDialog = new EditThemeUserControl(ContentDialogService)
             {
-                var serverContentDialog = new EditThemeUserControl(ContentDialogService);
-
-                var contentDialogResult = await serverContentDialog.ShowAsync();
+                ThemeTemplate = template,
+                IsNewTheme = isNew,
+                PreviewTheme = template.Theme
+            };
+            if (await editDialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                if (isNew)
+                {
+                    // Add new theme
+                    _themeManager.SaveTheme(editDialog.ResultTheme);
+                    SelectedTemplate = editDialog.ResultTheme;
+                }
+                else
+                {
+                    // Update existing theme
+                    _themeManager.SaveTheme(editDialog.ResultTheme);
+                    // Refresh the selected template to reflect changes
+                }
+                OnPropertyChanged(nameof(SelectedTemplate));
             }
         }
     }
