@@ -35,10 +35,11 @@ public partial class TerminalPreviewControl : UserControl
         UpdateFromTheme();
         
         // Start the copy highlight animation when loaded with a small delay
-        Loaded += (s, e) => 
+        Loaded += async (s, e) => 
         {
+            await Task.Delay(200);
             // Use Dispatcher to ensure we're on the UI thread and add a small delay
-            Dispatcher.BeginInvoke(() => StartCopyHighlightAnimation(), DispatcherPriority.Loaded);
+            await Dispatcher.BeginInvoke(() => StartCopyHighlightAnimation(), DispatcherPriority.Loaded);
         };
         
         // Stop animation when unloaded to prevent memory leaks
