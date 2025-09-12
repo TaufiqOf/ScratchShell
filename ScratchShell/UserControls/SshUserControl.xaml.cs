@@ -268,22 +268,22 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         catch (TimeoutException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout") ?? "Timeout: {0}", ex.Message));
-            throw;
+            //throw;
         }
         catch (SocketException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError") ?? "Network error: {0}", ex.Message));
-            throw;
+            //throw;
         }
         catch (Renci.SshNet.Common.SshConnectionException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError") ?? "SSH connection error: {0}", ex.Message));
-            throw;
+            //throw;
         }
         catch (Exception ex) when (ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("connection", StringComparison.OrdinalIgnoreCase) || ex.Message.Contains("network", StringComparison.OrdinalIgnoreCase))
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError") ?? "Connection error: {0}", ex.Message));
-            throw;
+            //throw;
         }
     }
 
@@ -525,8 +525,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         if (_sshClient is not null)
         {
             try { _shellStream?.Dispose(); } catch { }
-            try { _sshClient.Disconnect(); } catch { }
-            _sshClient.Dispose();
+            try { _sshClient?.Disconnect(); } catch { }
+            _sshClient?.Dispose();
         }
     }
 
