@@ -31,7 +31,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private readonly ISftpFileOperationHandler _fileOperationHandler;
     private readonly ISftpEventHandler _eventHandler;
     private readonly ISftpLogger _logger;
-
+    private bool _isClosed = false;
     // UI adapter for path textbox
     private readonly PathTextBoxAdapter _pathAdapter;
 
@@ -68,6 +68,13 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
+        this.Unloaded += SftpUserControlUnloaded; ;
+    }
+
+    private void SftpUserControlUnloaded(object sender, RoutedEventArgs e)
+    {
+        _isClosed = true;
+        this.Dispose();
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
@@ -119,7 +126,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
             // Store current path for restoration after reconnection
             _lastKnownPath = _navigationManager.CurrentPath;
-
+            if (_isClosed)
+            {
+                return;
+            }
             // Show disconnected state
             SetUIConnectionState(false);
             Browser.ShowProgress(true, LocalizationManager.GetString("Connection_Lost"));
@@ -233,22 +243,18 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         catch (TimeoutException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_Timeout"), ex.Message));
-            throw;
         }
         catch (System.Net.Sockets.SocketException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_NetworkError"), ex.Message));
-            throw;
         }
         catch (Renci.SshNet.Common.SshConnectionException ex)
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_SSHConnectionError"), ex.Message));
-            throw;
         }
         catch (Exception ex) when (ex.Message.Contains("timeout") || ex.Message.Contains("connection") || ex.Message.Contains("network"))
         {
             await HandleConnectionTimeout(string.Format(LocalizationManager.GetString("Operation_ConnectionError"), ex.Message));
-            throw;
         }
     }
 

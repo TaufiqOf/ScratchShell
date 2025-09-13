@@ -36,6 +36,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private ITerminalAutoCompleteService? _autoCompleteService;
     private IPathCompletionService _pathCompletionService;
     private string _currentWorkingDirectory = "~";
+    private bool _isClosed = false;
 
     public ITerminal Terminal { get; private set; }
 
@@ -91,9 +92,14 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
+        this.Unloaded += SshUserControlUnloaded;
     }
 
-
+    private void SshUserControlUnloaded(object sender, RoutedEventArgs e)
+    {
+        _isClosed = true;
+        this.Dispose();
+    }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
@@ -146,7 +152,10 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         {
             _isReconnecting = true;
             _connectionMonitorTimer?.Stop();
-
+            if (_isClosed)
+            {
+                return;
+            }
             // Store current working directory for restoration
             _lastKnownWorkingDirectory = _currentWorkingDirectory;
 
@@ -524,8 +533,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         _connectionMonitorTimer = null;
         if (_sshClient is not null)
         {
-            try { _shellStream?.Dispose(); } catch { }
             try { _sshClient?.Disconnect(); } catch { }
+            try { _shellStream?.Dispose(); } catch { }
             _sshClient?.Dispose();
         }
     }
