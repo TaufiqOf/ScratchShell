@@ -533,6 +533,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         LocalizationManager.LanguageChanged -= OnLanguageChanged;
         _connectionMonitorTimer?.Stop();
         _connectionMonitorTimer = null;
+        this._FullScreen?.Close();
         if (_sshClient is not null)
         {
             try { _sshClient?.Disconnect(); } catch { }

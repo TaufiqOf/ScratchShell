@@ -39,6 +39,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     private DispatcherTimer? _connectionMonitorTimer;
     private bool _isReconnecting = false;
     private string? _lastKnownPath;
+    private FullScreenWindow _FullScreen;
 
     public BrowserUserControl Browser { get; }
 
@@ -454,17 +455,19 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             _logger.LogInfo(LocalizationManager.GetString("Operation_EnteringFullscreen"));
             FullScreenButton.IsEnabled = false;
             BrowserContentControl.Content = null;
-            var fullScreen = new FullScreenWindow(_contentDialogService, Browser, _server.Name);
-            fullScreen.Show();
-            fullScreen.Closed += (s, args) =>
-            {
-                _eventHandler.SafeExecute(() =>
-                {
-                    _logger.LogInfo(LocalizationManager.GetString("Operation_ExitingFullscreen"));
-                    BrowserContentControl.Content = Browser;
-                    FullScreenButton.IsEnabled = true;
-                });
-            };
+            _FullScreen = new FullScreenWindow(_contentDialogService, Browser, _server.Name);
+            _FullScreen.Show();
+            _FullScreen.Closed += FullScreenClosed;
+        });
+    }
+
+    private void FullScreenClosed(object? sender, EventArgs e)
+    {
+        _eventHandler.SafeExecute(() =>
+        {
+            _logger.LogInfo(LocalizationManager.GetString("Operation_ExitingFullscreen"));
+            BrowserContentControl.Content = Browser;
+            FullScreenButton.IsEnabled = true;
         });
     }
 
@@ -542,6 +545,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             _connectionManager?.Dispose();
             _navigationManager?.Dispose();
             _fileOperationHandler?.Dispose();
+            _FullScreen.Close();
             Browser?.Clear();
             _logger?.LogInfo(LocalizationManager.GetString("Operation_CleanupCompleted"));
         }
