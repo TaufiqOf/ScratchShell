@@ -16,7 +16,8 @@ using Wpf.Ui.Controls;
 using Wpf.Ui.Extensions;
 using MenuItem = Wpf.Ui.Controls.MenuItem;
 using System.Net.Sockets; // Added for reconnection exception handling
-using System.Windows; // Added for Visibility
+using System.Windows;
+using ScratchShell.ViewModels.Pages; // Added for Visibility
 
 namespace ScratchShell.UserControls;
 
@@ -50,7 +51,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     private bool _isReconnecting = false;
     private string? _lastKnownWorkingDirectory; // store to restore after reconnection
 
-    public SshUserControl(ServerViewModel server, IContentDialogService contentDialogService)
+    public SshUserControl(TabItemViewModel tab, IContentDialogService contentDialogService)
     {
         InitializeComponent();
         Terminal = new GPTTerminalUserControl();
@@ -61,7 +62,8 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             fe.ContextMenu = TerminalContentControl.ContextMenu;
             TerminalContentControl.ContextMenu = null; // prevent double visual parent issues
         }
-        _server = server;
+        _server = tab.Server;
+        tab.Removed += TabRemoved;
         _contentDialogService = contentDialogService;
         ThemeControl.ContentDialogService = contentDialogService;
 
@@ -92,14 +94,14 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
-        this.Unloaded += SshUserControlUnloaded;
     }
 
-    private void SshUserControlUnloaded(object sender, RoutedEventArgs e)
+    private void TabRemoved()
     {
         _isClosed = true;
         this.Dispose();
     }
+
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {

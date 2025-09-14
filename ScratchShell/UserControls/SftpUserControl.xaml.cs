@@ -42,10 +42,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     public BrowserUserControl Browser { get; }
 
-    public SftpUserControl(ServerViewModel server, IContentDialogService contentDialogService)
+    public SftpUserControl(TabItemViewModel tab, IContentDialogService contentDialogService)
     {
         InitializeComponent();
-        _server = server;
+        _server = tab.Server;
+        tab.Removed += TabRemoved;
         _contentDialogService = contentDialogService;
 
         Browser = new BrowserUserControl();
@@ -68,10 +69,9 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
-        this.Unloaded += SftpUserControlUnloaded; ;
     }
 
-    private void SftpUserControlUnloaded(object sender, RoutedEventArgs e)
+    private void TabRemoved()
     {
         _isClosed = true;
         this.Dispose();

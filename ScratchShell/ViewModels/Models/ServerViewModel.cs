@@ -53,6 +53,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
     [ObservableProperty]
     private bool _isDeleted;
 
+
     public IContentDialogService ContentDialogService { get; }
 
     // Validation properties

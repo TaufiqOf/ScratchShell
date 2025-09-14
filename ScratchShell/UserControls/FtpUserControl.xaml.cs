@@ -15,10 +15,10 @@ public partial class FtpUserControl : UserControl, IWorkspaceControl
         InitializeComponent();
     }
 
-    public FtpUserControl(ServerViewModel server)
+    public FtpUserControl(TabItemViewModel tab)
     {
         InitializeComponent();
-        this.server = server;
+        this.server = tab.Server;
     }
 
     private void TerminalSentMessage(ITerminal obj, string command)

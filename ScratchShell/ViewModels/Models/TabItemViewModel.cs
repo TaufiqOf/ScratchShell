@@ -16,6 +16,9 @@ public partial class TabItemViewModel : ObservableObject
     [ObservableProperty]
     private IWorkspaceControl? _content;
 
+    public delegate void RemovedHandler();
+    public event RemovedHandler Removed;
+
     public string Icon { get; set; } = "XboxConsole24";
 
     public ServerViewModel Server
@@ -33,9 +36,9 @@ public partial class TabItemViewModel : ObservableObject
             {
                 Content = server.ProtocolType switch
                 {
-                    ProtocolType.FTP => new UserControls.FtpUserControl(server),
-                    ProtocolType.SSH => new UserControls.SshUserControl(server, ContentDialogService),
-                    ProtocolType.SFTP => new UserControls.SftpUserControl(server, ContentDialogService),
+                    ProtocolType.FTP => new UserControls.FtpUserControl(this),
+                    ProtocolType.SSH => new UserControls.SshUserControl(this, ContentDialogService),
+                    ProtocolType.SFTP => new UserControls.SftpUserControl(this, ContentDialogService),
                     _ => null
                 };
             }
@@ -53,5 +56,10 @@ public partial class TabItemViewModel : ObservableObject
     internal void Dispose()
     {
         Content?.Dispose();
+    }
+
+    internal void RemovedTab()
+    {
+        Removed.Invoke();
     }
 }

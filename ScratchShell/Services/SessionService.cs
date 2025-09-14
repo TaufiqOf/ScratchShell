@@ -45,6 +45,7 @@ internal static class SessionService
         {
             var tab = Sessions.FirstOrDefault(q => q.Id == tabViewModel.Id);
             Sessions.Remove(tab);
+            tab.RemovedTab();
             tabViewModel.Dispose();
         });
     }
