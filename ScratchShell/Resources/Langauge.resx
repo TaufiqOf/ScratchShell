@@ -1289,4 +1289,8 @@ SFTP: SSH File Transfer Protocol</value>
     <value>Restart</value>
     <comment>Settings Langauge Change Restart</comment>
   </data>
+  <data name="Theme_ThemeDetails" xml:space="preserve">
+    <value>Details</value>
+    <comment>Theme Details</comment>
+  </data>
 </root>

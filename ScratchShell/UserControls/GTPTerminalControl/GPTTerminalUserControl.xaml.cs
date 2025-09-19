@@ -25,6 +25,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private double _charWidth = 8;
     private double _charHeight = 16;
     private Typeface _typeface = new Typeface("Consolas");
+    private bool _initialized = false;
 
     private System.Windows.Threading.DispatcherTimer _resizeRedrawTimer;
     private Size _pendingResizeSize;
@@ -101,8 +102,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Loaded += GPTTerminalUserControl_Loaded;
         Unloaded += GPTTerminalUserControl_Unloaded;
 
-        GotFocus += (s, e) => { _isFocused = true; RedrawTerminal(); };
-        LostFocus += (s, e) => { _isFocused = false; RedrawTerminal(); };
+        //GotFocus += (s, e) => { _isFocused = true; RedrawTerminal(); };
+        //LostFocus += (s, e) => { _isFocused = false; RedrawTerminal(); };
 
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
 
@@ -133,6 +134,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Focusable = true;
         IsTabStop = true;
         _isFocused = true;
+        if (_initialized)
+        {
+            return;
+        }
+        _initialized = true;
         if (_terminal == null)
             InitializeTerminalEmulator();
         UpdateTerminalLayoutAndSize();

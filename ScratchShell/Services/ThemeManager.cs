@@ -197,7 +197,7 @@ public class ThemeManager : INotifyPropertyChanged
             else
             {
                 // Add new theme
-                existingTheme.Name = template.Name;
+                template.Name = template.Name;
                 template.IsDefault = false;
                 template.CreatedDate = DateTime.Now;
                 template.ModifiedDate = DateTime.Now;

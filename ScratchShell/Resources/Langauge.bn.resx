@@ -1285,4 +1285,7 @@ SFTP: SSH ফাইল ট্রান্সফার প্রোটোকল</
   <data name="Settings_Restart" xml:space="preserve">
     <value>রিস্টার্ট</value>
   </data>
+  <data name="Theme_ThemeDetails" xml:space="preserve">
+    <value>বিস্তারিত</value>
+  </data>
 </root>

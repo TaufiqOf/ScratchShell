@@ -2080,6 +2080,15 @@ namespace ScratchShell.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Details.
+        /// </summary>
+        internal static string Theme_ThemeDetails {
+            get {
+                return ResourceManager.GetString("Theme_ThemeDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a new server to your list.
         /// </summary>
         internal static string Tooltip_AddServer {

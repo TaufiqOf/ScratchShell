@@ -1039,4 +1039,7 @@ SFTP: Protocolo de transferencia de archivos SSH</value>
   <data name="Settings_Restart" xml:space="preserve">
     <value>Reiniciar</value>
   </data>
+  <data name="Theme_ThemeDetails" xml:space="preserve">
+    <value>Detalles</value>
+  </data>
 </root>

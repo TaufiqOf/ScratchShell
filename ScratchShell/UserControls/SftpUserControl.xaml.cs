@@ -551,7 +551,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             _connectionManager?.Dispose();
             _navigationManager?.Dispose();
             _fileOperationHandler?.Dispose();
-            _FullScreen.Close();
+            _FullScreen?.Close();
             Browser?.Clear();
             _logger?.LogInfo(LocalizationManager.GetString("Operation_CleanupCompleted"));
         }
