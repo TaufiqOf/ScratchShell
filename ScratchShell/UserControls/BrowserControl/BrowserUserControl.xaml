@@ -6,10 +6,10 @@
     xmlns:local="clr-namespace:ScratchShell.UserControls.BrowserControl"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     AllowDrop="True"
-    DragEnter="BrowserUserControl_DragEnter"
-    DragLeave="BrowserUserControl_DragLeave"
-    DragOver="BrowserUserControl_DragOver"
-    Drop="BrowserUserControl_Drop">
+    DragEnter="BrowserUserControlDragEnter"
+    DragLeave="BrowserUserControlDragLeave"
+    DragOver="BrowserUserControlDragOver"
+    Drop="BrowserUserControlDrop">
     <UserControl.Resources>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -30,8 +30,8 @@
                 Width="120"
                 Height="120"
                 Margin="5"
-                MouseLeftButtonDown="GridItem_MouseLeftButtonDown"
-                MouseRightButtonDown="GridItem_MouseRightButtonDown"
+                MouseLeftButtonDown="GridItemMouseLeftButtonDown"
+                MouseRightButtonDown="GridItemMouseRightButtonDown"
                 ToolTip="{Binding Name}">
                 <Border.Style>
                     <Style TargetType="Border">
@@ -67,7 +67,7 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
-                            MouseLeftButtonDown="DisplayTextBlock_MouseLeftButtonDown"
+                            MouseLeftButtonDown="DisplayTextBlockMouseLeftButtonDown"
                             Text="{Binding Name}"
                             TextAlignment="Center"
                             TextWrapping="Wrap">
@@ -88,9 +88,9 @@
                             MinWidth="80"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            KeyDown="EditTextBox_KeyDown"
-                            Loaded="EditTextBox_Loaded"
-                            LostFocus="EditTextBox_LostFocus"
+                            KeyDown="EditTextBoxKeyDown"
+                            Loaded="EditTextBoxLoaded"
+                            LostFocus="EditTextBoxLostFocus"
                             Style="{StaticResource EditTextBoxStyle}"
                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                             TextAlignment="Center"
@@ -129,7 +129,7 @@
                         Height="32"
                         Margin="2"
                         Padding="4"
-                        Click="GridViewButton_Click"
+                        Click="GridViewButtonClick"
                         ToolTip="{helpers:Localized UI_GridView}">
                         <ui:SymbolIcon FontSize="16" Symbol="Grid24" />
                     </ui:Button>
@@ -139,7 +139,7 @@
                         Height="32"
                         Margin="2"
                         Padding="4"
-                        Click="ListViewButton_Click"
+                        Click="ListViewButtonClick"
                         ToolTip="{helpers:Localized UI_ListView}">
                         <ui:SymbolIcon FontSize="16" Symbol="List24" />
                     </ui:Button>
@@ -159,7 +159,7 @@
                         Height="32"
                         Margin="0,0,5,0"
                         Padding="8,4"
-                        Click="SortDropDown_Click"
+                        Click="SortDropDownClick"
                         Content="{Binding ElementName=SortDropDown, Path=Tag, FallbackValue='Name ↑'}"
                         Icon="{ui:SymbolIcon Symbol=ArrowSort24}"
                         ToolTip="{helpers:Localized UI_SortOptions}">
@@ -244,10 +244,10 @@
                 x:Name="BrowserList"
                 MouseDoubleClick="BrowserListMouseDoubleClick"
                 MouseRightButtonUp="BrowserList_MouseRightButtonUp"
-                PreviewKeyDown="BrowserList_PreviewKeyDown"
+                PreviewKeyDown="BrowserListPreviewKeyDown"
                 PreviewMouseDown="BrowserListPreviewMouseDown"
-                PreviewMouseLeftButtonDown="BrowserList_PreviewMouseLeftButtonDown"
-                SelectionChanged="BrowserList_SelectionChanged"
+                PreviewMouseLeftButtonDown="BrowserListPreviewMouseLeftButtonDown"
+                SelectionChanged="BrowserListSelectionChanged"
                 SelectionMode="Extended"
                 Visibility="Visible">
                 <ui:ListView.View>
@@ -267,7 +267,7 @@
                                             x:Name="DisplayTextBlock"
                                             VerticalAlignment="Center"
                                             FontWeight="{Binding IsFolder, Converter={StaticResource BoolToFontWeightConverter}}"
-                                            MouseLeftButtonDown="DisplayTextBlock_MouseLeftButtonDown"
+                                            MouseLeftButtonDown="DisplayTextBlockMouseLeftButtonDown"
                                             Text="{Binding Name}">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -283,9 +283,9 @@
                                         <!--  Edit mode  -->
                                         <TextBox
                                             x:Name="EditTextBox"
-                                            KeyDown="EditTextBox_KeyDown"
-                                            Loaded="EditTextBox_Loaded"
-                                            LostFocus="EditTextBox_LostFocus"
+                                            KeyDown="EditTextBoxKeyDown"
+                                            Loaded="EditTextBoxLoaded"
+                                            LostFocus="EditTextBoxLostFocus"
                                             Style="{StaticResource EditTextBoxStyle}"
                                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                             Visibility="{Binding IsInEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" />
@@ -317,7 +317,7 @@
                 x:Name="GridScrollViewer"
                 Background="Transparent"
                 HorizontalScrollBarVisibility="Disabled"
-                MouseRightButtonUp="GridScrollViewer_MouseRightButtonUp"
+                MouseRightButtonUp="GridScrollViewerMouseRightButtonUp"
                 VerticalScrollBarVisibility="Auto"
                 Visibility="Collapsed">
                 <ItemsControl
@@ -359,7 +359,7 @@
                         Width="100"
                         Margin="0,10,0,0"
                         HorizontalAlignment="Center"
-                        Click="CancelOperationButton_Click"
+                        Click="CancelOperationButtonClick"
                         Content="{helpers:Localized General_Cancel}"
                         Icon="{ui:SymbolIcon Symbol=Dismiss20}"
                         ToolTip="{helpers:Localized UI_CancelOperation}" />

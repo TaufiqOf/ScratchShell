@@ -126,8 +126,8 @@ public partial class BrowserUserControl : UserControl
         BrowserGrid.ItemsSource = Items;
         BrowserList.MouseDoubleClick += BrowserListMouseDoubleClick;
         BrowserList.PreviewMouseDown += BrowserListPreviewMouseDown;
-        BrowserList.SelectionChanged += BrowserList_SelectionChanged;
-        BrowserList.PreviewMouseLeftButtonDown += BrowserList_PreviewMouseLeftButtonDown;
+        BrowserList.SelectionChanged += BrowserListSelectionChanged;
+        BrowserList.PreviewMouseLeftButtonDown += BrowserListPreviewMouseLeftButtonDown;
 
         // Add handler for BrowserGrid PreviewMouseDown with handledEventsToo = true
         BrowserGrid.AddHandler(
@@ -147,10 +147,10 @@ public partial class BrowserUserControl : UserControl
         LocalizationManager.LanguageChanged += OnLanguageChanged;
         
         // Subscribe to Unloaded event for cleanup
-        this.Unloaded += BrowserUserControl_Unloaded;
+        this.Unloaded += BrowserUserControlUnloaded;
     }
     
-    private void BrowserUserControl_Unloaded(object sender, RoutedEventArgs e)
+    private void BrowserUserControlUnloaded(object sender, RoutedEventArgs e)
     {
         // Unsubscribe from language change events
         LocalizationManager.LanguageChanged -= OnLanguageChanged;
@@ -199,12 +199,12 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void ListViewButton_Click(object sender, RoutedEventArgs e)
+    private void ListViewButtonClick(object sender, RoutedEventArgs e)
     {
         CurrentViewMode = BrowserViewMode.List;
     }
 
-    private void GridViewButton_Click(object sender, RoutedEventArgs e)
+    private void GridViewButtonClick(object sender, RoutedEventArgs e)
     {
         CurrentViewMode = BrowserViewMode.Grid;
     }
@@ -213,7 +213,7 @@ public partial class BrowserUserControl : UserControl
 
     #region Grid View Event Handlers
 
-    private void GridItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void GridItemMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is Border border && border.DataContext is BrowserItem item)
         {
@@ -249,7 +249,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void GridItem_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    private void GridItemMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is Border border && border.DataContext is BrowserItem item)
         {
@@ -447,13 +447,13 @@ public partial class BrowserUserControl : UserControl
     #endregion Grid View Event Handlers
 
     // Event handlers for inline editing
-    private void DisplayTextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void DisplayTextBlockMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         // Only allow rename on slow double click or F2, not single click
         // This will be handled by F2 key or context menu
     }
 
-    private void EditTextBox_Loaded(object sender, RoutedEventArgs e)
+    private void EditTextBoxLoaded(object sender, RoutedEventArgs e)
     {
         if (sender is TextBox textBox)
         {
@@ -462,7 +462,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void EditTextBox_LostFocus(object sender, RoutedEventArgs e)
+    private void EditTextBoxLostFocus(object sender, RoutedEventArgs e)
     {
         if (sender is TextBox textBox && textBox.DataContext is BrowserItem item)
         {
@@ -470,7 +470,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
+    private void EditTextBoxKeyDown(object sender, KeyEventArgs e)
     {
         if (sender is TextBox textBox && textBox.DataContext is BrowserItem item)
         {
@@ -489,7 +489,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void BrowserList_PreviewKeyDown(object sender, KeyEventArgs e)
+    private void BrowserListPreviewKeyDown(object sender, KeyEventArgs e)
     {
         switch (e.Key)
         {
@@ -1037,7 +1037,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void BrowserList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void BrowserListSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_currentViewMode == BrowserViewMode.List)
         {
@@ -1314,7 +1314,7 @@ public partial class BrowserUserControl : UserControl
     /// <summary>
     /// Event handler for the cancel operation button
     /// </summary>
-    private void CancelOperationButton_Click(object sender, RoutedEventArgs e)
+    private void CancelOperationButtonClick(object sender, RoutedEventArgs e)
     {
         CancelOperationButton.IsEnabled = false;
         ProgressText.Text = LocalizationManager.GetString("Operation_Cancelling") ?? "Cancelling operation...";
@@ -1327,12 +1327,12 @@ public partial class BrowserUserControl : UserControl
 
     #region Drag and Drop Event Handlers
 
-    private void BrowserUserControl_DragEnter(object sender, DragEventArgs e)
+    private void BrowserUserControlDragEnter(object sender, DragEventArgs e)
     {
         HandleDragEvent(e);
     }
 
-    private void BrowserUserControl_DragOver(object sender, DragEventArgs e)
+    private void BrowserUserControlDragOver(object sender, DragEventArgs e)
     {
         HandleDragEvent(e);
     }
@@ -1365,14 +1365,14 @@ public partial class BrowserUserControl : UserControl
         e.Handled = true;
     }
 
-    private void BrowserUserControl_DragLeave(object sender, DragEventArgs e)
+    private void BrowserUserControlDragLeave(object sender, DragEventArgs e)
     {
         // Hide the drag drop overlay when leaving the control
         ShowDragDropOverlay(false);
         e.Handled = true;
     }
 
-    private void BrowserUserControl_Drop(object sender, DragEventArgs e)
+    private void BrowserUserControlDrop(object sender, DragEventArgs e)
     {
         try
         {
@@ -1460,7 +1460,7 @@ public partial class BrowserUserControl : UserControl
     #endregion Drag and Drop Event Handlers
 
     // Sorting functionality for ListView column headers
-    private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+    private void GridViewColumnHeaderClick(object sender, RoutedEventArgs e)
     {
         if (e.OriginalSource is GridViewColumnHeader header && header.Column != null)
         {
@@ -1489,7 +1489,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void BrowserList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void BrowserListPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var depObj = (DependencyObject)e.OriginalSource;
         while (depObj != null && depObj is not GridViewColumnHeader)
@@ -1527,7 +1527,7 @@ public partial class BrowserUserControl : UserControl
     /// <summary>
     /// Event handler for sort dropdown button click
     /// </summary>
-    private void SortDropDown_Click(object sender, RoutedEventArgs e)
+    private void SortDropDownClick(object sender, RoutedEventArgs e)
     {
         if (sender is Wpf.Ui.Controls.Button button && button.ContextMenu != null)
         {
@@ -1536,7 +1536,7 @@ public partial class BrowserUserControl : UserControl
         }
     }
 
-    private void GridScrollViewer_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    private void GridScrollViewerMouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (_currentViewMode != BrowserViewMode.Grid) return;
         // Determine if click was on an item by hit testing BrowserGrid children
