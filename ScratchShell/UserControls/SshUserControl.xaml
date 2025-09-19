@@ -102,7 +102,7 @@
                     Grid.Column="6"
                     Margin="2"
                     VerticalAlignment="Stretch"
-                    Click="FullScreenButton_Click"
+                    Click="FullScreenButtonClick"
                     FontSize="20"
                     Icon="{ui:SymbolIcon Symbol=FullScreenMaximize20}"
                     ToolTip="{helpers:Localized Tooltip_ToggleFullScreenTerminal}" />

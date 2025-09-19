@@ -102,7 +102,6 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         this.Dispose();
     }
 
-
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
         // Currently no dynamic text to update beyond localization of dialogs
@@ -367,7 +366,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var pixelWidth = (uint)Terminal.Width;
             var pixelHeight = (uint)Terminal.Height;
             _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
-
+            TerminalSizeChanged(Terminal, TerminalContentControl.RenderSize);
             _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
 
             StartReadLoop();
@@ -734,21 +733,37 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         await Task.CompletedTask;
     }
 
-    private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+    private async void FullScreenButtonClick(object sender, RoutedEventArgs e)
     {
         StackPanel menuButton = GetMenu();
 
         FullScreenButton.IsEnabled = false;
         TerminalContentControl.Content = null;
         _FullScreen = new FullScreenWindow(_contentDialogService, Terminal, _server.Name, menuButton);
+        _FullScreen.OnSizeChanged += FullScreenOnSizeChanged;
         _FullScreen.Show();
-        _FullScreen.Closed += (s, args) =>
-        {
-            _FullScreen.RootContentDialog.Content = null;
-            TerminalContentControl.Content = Terminal;
-            _FullScreen = null;
-            FullScreenButton.IsEnabled = true;
-        };
+        _FullScreen.Closed += OnFullScreenClosed;
+
+    }
+
+    private async void FullScreenOnSizeChanged(Size obj)
+    {
+        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+        TerminalSizeChanged(Terminal, obj);
+        _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
+    }
+
+    private async void OnFullScreenClosed(object? sender, EventArgs e)
+    {
+        _FullScreen.RootContentDialog.Content = null;
+        TerminalContentControl.Content = Terminal;
+        _FullScreen = null;
+
+        FullScreenButton.IsEnabled = true;
+        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+        TerminalSizeChanged(Terminal, TerminalContentControl.RenderSize);
+        _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
+
     }
 
     private StackPanel GetMenu()

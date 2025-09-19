@@ -10,6 +10,7 @@ namespace ScratchShell.Views.Windows;
 public partial class FullScreenWindow : FluentWindow
 {
     private IContentDialogService _contentDialogService;
+    public event Action<Size> OnSizeChanged;
 
     public FullScreenWindow(IContentDialogService contentDialogService)
     {
@@ -34,5 +35,10 @@ public partial class FullScreenWindow : FluentWindow
         var rootContentDialog = ((MainWindow)Application.Current.MainWindow).RootContentDialog;
         _contentDialogService.SetDialogHost(rootContentDialog);
         base.OnClosing(e);
+    }
+
+    protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+    {
+        OnSizeChanged.Invoke(sizeInfo.NewSize);
     }
 }
