@@ -523,7 +523,13 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private void SetupBrowserEvents()
     {
+        Browser.OnProgress += BrowserOnProgress;
         _eventHandler.SetupBrowserEvents(Browser, _pathAdapter, _navigationManager, _fileOperationHandler);
+    }
+
+    private void BrowserOnProgress(bool obj)
+    {
+        SetUIConnectionState(!obj);
     }
 
     public void Dispose()

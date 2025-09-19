@@ -22,6 +22,8 @@ public partial class BrowserUserControl : UserControl
 {
     public ObservableCollection<BrowserItem> Items { get; private set; } = new ObservableCollection<BrowserItem>();
 
+    public event Action<bool>? OnProgress;
+
     // Delegate events
     public event Action<BrowserItem>? CopyRequested;
 
@@ -1275,6 +1277,8 @@ public partial class BrowserUserControl : UserControl
     /// <param name="total">Total number of items (optional)</param>
     public void ShowProgress(bool show, string message = "", int? current = null, int? total = null)
     {
+        OnProgress?.Invoke(show);
+        ToolBar.IsEnabled = !show;
         if (show)
         {
             // Use default localized message if none provided
