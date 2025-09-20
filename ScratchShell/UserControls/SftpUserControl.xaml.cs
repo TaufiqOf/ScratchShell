@@ -21,6 +21,7 @@ namespace ScratchShell.UserControls;
 /// </summary>
 public partial class SftpUserControl : UserControl, IWorkspaceControl
 {
+    private readonly TabItemViewModel _currentTab;
     private readonly ServerViewModel _server;
     private readonly IContentDialogService _contentDialogService;
     private bool _isInitialized = false;
@@ -46,6 +47,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     public SftpUserControl(TabItemViewModel tab, IContentDialogService contentDialogService)
     {
         InitializeComponent();
+        _currentTab = tab;
         _server = tab.Server;
         tab.Removed += TabRemoved;
         _contentDialogService = contentDialogService;
@@ -67,7 +69,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         SetupEventHandlers();
         SetupBrowserEvents();
         SetupConnectionMonitoring();
-        
+
         // Subscribe to language changes
         LocalizationManager.LanguageChanged += OnLanguageChanged;
     }
@@ -198,11 +200,11 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         {
             _logger.LogError(LocalizationManager.GetString("Connection_ReconnectionFailed"), ex);
             Browser.ShowProgress(false);
-            
+
             // Show error and ask user what to do next
             var errorDialog = new ReconnectionDialog(_contentDialogService, _server, string.Format(LocalizationManager.GetString("Connection_ReconnectionFailed"), ex.Message));
             var result = await errorDialog.ShowAsync();
-            
+
             if (result == ContentDialogResult.Primary)
             {
                 // Try reconnecting again
@@ -221,13 +223,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         try
         {
             _logger.LogInfo(LocalizationManager.GetString("Operation_ClosingCurrentTab"));
-            
-            // Find and close the current tab
-            var currentTab = SessionService.SelectedSession;
-            if (currentTab != null && currentTab.Content == this)
-            {
-                await Task.Run(() => SessionService.RemoveSession(currentTab));
-            }
+            SessionService.RemoveSession(_currentTab);
         }
         catch (Exception ex)
         {
@@ -270,39 +266,39 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_AttemptingTo"), _server.Name, _server.Host, _server.Port));
 
             await ExecuteWithTimeoutDetection(async () => await _connectionManager.ConnectAsync(_server));
-            
+
             // Update loading message for initialization
             Browser.ShowProgress(true, LocalizationManager.GetString("Connection_InitializingFileOps"));
             _fileOperationHandler.Initialize(_connectionManager.FileOperationService, _navigationManager);
             _connectionManager.FileOperationService.ProgressChanged += FileOperationServiceProgressChanged;
             SubscribeFileOperationClipboardEvents();
-            
+
             // Update loading message for navigation setup
             Browser.ShowProgress(true, LocalizationManager.GetString("Connection_SettingUpNavigation"));
             _navigationManager.Initialize(_connectionManager.Client, _pathAdapter, GetNavigationButtons());
-            
+
             // Update loading message for directory loading
             Browser.ShowProgress(true, LocalizationManager.GetString("Connection_LoadingHomeDirectory"));
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.GoToFolderAsync("~"));
-            
+
             // Connection successful - enable UI and hide progress
             EnableUIAfterConnection();
             Browser.ShowProgress(false);
-            
+
             // Start connection monitoring
             _connectionMonitorTimer?.Start();
-            
+
             _isInitialized = true;
             _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_SuccessfullyConnected"), _server.Name));
         }
         catch (Exception ex)
         {
             _logger.LogError(LocalizationManager.GetString("Connection_ErrorDuringControlLoad") ?? "Error during control load", ex);
-            
+
             // Show error state in browser
             Browser.ShowProgress(false);
             Browser.Clear();
-            
+
             // Add an error message item to the browser
             var errorItem = new BrowserItem
             {
@@ -313,10 +309,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
                 Size = 0
             };
             Browser.AddItem(errorItem);
-            
+
             // Update path to show error
             _pathAdapter.Text = string.Format(LocalizationManager.GetString("Connection_FailedTo"), _server.Host, _server.Port);
-            
+
             // Keep UI disabled on error
             SetUIConnectionState(false);
             Progress.IsIndeterminate = false;
@@ -397,25 +393,25 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
 
     private async void RefreshButtonClick(object sender, RoutedEventArgs e)
     {
-        await _eventHandler.SafeExecuteAsync(async () => 
+        await _eventHandler.SafeExecuteAsync(async () =>
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.RefreshCurrentDirectoryAsync()));
     }
 
     private async void BackButtonClick(object sender, RoutedEventArgs e)
     {
-        await _eventHandler.SafeExecuteAsync(async () => 
+        await _eventHandler.SafeExecuteAsync(async () =>
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateBackAsync()));
     }
 
     private async void ForwardButtonClick(object sender, RoutedEventArgs e)
     {
-        await _eventHandler.SafeExecuteAsync(async () => 
+        await _eventHandler.SafeExecuteAsync(async () =>
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateForwardAsync()));
     }
 
     private async void UpButtonClick(object sender, RoutedEventArgs e)
     {
-        await _eventHandler.SafeExecuteAsync(async () => 
+        await _eventHandler.SafeExecuteAsync(async () =>
             await ExecuteWithTimeoutDetection(async () => await _navigationManager.NavigateUpAsync()));
     }
 
@@ -477,13 +473,13 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         // Show browser immediately with loading state
         Browser.ShowProgress(true, string.Format(LocalizationManager.GetString("Connection_ConnectingTo"), _server.Name));
-        
+
         // Disable UI buttons during connection
         SetUIConnectionState(false);
-        
+
         // Set path to show server info
         _pathAdapter.Text = string.Format(LocalizationManager.GetString("Connection_ConnectingTo"), $"{_server.Host}:{_server.Port}");
-        
+
         _logger.LogInfo(string.Format(LocalizationManager.GetString("Connection_AttemptingTo"), _server.Name, _server.Host, _server.Port));
     }
 
@@ -498,7 +494,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
         OptionsButton.IsEnabled = isConnected;
         FullScreenButton.IsEnabled = isConnected;
         PathAddressBar.IsEnabled = isConnected;
-        
+
         // Update progress bar
         Progress.IsIndeterminate = !isConnected;
     }
@@ -507,7 +503,7 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
     {
         this.Loaded += async (s, e) => await LoadControl();
         this.KeyDown += (s, e) => _eventHandler.HandleKeyDown(e, _navigationManager, _fileOperationHandler);
-        
+
         // Setup breadcrumb address bar event
         PathAddressBar.PathChanged += async (s, e) =>
         {
@@ -541,10 +537,10 @@ public partial class SftpUserControl : UserControl, IWorkspaceControl
             {
                 svc.ClipboardStateChanged -= FileOperationClipboardStateChanged;
             }
-            
+
             // Unsubscribe from language changes
             LocalizationManager.LanguageChanged -= OnLanguageChanged;
-            
+
             _logger?.LogInfo(LocalizationManager.GetString("Operation_StartingCleanup"));
             _connectionMonitorTimer?.Stop();
             _connectionMonitorTimer = null;

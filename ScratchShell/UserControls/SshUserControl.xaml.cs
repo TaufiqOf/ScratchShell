@@ -27,6 +27,7 @@ namespace ScratchShell.UserControls;
 public partial class SshUserControl : UserControl, IWorkspaceControl
 {
     private ServerViewModel _server;
+    private TabItemViewModel _currentTab;
     private readonly IContentDialogService _contentDialogService;
     private SshClient? _sshClient;
     private ShellStream _shellStream;
@@ -63,6 +64,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             TerminalContentControl.ContextMenu = null; // prevent double visual parent issues
         }
         _server = tab.Server;
+        _currentTab = tab;
         tab.Removed += TabRemoved;
         _contentDialogService = contentDialogService;
         ThemeControl.ContentDialogService = contentDialogService;
@@ -236,11 +238,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
     {
         try
         {
-            var currentTab = SessionService.SelectedSession;
-            if (currentTab != null && currentTab.Content == this)
-            {
-                await Task.Run(() => SessionService.RemoveSession(currentTab));
-            }
+            SessionService.RemoveSession(_currentTab);
         }
         catch (Exception ex)
         {
