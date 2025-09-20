@@ -9,6 +9,7 @@ using MenuItem = Wpf.Ui.Controls.MenuItem;
 using TextBox = System.Windows.Controls.TextBox;
 using System.IO;
 using ScratchShell.Services;
+using System.Windows.Controls.Primitives;
 
 namespace ScratchShell.UserControls.BrowserControl;
 
@@ -323,7 +324,12 @@ public partial class BrowserUserControl : UserControl
                 SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
             }
 
+            // Place the context menu exactly at the mouse position
             contextMenu.PlacementTarget = BrowserGrid;
+            contextMenu.Placement = PlacementMode.RelativePoint;
+            var pt = e.GetPosition(BrowserGrid);
+            contextMenu.HorizontalOffset = pt.X;
+            contextMenu.VerticalOffset = pt.Y;
             contextMenu.IsOpen = true;
             e.Handled = true;
         }
@@ -374,6 +380,10 @@ public partial class BrowserUserControl : UserControl
             if (hitTest?.VisualHit == BrowserGrid)
             {
                 emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+                emptySpaceContextMenu.Placement = PlacementMode.RelativePoint;
+                var pt = e.GetPosition(BrowserGrid);
+                emptySpaceContextMenu.HorizontalOffset = pt.X;
+                emptySpaceContextMenu.VerticalOffset = pt.Y;
                 emptySpaceContextMenu.IsOpen = true;
                 e.Handled = true;
             }
@@ -393,6 +403,10 @@ public partial class BrowserUserControl : UserControl
                     if (target == null)
                     {
                         emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+                        emptySpaceContextMenu.Placement = PlacementMode.RelativePoint;
+                        var pt = e.GetPosition(BrowserGrid);
+                        emptySpaceContextMenu.HorizontalOffset = pt.X;
+                        emptySpaceContextMenu.VerticalOffset = pt.Y;
                         emptySpaceContextMenu.IsOpen = true;
                         e.Handled = true;
                     }
@@ -741,7 +755,13 @@ public partial class BrowserUserControl : UserControl
                     SetMenuVisibility(LocalizationManager.GetString("General_Delete"), true);
                 }
 
-                e.Handled = true;
+                // Place the context menu exactly at the mouse position
+                contextMenu.PlacementTarget = BrowserList;
+                contextMenu.Placement = PlacementMode.RelativePoint;
+                var pt = e.GetPosition(BrowserList);
+                contextMenu.HorizontalOffset = pt.X;
+                contextMenu.VerticalOffset = pt.Y;
+                contextMenu.IsOpen = true;
             }
         }
     }
@@ -757,6 +777,7 @@ public partial class BrowserUserControl : UserControl
     private void SetupContextMenu()
     {
         contextMenu = new ContextMenu();
+        contextMenu.Placement = PlacementMode.RelativePoint; // default placement for precise positioning
         AddMenuItem(LocalizationManager.GetString("ContextMenu_Cut"), (_, __) => RaiseContextEvent(CutRequested), SymbolRegular.Cut24);
         AddMenuItem(LocalizationManager.GetString("ContextMenu_Copy"), (_, __) => RaiseContextEvent(CopyRequested), SymbolRegular.Copy24);
         AddMenuItem(LocalizationManager.GetString("ContextMenu_Paste"), (_, __) => RaiseContextEvent(PasteRequested), SymbolRegular.ClipboardPaste24);
@@ -779,6 +800,7 @@ public partial class BrowserUserControl : UserControl
     private void SetupEmptySpaceContextMenu()
     {
         emptySpaceContextMenu = new ContextMenu();
+        emptySpaceContextMenu.Placement = PlacementMode.RelativePoint; // default placement for precise positioning
         AddEmptySpaceMenuItem(LocalizationManager.GetString("ContextMenu_Paste"), (_, __) => EmptySpacePasteRequested?.Invoke(), SymbolRegular.ClipboardPaste24);
         AddEmptySpaceMenuItem(LocalizationManager.GetString("ContextMenu_Upload"), (_, __) => EmptySpaceUploadRequested?.Invoke(), SymbolRegular.ArrowUpload24);
 
@@ -877,12 +899,20 @@ public partial class BrowserUserControl : UserControl
                 if (item.Name != "..")
                 {
                     contextMenu.PlacementTarget = BrowserList;
+                    contextMenu.Placement = PlacementMode.RelativePoint;
+                    var pt = e.GetPosition(BrowserList);
+                    contextMenu.HorizontalOffset = pt.X;
+                    contextMenu.VerticalOffset = pt.Y;
                     contextMenu.IsOpen = true;
                 }
             }
             else
             {
                 emptySpaceContextMenu.PlacementTarget = BrowserList;
+                emptySpaceContextMenu.Placement = PlacementMode.RelativePoint;
+                var pt = e.GetPosition(BrowserList);
+                emptySpaceContextMenu.HorizontalOffset = pt.X;
+                emptySpaceContextMenu.VerticalOffset = pt.Y;
                 emptySpaceContextMenu.IsOpen = true;
             }
         }
@@ -1545,6 +1575,9 @@ public partial class BrowserUserControl : UserControl
         if (hit == null)
         {
             emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+            emptySpaceContextMenu.Placement = PlacementMode.RelativePoint;
+            emptySpaceContextMenu.HorizontalOffset = pos.X;
+            emptySpaceContextMenu.VerticalOffset = pos.Y;
             emptySpaceContextMenu.IsOpen = true;
             e.Handled = true;
             return;
@@ -1563,6 +1596,9 @@ public partial class BrowserUserControl : UserControl
         if (!onItem)
         {
             emptySpaceContextMenu.PlacementTarget = BrowserGrid;
+            emptySpaceContextMenu.Placement = PlacementMode.RelativePoint;
+            emptySpaceContextMenu.HorizontalOffset = pos.X;
+            emptySpaceContextMenu.VerticalOffset = pos.Y;
             emptySpaceContextMenu.IsOpen = true;
             e.Handled = true;
         }

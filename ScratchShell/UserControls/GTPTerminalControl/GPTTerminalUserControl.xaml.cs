@@ -99,8 +99,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public GPTTerminalUserControl()
     {
         InitializeComponent();
-        Loaded += GPTTerminalUserControl_Loaded;
-        Unloaded += GPTTerminalUserControl_Unloaded;
+        Loaded += GPTTerminalUserControlLoaded;
+        Unloaded += GPTTerminalUserControlUnloaded;
 
         //GotFocus += (s, e) => { _isFocused = true; RedrawTerminal(); };
         //LostFocus += (s, e) => { _isFocused = false; RedrawTerminal(); };
@@ -128,7 +128,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    private void GPTTerminalUserControl_Loaded(object sender, RoutedEventArgs e)
+    private void GPTTerminalUserControlLoaded(object sender, RoutedEventArgs e)
     {
         Focus();
         Focusable = true;
@@ -144,19 +144,19 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         UpdateTerminalLayoutAndSize();
         // Track scroll to reposition autocomplete popup
         if (TerminalScrollViewer != null)
-            TerminalScrollViewer.ScrollChanged += TerminalScrollViewer_ScrollChanged;
+            TerminalScrollViewer.ScrollChanged += TerminalScrollViewerScrollChanged;
     }
 
-    private void GPTTerminalUserControl_Unloaded(object sender, RoutedEventArgs e)
+    private void GPTTerminalUserControlUnloaded(object sender, RoutedEventArgs e)
     {
         CleanupHighlightAnimations();
         SizeChanged -= OnControlSizeChanged;
         _resizeRedrawTimer.Stop();
         if (TerminalScrollViewer != null)
-            TerminalScrollViewer.ScrollChanged -= TerminalScrollViewer_ScrollChanged;
+            TerminalScrollViewer.ScrollChanged -= TerminalScrollViewerScrollChanged;
     }
 
-    private void TerminalScrollViewer_ScrollChanged(object? sender, ScrollChangedEventArgs e)
+    private void TerminalScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
         if (_isAutoCompleteVisible)
             UpdateAutoCompletePopupPosition();
@@ -528,7 +528,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         return text;
     }
 
-    private void TerminalCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+    private void TerminalCanvasMouseDown(object sender, MouseButtonEventArgs e)
     {
         TerminalCanvas.Focus();
         _isFocused = true;
@@ -578,7 +578,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    private void TerminalCanvas_MouseMove(object sender, MouseEventArgs e)
+    private void TerminalCanvasMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton == MouseButtonState.Pressed)
         {
@@ -598,7 +598,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    private void TerminalCanvas_MouseUp(object sender, MouseButtonEventArgs e)
+    private void TerminalCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (_isSelecting && e.ChangedButton == MouseButton.Left)
         {
@@ -725,7 +725,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         // Update editable end tracking
         _currentInputEndCol = Math.Max(_currentInputEndCol, buffer.X);
 
-        if (!_fullRedrawPending) _dirtyLines.Add(row);
+        if (!_fullRedrawPending)
+        {
+            _dirtyLines.Add(row);
+        }
         RedrawTerminal(onlyRow: row);
     }
 
@@ -925,7 +928,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     }
 
     // XAML references MouseDown="TerminalControl_MouseDown" – provide wrapper
-    private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e) => TerminalCanvas_MouseDown(sender, e);
+    private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e) => TerminalCanvasMouseDown(sender, e);
 
     private void RedrawTerminal(int? onlyRow = null)
     {
@@ -973,8 +976,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             foreach (var row in linesToDraw)
             {
                 if (row < 0 || row >= buffer.Lines.Length) continue;
-                int visualRow = row - _renderStartRow; if (visualRow < 0 || visualRow >= renderRowCount) continue;
-                int destY = visualRow * linePixelHeight; if (destY + linePixelHeight > _surface.PixelHeight) continue;
+                int visualRow = row - _renderStartRow; 
+                if (visualRow < 0 || visualRow >= renderRowCount) continue;
+                int destY = visualRow * linePixelHeight; 
+                if (destY + linePixelHeight > _surface?.PixelHeight) continue;
                 var line = buffer.Lines[row];
                 var dv = new DrawingVisual();
                 using (var dc = dv.RenderOpen())
@@ -1041,7 +1046,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         bool again;
         lock (_redrawLock)
         {
-            _isRedrawing = false; again = _redrawRequested; _redrawRequested = false;
+            _isRedrawing = false; 
+            again = _redrawRequested; 
+            _redrawRequested = false;
         }
         if (again) RedrawTerminal();
     }
@@ -1094,7 +1101,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
     public void PasteText(string text) => PasteAtInputArea(text);
-    public void PasteFromClipboard() { if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText()); }
+    public void PasteFromClipboard() 
+    { 
+        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText()); 
+    }
     public void SelectAll()
     {
         if (_terminal == null) return; var buffer = _terminal.Buffer; if (buffer.Lines.Length == 0) return;
@@ -1260,4 +1270,4 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         public string Description { get; set; } = string.Empty;
         public CompletionType Type { get; set; }
     }
-} // end class GPTTerminalUserControl
+}
