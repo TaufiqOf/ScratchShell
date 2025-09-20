@@ -5,37 +5,36 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    mc:Ignorable="d"
-    d:DesignHeight="32" d:DesignWidth="500">
-    
+    d:DesignHeight="32"
+    d:DesignWidth="500"
+    mc:Ignorable="d">
+
     <UserControl.Resources>
-        <!-- Style for breadcrumb buttons -->
+        <!--  Style for breadcrumb buttons  -->
         <Style x:Key="BreadcrumbButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border 
+                        <Border
+                            Padding="{TemplateBinding Padding}"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="2"
-                            Padding="{TemplateBinding Padding}">
-                            <ContentPresenter 
-                                HorizontalAlignment="Center" 
-                                VerticalAlignment="Center"/>
+                            CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}"/>
+                                <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}"/>
+                                <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -43,14 +42,14 @@
             </Setter>
         </Style>
 
-        <!-- Style for separator arrows -->
+        <!--  Style for separator arrows  -->
         <Style x:Key="SeparatorStyle" TargetType="TextBlock">
-            <Setter Property="Text" Value="&#xE76C;"/>
-            <Setter Property="FontFamily" Value="Segoe Fluent Icons"/>
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Setter Property="Text" Value="&#xE76C;" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
         </Style>
     </UserControl.Resources>
 
@@ -59,34 +58,35 @@
         BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
         BorderThickness="1"
         CornerRadius="4">
-        
+
         <Grid>
-            <!-- Breadcrumb mode -->
+            <!--  Breadcrumb mode  -->
             <ScrollViewer
                 x:Name="BreadcrumbScrollViewer"
-                HorizontalScrollBarVisibility="Auto"
-                VerticalScrollBarVisibility="Disabled"
                 CanContentScroll="True"
-                PanningMode="HorizontalOnly">
-                
-                <StackPanel 
-                    x:Name="BreadcrumbPanel" 
-                    Orientation="Horizontal"
+                HorizontalScrollBarVisibility="Auto"
+                PanningMode="HorizontalOnly"
+                PreviewMouseLeftButtonDown="BreadcrumbAddressBar_MouseLeftButtonDown"
+                VerticalScrollBarVisibility="Disabled">
+
+                <StackPanel
+                    x:Name="BreadcrumbPanel"
+                    Margin="4,2"
                     VerticalAlignment="Center"
-                    Margin="4,2"/>
+                    Orientation="Horizontal" />
             </ScrollViewer>
 
-            <!-- Text input mode -->
+            <!--  Text input mode  -->
             <ui:TextBox
                 x:Name="PathTextBox"
-                Visibility="Collapsed"
-                BorderThickness="0"
-                Background="Transparent"
                 Padding="8,4"
+                Background="Transparent"
+                BorderThickness="0"
                 FontSize="12"
                 KeyDown="PathTextBox_KeyDown"
                 LostFocus="PathTextBox_LostFocus"
-                PlaceholderText="Enter path..."/>
+                PlaceholderText="Enter path..."
+                Visibility="Collapsed" />
         </Grid>
     </Border>
 </UserControl>
