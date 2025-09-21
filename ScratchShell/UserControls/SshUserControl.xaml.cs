@@ -363,7 +363,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             var rows = (uint)Math.Max(1, Terminal.Height / 16);
             var pixelWidth = (uint)Terminal.Width;
             var pixelHeight = (uint)Terminal.Height;
-            _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+            _shellStream = await Task.Run(() => _sshClient.CreateShellStream("xterm-256color", 80, 24, 0, 0, 4096));
             TerminalSizeChanged(Terminal, TerminalContentControl.RenderSize);
             _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
 
@@ -746,7 +746,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
 
     private async void FullScreenOnSizeChanged(Size obj)
     {
-        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("xterm-256color", 80, 24, 0, 0, 4096));
         TerminalSizeChanged(Terminal, obj);
         _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
     }
@@ -758,7 +758,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         _FullScreen = null;
 
         FullScreenButton.IsEnabled = true;
-        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("vt100", 80, 24, 0, 0, 4096));
+        _shellStream = await Task.Run(() => _sshClient.CreateShellStream("xterm-256color", 80, 24, 0, 0, 4096));
         TerminalSizeChanged(Terminal, TerminalContentControl.RenderSize);
         _autoCompleteService = new SshAutoCompleteService(_sshClient, _pathCompletionService);
 

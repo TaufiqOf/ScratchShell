@@ -253,6 +253,23 @@
                                 <ComboBoxItem Content="{helpers:Localized Theme_SelectionColor}" Tag="Selection" />
                                 <ComboBoxItem Content="{helpers:Localized Theme_CursorColor}" Tag="Cursor" />
                                 <ComboBoxItem Content="{helpers:Localized Theme_CopyHighlightColor}" Tag="CopySelection" />
+                                <Separator />
+                                <ComboBoxItem Content="ANSI Black" Tag="Ansi0" />
+                                <ComboBoxItem Content="ANSI Dark Red" Tag="Ansi1" />
+                                <ComboBoxItem Content="ANSI Dark Green" Tag="Ansi2" />
+                                <ComboBoxItem Content="ANSI Dark Yellow" Tag="Ansi3" />
+                                <ComboBoxItem Content="ANSI Dark Blue" Tag="Ansi4" />
+                                <ComboBoxItem Content="ANSI Dark Magenta" Tag="Ansi5" />
+                                <ComboBoxItem Content="ANSI Dark Cyan" Tag="Ansi6" />
+                                <ComboBoxItem Content="ANSI Light Gray" Tag="Ansi7" />
+                                <ComboBoxItem Content="ANSI Dark Gray" Tag="Ansi8" />
+                                <ComboBoxItem Content="ANSI Red" Tag="Ansi9" />
+                                <ComboBoxItem Content="ANSI Green" Tag="Ansi10" />
+                                <ComboBoxItem Content="ANSI Yellow" Tag="Ansi11" />
+                                <ComboBoxItem Content="ANSI Blue" Tag="Ansi12" />
+                                <ComboBoxItem Content="ANSI Magenta" Tag="Ansi13" />
+                                <ComboBoxItem Content="ANSI Cyan" Tag="Ansi14" />
+                                <ComboBoxItem Content="ANSI White" Tag="Ansi15" />
                             </ComboBox>
                         </Grid>
 
@@ -383,6 +400,14 @@
                             </StackPanel>
                         </Grid>
 
+                        <!--  ANSI 16-color Palette Editor  -->
+                        <TextBlock
+                            Margin="0,12,0,8"
+                            FontSize="12"
+                            FontWeight="Medium"
+                            Text="ANSI 16-color Palette" />
+                        <WrapPanel x:Name="AnsiPalettePanel" />
+
                         <!--  Color Picker  -->
                         <colorPicker:StandardColorPicker
                             x:Name="MainColorPicker"
@@ -392,6 +417,7 @@
                             HorizontalAlignment="Center"
                             ColorChanged="MainColorPicker_ColorChanged"
                             ShowAlpha="False" />
+
 
                         <!--  Terminal Color Presets  -->
                         <TextBlock

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -65,7 +67,9 @@ public class ThemeManager : INotifyPropertyChanged
                 Background = Brushes.Black,
                 SelectionColor = Color.FromArgb(80, 0, 120, 255),
                 CursorColor = Brushes.LightGray,
-                CopySelectionColor = Color.FromArgb(180, 144, 238, 144)
+                CopySelectionColor = Color.FromArgb(180, 144, 238, 144),
+                // ensure list instance
+                AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
             }
         });
 
@@ -82,7 +86,9 @@ public class ThemeManager : INotifyPropertyChanged
                 Background = new SolidColorBrush(Color.FromRgb(40, 44, 52)),
                 SelectionColor = Color.FromArgb(80, 98, 114, 164),
                 CursorColor = new SolidColorBrush(Color.FromRgb(248, 248, 242)),
-                CopySelectionColor = Color.FromArgb(180, 87, 227, 137)
+                CopySelectionColor = Color.FromArgb(180, 87, 227, 137),
+                AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
+
             }
         });
 
@@ -99,7 +105,8 @@ public class ThemeManager : INotifyPropertyChanged
                 Background = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
                 SelectionColor = Color.FromArgb(80, 0, 120, 215),
                 CursorColor = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-                CopySelectionColor = Color.FromArgb(180, 0, 150, 0)
+                CopySelectionColor = Color.FromArgb(180, 0, 150, 0),
+                AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
             }
         });
 
@@ -116,7 +123,8 @@ public class ThemeManager : INotifyPropertyChanged
                 Background = new SolidColorBrush(Color.FromRgb(39, 40, 34)),
                 SelectionColor = Color.FromArgb(80, 73, 72, 62),
                 CursorColor = new SolidColorBrush(Color.FromRgb(249, 38, 114)),
-                CopySelectionColor = Color.FromArgb(180, 102, 217, 239)
+                CopySelectionColor = Color.FromArgb(180, 102, 217, 239),
+                AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
             }
         });
 
@@ -276,6 +284,8 @@ public class ThemeManager : INotifyPropertyChanged
             terminal.Theme.SelectionColor = template.Theme.SelectionColor;
             terminal.Theme.CursorColor = template.Theme.CursorColor;
             terminal.Theme.CopySelectionColor = template.Theme.CopySelectionColor;
+            // Copy ANSI palette from template into terminal instance
+            terminal.Theme.AnsiForegroundPalette = template.Theme.AnsiForegroundPalette?.ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList();
 
             terminal.RefreshTheme();
             SetCurrentTheme(template);
@@ -382,7 +392,9 @@ public class ThemeManager : INotifyPropertyChanged
             BackgroundColor = ColorToHex((template.Theme.Background as SolidColorBrush)?.Color ?? Colors.Black),
             SelectionColor = ColorToHex(template.Theme.SelectionColor),
             CursorColor = ColorToHex((template.Theme.CursorColor as SolidColorBrush)?.Color ?? Colors.White),
-            CopySelectionColor = ColorToHex(template.Theme.CopySelectionColor)
+            CopySelectionColor = ColorToHex(template.Theme.CopySelectionColor),
+            // ANSI palette
+            AnsiForegroundPalette = template.Theme.AnsiForegroundPalette?.Select(ColorToHex).ToList() ?? new List<string>()
         };
     }
 
@@ -405,7 +417,9 @@ public class ThemeManager : INotifyPropertyChanged
                     Background = new SolidColorBrush(HexToColor(dto.BackgroundColor)),
                     SelectionColor = HexToColor(dto.SelectionColor),
                     CursorColor = new SolidColorBrush(HexToColor(dto.CursorColor)),
-                    CopySelectionColor = HexToColor(dto.CopySelectionColor)
+                    CopySelectionColor = HexToColor(dto.CopySelectionColor),
+                    // ANSI palette
+                    AnsiForegroundPalette = dto.AnsiForegroundPalette?.Select(HexToColor).ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList()
                 }
             };
         }
@@ -471,4 +485,6 @@ public class ThemeTemplateDto
     public string SelectionColor { get; set; } = "#500078FF";
     public string CursorColor { get; set; } = "#FFFFFFFF";
     public string CopySelectionColor { get; set; } = "#B490EE90";
+    // ANSI palette serialized as hex strings (index 0..15)
+    public List<string> AnsiForegroundPalette { get; set; } = new List<string>();
 }

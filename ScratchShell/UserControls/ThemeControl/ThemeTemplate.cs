@@ -82,7 +82,8 @@ public class ThemeTemplate : INotifyPropertyChanged
             Background = original.Background,
             SelectionColor = original.SelectionColor,
             CursorColor = original.CursorColor,
-            CopySelectionColor = original.CopySelectionColor
+            CopySelectionColor = original.CopySelectionColor,
+            AnsiForegroundPalette = original.AnsiForegroundPalette
         };
     }
 }

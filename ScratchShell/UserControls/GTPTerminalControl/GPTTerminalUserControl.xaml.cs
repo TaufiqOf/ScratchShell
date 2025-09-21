@@ -14,6 +14,8 @@ using System.Windows.Data;
 using XtermSharp;
 using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel;
+using Wpf.Ui.Extensions;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -70,6 +72,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private string? _lastSubmittedCommand = null;
     private int _linePixelHeight = 0;
 
+    // Cached ANSI foreground brushes derived from Theme.AnsiForegroundPalette
+    private Brush[] _ansiForegroundBrushes = TerminalTheme.DefaultAnsiForegroundPalette
+        .Select(c => (Brush)new SolidColorBrush(c))
+        .ToArray();
+
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.Register(
         nameof(Theme), typeof(TerminalTheme), typeof(GPTTerminalUserControl),
         new PropertyMetadata(new TerminalTheme(), OnThemeChanged));
@@ -93,7 +100,38 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private static void OnThemeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is GPTTerminalUserControl ctrl)
+        {
+            if (e.OldValue is TerminalTheme oldTheme)
+            {
+                oldTheme.PropertyChanged -= ctrl.Theme_PropertyChanged;
+            }
+            if (e.NewValue is TerminalTheme newTheme)
+            {
+                newTheme.PropertyChanged += ctrl.Theme_PropertyChanged;
+            }
             ctrl.ApplyThemeProperties();
+        }
+    }
+
+    private void Theme_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TerminalTheme.AnsiForegroundPalette))
+        {
+            BuildAnsiBrushes();
+            _fullRedrawPending = true; _dirtyLines.Clear();
+            RedrawTerminal();
+            return;
+        }
+        if (e.PropertyName is nameof(TerminalTheme.FontFamily)
+            or nameof(TerminalTheme.FontSize)
+            or nameof(TerminalTheme.Foreground)
+            or nameof(TerminalTheme.Background)
+            or nameof(TerminalTheme.SelectionColor)
+            or nameof(TerminalTheme.CursorColor)
+            or nameof(TerminalTheme.CopySelectionColor))
+        {
+            ApplyThemeProperties();
+        }
     }
 
     public GPTTerminalUserControl()
@@ -106,6 +144,11 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         //LostFocus += (s, e) => { _isFocused = false; RedrawTerminal(); };
 
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
+        BuildAnsiBrushes();
+        if (Theme != null)
+        {
+            Theme.PropertyChanged += Theme_PropertyChanged;
+        }
 
         _resizeRedrawTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _resizeRedrawTimer.Tick += (s, e) =>
@@ -116,6 +159,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         };
 
         SizeChanged += OnControlSizeChanged;
+    }
+
+    private void BuildAnsiBrushes()
+    {
+        var pal = Theme?.AnsiForegroundPalette;
+        if (pal == null || pal.Count < 16)
+        {
+            pal = TerminalTheme.DefaultAnsiForegroundPalette;
+        }
+        _ansiForegroundBrushes = pal.Take(16)
+            .Select(c => (Brush)new SolidColorBrush(c))
+            .ToArray();
     }
 
     private void OnControlSizeChanged(object sender, SizeChangedEventArgs e)
@@ -154,6 +209,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _resizeRedrawTimer.Stop();
         if (TerminalScrollViewer != null)
             TerminalScrollViewer.ScrollChanged -= TerminalScrollViewerScrollChanged;
+        if (Theme != null)
+            Theme.PropertyChanged -= Theme_PropertyChanged;
     }
 
     private void TerminalScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
@@ -701,7 +758,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             int remainderLength = _currentInputEndCol - insertCol;
             int needed = text.Length;
             // Shift characters to the right (truncate if exceeds line length)
-            for (int i = _currentInputEndCol - 1; i >= insertCol && i < line.Length; i--)
+            for (int i = _currentInputEndCol - 1; i >= insertCol && i < line.Length; i++)
             {
                 int target = i + needed;
                 if (target >= line.Length) continue; // overflow truncated
@@ -736,6 +793,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         _typeface = new Typeface(Theme.FontFamily.Source);
         _selectionBrush = new SolidColorBrush(Theme.SelectionColor);
+        BuildAnsiBrushes();
         if (TerminalGrid != null) TerminalGrid.Background = Theme.Background;
         UpdateCharSize();
         _fullRedrawPending = true; _dirtyLines.Clear();
@@ -837,23 +895,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         public static bool AreClose(double a, double b) => Math.Abs(a - b) < 0.5;
     }
 
-    private static Brush[] AnsiForeground = new Brush[] {
-        Brushes.Black, Brushes.DarkRed, Brushes.DarkGreen, Brushes.Olive, Brushes.DarkBlue, Brushes.DarkMagenta, Brushes.DarkCyan, Brushes.LightGray,
-        Brushes.DarkGray, Brushes.Red, Brushes.Green, Brushes.Yellow, Brushes.Blue, Brushes.Magenta, Brushes.Cyan, Brushes.White
-    };
-
-    private static Brush[] AnsiBackground = new Brush[] {
-        Brushes.Black, Brushes.DarkRed, Brushes.DarkGreen, Brushes.Olive, Brushes.DarkBlue, Brushes.DarkMagenta, Brushes.DarkCyan, Brushes.LightGray,
-        Brushes.DarkGray, Brushes.Red, Brushes.Green, Brushes.Yellow, Brushes.Blue, Brushes.Magenta, Brushes.Cyan, Brushes.White
-    };
-
     private static bool IsBold(int attr) => ((attr >> 18) & 1) != 0;
     private static bool IsInverse(int attr) => ((attr >> 18) & 0x40) != 0;
 
-    private static Brush GetAnsiForeground(int attr, bool inverse)
+    private Brush GetAnsiForeground(int attr, bool inverse)
     {
-        int fg = (attr >> 9) & 0x1ff; int bg = attr & 0x1ff; if (inverse) (fg, bg) = (bg, fg);
-        if (fg >= 0 && fg < AnsiForeground.Length) return AnsiForeground[fg]; return Brushes.LightGray;
+        int fg = (attr >> 9) & 0x1ff;
+        int bg = attr & 0x1ff; 
+        if (inverse) (fg, bg) = (bg, fg);
+        if (fg >= 0 && fg < Theme.AnsiForegroundPalette.Count) 
+            return Theme.AnsiForegroundPalette[fg].ToBrush();
+        return (Theme.Foreground as SolidColorBrush) ?? Brushes.LightGray;
     }
 
     private static string BufferLineToString(dynamic line, int cols)
@@ -988,19 +1040,20 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     int lineLen = line.Length;
                     for (int col = 0; col < cols; col++)
                     {
-                        char chChar = ' '; int attr = XtermSharp.CharData.DefaultAttr;
+                        char chChar = ' '; 
+                        int attr = CharData.DefaultAttr;
                         if (col < lineLen)
                         {
                             var cell = line[col]; chChar = cell.Code != 0 ? (char)cell.Code : ' '; attr = cell.Attribute;
                         }
                         bool isCursor = (row == buffer.Y + buffer.YBase && col == buffer.X);
                         bool inverse = IsInverse(attr) ^ (isCursor && _isFocused);
-                        Brush fg = attr == XtermSharp.CharData.DefaultAttr ? fgDefault : GetAnsiForeground(attr, inverse);
+                        Brush fg = GetAnsiForeground(attr, inverse);
                         Brush bg = bgDefault;
                         dc.DrawRectangle(bg, null, new Rect(col * cw, 0, cw, linePixelHeight));
 #pragma warning disable CS0618
                         var ft = new FormattedText(chChar.ToString(), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                            new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal),
+                            new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Medium),
                             theme.FontSize, fg, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 #pragma warning restore CS0618
                         dc.DrawText(ft, new Point(col * cw, 0));
@@ -1009,7 +1062,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                             dc.DrawRectangle(cursorBrush, null, new Rect(col * cw, 0, cw, linePixelHeight));
 #pragma warning disable CS0618
                             var ftC = new FormattedText(chChar.ToString(), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                                new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal),
+                                new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Medium),
                                 theme.FontSize, bgDefault, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 #pragma warning restore CS0618
                             dc.DrawText(ftC, new Point(col * cw, 0));

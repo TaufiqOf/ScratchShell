@@ -96,6 +96,9 @@ public partial class EditThemeUserControl : ContentDialog
         
         // Initialize preview theme with defaults if no theme is available yet
         EnsurePreviewThemeExists();
+        
+        // Build ANSI palette editor UI
+        CreateAnsiPaletteEditor();
     }
 
     private static void OnThemeTemplateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -112,6 +115,7 @@ public partial class EditThemeUserControl : ContentDialog
         {
             _previewTheme = template.Theme.Clone();
             UpdatePreviewThemeBinding();
+            RefreshAnsiPaletteEditor();
         }
     }
 
@@ -128,7 +132,8 @@ public partial class EditThemeUserControl : ContentDialog
                 Background = Brushes.Black,
                 SelectionColor = Color.FromArgb(80, 0, 120, 255),
                 CursorColor = Brushes.LightGray,
-                CopySelectionColor = Color.FromArgb(180, 144, 238, 144)
+                CopySelectionColor = Color.FromArgb(180, 144, 238, 144),
+                AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
             };
             
             UpdatePreviewThemeBinding();
@@ -194,6 +199,7 @@ public partial class EditThemeUserControl : ContentDialog
         UpdateColorPreviews();
         UpdatePreview();
         UpdateColorPickerFromTheme();
+        RefreshAnsiPaletteEditor();
     }
 
     private void InitializePreviewTheme()
@@ -209,7 +215,8 @@ public partial class EditThemeUserControl : ContentDialog
             Background = _theme.Background,
             SelectionColor = _theme.SelectionColor,
             CursorColor = _theme.CursorColor,
-            CopySelectionColor = _theme.CopySelectionColor
+            CopySelectionColor = _theme.CopySelectionColor,
+            AnsiForegroundPalette = _theme.AnsiForegroundPalette?.ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList()
         };
         
         // Update the public property for binding
@@ -314,6 +321,7 @@ public partial class EditThemeUserControl : ContentDialog
         UpdatePreview();
         UpdateColorPickerFromTheme();
         UpdatePreviewThemeBinding(); // Still needed to set the initial reference
+        RefreshAnsiPaletteEditor();
     }
 
     private void UpdateColorPreviews()
@@ -374,6 +382,18 @@ public partial class EditThemeUserControl : ContentDialog
     {
         if (_previewTheme == null) return Colors.Black;
 
+        // Handle ANSI palette selections like "Ansi0".."Ansi15"
+        if (!string.IsNullOrEmpty(_currentColorType) && _currentColorType.ToLowerInvariant().StartsWith("ansi"))
+        {
+            if (int.TryParse(_currentColorType.Substring(4), out int idx))
+            {
+                var palette = _previewTheme.AnsiForegroundPalette ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList();
+                if (idx >= 0 && idx < palette.Count)
+                    return palette[idx];
+                return palette[Math.Min(Math.Max(idx, 0), 15)];
+            }
+        }
+
         return _currentColorType switch
         {
             "Foreground" => (_previewTheme.Foreground as SolidColorBrush)?.Color ?? Colors.White,
@@ -388,6 +408,24 @@ public partial class EditThemeUserControl : ContentDialog
     private void ApplyColorToCurrentType(Color color)
     {
         if (_previewTheme == null) return;
+
+        // Handle ANSI palette selections like "Ansi0".."Ansi15"
+        if (!string.IsNullOrEmpty(_currentColorType) && _currentColorType.ToLowerInvariant().StartsWith("ansi"))
+        {
+            if (int.TryParse(_currentColorType.Substring(4), out int idx))
+            {
+                var list = _previewTheme.AnsiForegroundPalette?.ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList();
+                while (list.Count < 16) list.Add(Colors.White);
+                if (idx >= 0 && idx < 16)
+                {
+                    list[idx] = color;
+                    _previewTheme.AnsiForegroundPalette = list; // triggers PropertyChanged
+                    RefreshAnsiPaletteEditor();
+                    UpdatePreview();
+                }
+                return;
+            }
+        }
 
         switch (_currentColorType)
         {
@@ -469,7 +507,8 @@ public partial class EditThemeUserControl : ContentDialog
             Background = Brushes.Black,
             SelectionColor = Color.FromArgb(80, 0, 120, 255),
             CursorColor = Brushes.LightGray,
-            CopySelectionColor = Color.FromArgb(180, 144, 238, 144)
+            CopySelectionColor = Color.FromArgb(180, 144, 238, 144),
+            AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList()
         };
     }
 
@@ -540,6 +579,10 @@ public partial class EditThemeUserControl : ContentDialog
         if (_previewTheme.CopySelectionColor.A == 0)
             _previewTheme.CopySelectionColor = Color.FromArgb(180, _previewTheme.CopySelectionColor.R, _previewTheme.CopySelectionColor.G, _previewTheme.CopySelectionColor.B);
 
+        // Ensure ANSI palette exists
+        if (_previewTheme.AnsiForegroundPalette == null || _previewTheme.AnsiForegroundPalette.Count < 16)
+            _previewTheme.AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList();
+
         // Property changes will automatically notify bindings
     }
 
@@ -555,6 +598,7 @@ public partial class EditThemeUserControl : ContentDialog
         _previewTheme.SelectionColor = Color.FromArgb(80, 0, 120, 255);
         _previewTheme.CursorColor = Brushes.LightGray;
         _previewTheme.CopySelectionColor = Color.FromArgb(180, 144, 238, 144);
+        _previewTheme.AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList();
 
         // Update UI to reflect the changes
         UpdateUIFromTheme();
@@ -576,6 +620,7 @@ public partial class EditThemeUserControl : ContentDialog
                 _previewTheme.SelectionColor = Color.FromArgb(80, 98, 114, 164);
                 _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(248, 248, 242));
                 _previewTheme.CopySelectionColor = Color.FromArgb(180, 87, 227, 137);
+                _previewTheme.AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList();
                 break;
 
             case "light":
@@ -586,6 +631,7 @@ public partial class EditThemeUserControl : ContentDialog
                 _previewTheme.SelectionColor = Color.FromArgb(80, 0, 120, 215);
                 _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(0, 0, 0));
                 _previewTheme.CopySelectionColor = Color.FromArgb(180, 0, 150, 0);
+                _previewTheme.AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList();
                 break;
 
             case "monokai":
@@ -596,6 +642,7 @@ public partial class EditThemeUserControl : ContentDialog
                 _previewTheme.SelectionColor = Color.FromArgb(80, 73, 72, 62);
                 _previewTheme.CursorColor = new SolidColorBrush(Color.FromRgb(249, 38, 114));
                 _previewTheme.CopySelectionColor = Color.FromArgb(180, 102, 217, 239);
+                _previewTheme.AnsiForegroundPalette = TerminalTheme.DefaultAnsiForegroundPalette.ToList();
                 break;
 
             default:
@@ -631,5 +678,76 @@ public partial class EditThemeUserControl : ContentDialog
             };
         }
         base.OnButtonClick(button);
+    }
+
+    // ===== ANSI 16-color palette editor =====
+    private readonly List<Button> _ansiButtons = new();
+
+    private void CreateAnsiPaletteEditor()
+    {
+        if (AnsiPalettePanel == null) return;
+        AnsiPalettePanel.Children.Clear();
+        _ansiButtons.Clear();
+
+        // Ensure available theme
+        EnsurePreviewThemeExists();
+        var palette = _previewTheme?.AnsiForegroundPalette?.ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList();
+        for (int i = 0; i < 16; i++)
+        {
+            var idx = i; // local copy for closures
+            var color = i < palette.Count ? palette[i] : Colors.White;
+            var btn = new Button
+            {
+                Width = 24,
+                Height = 24,
+                Margin = new Thickness(2),
+                Background = new SolidColorBrush(color),
+                BorderBrush = new SolidColorBrush(Colors.Gray),
+                BorderThickness = new Thickness(1),
+                ToolTip = $"Index {i}"
+            };
+            btn.Click += (s, e) => OnAnsiColorButtonClick(idx);
+            _ansiButtons.Add(btn);
+            AnsiPalettePanel.Children.Add(btn);
+        }
+    }
+
+    private void RefreshAnsiPaletteEditor()
+    {
+        if (_ansiButtons.Count == 0)
+        {
+            CreateAnsiPaletteEditor();
+            return;
+        }
+        var palette = _previewTheme?.AnsiForegroundPalette?.ToList() ?? TerminalTheme.DefaultAnsiForegroundPalette.ToList();
+        for (int i = 0; i < _ansiButtons.Count && i < palette.Count; i++)
+        {
+            if (_ansiButtons[i].Background is SolidColorBrush b)
+                b.Color = palette[i];
+            else
+                _ansiButtons[i].Background = new SolidColorBrush(palette[i]);
+        }
+    }
+
+    private void OnAnsiColorButtonClick(int index)
+    {
+        if (_previewTheme == null || ColorTypeComboBox == null) return;
+
+        // Select the matching ComboBoxItem whose Tag is "Ansi{index}"
+        var ansiTag = $"Ansi{index}";
+        foreach (var item in ColorTypeComboBox.Items)
+        {
+            if (item is ComboBoxItem cbi && (cbi.Tag?.ToString() ?? string.Empty) == ansiTag)
+            {
+                ColorTypeComboBox.SelectedItem = cbi;
+                _currentColorType = ansiTag;
+                UpdateColorPickerFromTheme();
+                return;
+            }
+        }
+
+        // Fallback: set current color type and update picker
+        _currentColorType = ansiTag;
+        UpdateColorPickerFromTheme();
     }
 }

@@ -17,8 +17,10 @@
             x:Name="TerminalScrollViewer"
             Background="Black"
             HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Auto">
-            <Grid x:Name="TerminalGrid" Background="Black">
+            VerticalScrollBarVisibility="Auto" Padding="5">
+            <Grid
+                x:Name="TerminalGrid"
+                Background="Black">
                 <!--  Bitmap-based fast rendering  -->
                 <Image
                     x:Name="TerminalBitmapImage"

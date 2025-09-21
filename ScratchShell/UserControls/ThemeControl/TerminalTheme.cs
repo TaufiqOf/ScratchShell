@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ScratchShell.UserControls.ThemeControl;
 
@@ -13,6 +15,9 @@ public class TerminalTheme : INotifyPropertyChanged
     private Color _selectionColor = Color.FromArgb(80, 0, 120, 255);
     private Brush _cursorColor = Brushes.LightGray;
     private Color _copySelectionColor = Color.FromArgb(180, 144, 238, 144);
+
+    // ANSI 16-color foreground palette (index 0..15)
+    private List<Color> _ansiForegroundPalette = DefaultAnsiForegroundPalette.ToList();
 
     public FontFamily FontFamily
     {
@@ -56,6 +61,25 @@ public class TerminalTheme : INotifyPropertyChanged
         set => SetProperty(ref _copySelectionColor, value);
     }
 
+    /// <summary>
+    /// ANSI 16-color foreground palette. Index 0..15 maps to standard + bright colors.
+    /// </summary>
+    public IList<Color> AnsiForegroundPalette
+    {
+        get => _ansiForegroundPalette;
+        set => SetProperty(ref _ansiForegroundPalette, value?.ToList() ?? DefaultAnsiForegroundPalette.ToList());
+    }
+
+    /// <summary>
+    /// Default ANSI 16-color palette (black, dark red, dark green, olive, dark blue, dark magenta, dark cyan, light gray,
+    /// dark gray, red, green, yellow, blue, magenta, cyan, white)
+    /// </summary>
+    public static readonly Color[] DefaultAnsiForegroundPalette = new Color[]
+    {
+        Colors.Black, Colors.DarkRed, Colors.DarkGreen, Colors.Olive, Colors.DarkBlue, Colors.DarkMagenta, Colors.DarkCyan, Colors.LightGray,
+        Colors.DarkGray, Colors.Red, Colors.Green, Colors.Yellow, Colors.Blue, Colors.Magenta, Colors.Cyan, Colors.White
+    };
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -84,7 +108,8 @@ public class TerminalTheme : INotifyPropertyChanged
             Background = Background,
             SelectionColor = SelectionColor,
             CursorColor = CursorColor,
-            CopySelectionColor = CopySelectionColor
+            CopySelectionColor = CopySelectionColor,
+            AnsiForegroundPalette = AnsiForegroundPalette?.ToList() ?? DefaultAnsiForegroundPalette.ToList()
         };
     }
 }
