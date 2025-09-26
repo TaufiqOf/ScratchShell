@@ -152,6 +152,7 @@ public partial class ServerViewModel : ObservableValidator, IDataErrorInfo
 
     public ServerViewModel(IContentDialogService contentDialogService)
     {
+        Id = Guid.NewGuid().ToString();
         ContentDialogService = contentDialogService;
         ProtocolTypes = Enum.GetValues(typeof(ProtocolType)).Cast<ProtocolType>().Where(q => q != ProtocolType.FTP);
 

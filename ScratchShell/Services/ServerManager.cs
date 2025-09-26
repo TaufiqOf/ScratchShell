@@ -147,6 +147,7 @@ internal static class ServerManager
         var existingServer = _servers.FirstOrDefault(q => q.Id == server.Id);
         if (existingServer != null)
         {
+            existingServer.Id = server.Id;
             existingServer.Name = server.Name;
             existingServer.Host = server.Host;
             existingServer.Port = server.Port;

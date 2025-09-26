@@ -21,6 +21,7 @@ public class Server
 
     public Server()
     {
+        Id = Guid.NewGuid().ToString();
     }
 
     public Server(string name, string host, int port, ProtocolType protocolType, string username, string password, bool useKeyFile = false, string publicKeyFilePath = null, string privateKeyFilePath = null, string keyFilePassword = null)
