@@ -6,3 +6,5 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>", Scope = "member", Target = "~M:ScratchShell.UserControls.ThemeControl.EditThemeUserControl.CreateColorPresets")]
+// Suppress Edit-and-Continue diagnostics that can appear during automated code edits
+[assembly: SuppressMessage("EditAndContinue", "ENC0020", Justification = "Tooling edit artifact suppression")]

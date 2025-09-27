@@ -70,6 +70,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private int _currentInputLineAbsRow = -1;
     private int _currentPromptEndCol = 0;
     private string? _lastSubmittedCommand = null;
+    // Line height in device-independent units (DIPs) for layout/interaction
+    private double _lineHeightDip = 0;
+    // Line height in device pixels (for bitmap math) - kept for compatibility with existing code paths
     private int _linePixelHeight = 0;
 
     // Cached ANSI foreground brushes derived from Theme.AnsiForegroundPalette
@@ -601,7 +604,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             if (_terminal != null)
             {
                 var pos = e.GetPosition(TerminalCanvas);
-                int lineHeightForCalc = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
+                int lineHeightForCalc = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
                 int visualCol = (int)(pos.X / _charWidth);
                 int visualRow = (int)(pos.Y / lineHeightForCalc);
                 var buffer = _terminal.Buffer;
@@ -642,7 +645,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             var pos = e.GetPosition(TerminalCanvas);
-            int lineHeightForCalc = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
+            int lineHeightForCalc = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
             int col = (int)(pos.X / _charWidth);
             int row = (int)(pos.Y / lineHeightForCalc) + _renderStartRow;
             if (_isSelecting)
@@ -681,7 +684,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
         int maxCol = _terminal.Cols - 1;
-        int lineHeight = _linePixelHeight > 0 ? _linePixelHeight : (int)Math.Ceiling(_charHeight);
+        int lineHeight = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
         for (int row = startRow; row <= endRow; row++)
         {
             if (row < _renderStartRow) continue;
@@ -812,7 +815,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Size size = newSize ?? new Size(ActualWidth, ActualHeight);
         int cols = Math.Max(10, (int)(size.Width / _charWidth));
         int rows = Math.Max(2, (int)(size.Height / _charHeight));
-        TerminalCanvas.Width = cols * _charWidth; TerminalCanvas.Height = rows * _charHeight;
+        // Do not set TerminalCanvas size here; canvas represents the full rendered content and is set in PerformRedraw.
+        // Use cols/rows to resize the terminal emulator (based on viewport size).
         if (_terminal != null && (size != _lastLayoutSize || cols != _lastCols || rows != _lastRows))
         {
             _terminal.Resize(cols, rows); _lastLayoutSize = size; _lastCols = cols; _lastRows = rows; _fullRedrawPending = true; _dirtyLines.Clear();
@@ -831,6 +835,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _autoCompleteRefreshTimer.Stop();
             if (_autoCompleteRefreshPending)
             {
+
                 _autoCompleteRefreshPending = false;
                 RaiseAutoCompleteRequest();
             }
@@ -864,13 +869,13 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (_autoCompletePopup == null || _terminal == null)
             return;
-        if (_linePixelHeight <= 0) _linePixelHeight = (int)Math.Ceiling(_charHeight);
+        if (_lineHeightDip <= 0) _lineHeightDip = (int)Math.Ceiling(_charHeight);
         var buffer = _terminal.Buffer;
         int absRow = buffer.Y + buffer.YBase;
         int visualRow = absRow - _renderStartRow;
         if (visualRow < 0) visualRow = 0;
         double x = buffer.X * _charWidth;
-        double y = (visualRow + 1) * _linePixelHeight; // below cursor cell
+        double y = (visualRow + 1) * _lineHeightDip; // below cursor cell
         if (_autoCompletePopup.Child is FrameworkElement fe && (fe.ActualWidth == 0 || fe.ActualHeight == 0))
             fe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         double popupWidth = (_autoCompletePopup.Child as FrameworkElement)?.ActualWidth ?? 300;
@@ -880,7 +885,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         double maxY = Math.Max(0, TerminalCanvas.Height - popupHeight - 4);
         if (y > maxY)
         {
-            double aboveY = visualRow * _linePixelHeight - popupHeight - 2;
+            double aboveY = visualRow * _lineHeightDip - popupHeight - 2;
             y = aboveY < 0 ? 0 : aboveY;
         }
         bool changed = !DoubleUtil.AreClose(_autoCompletePopup.HorizontalOffset, x) || !DoubleUtil.AreClose(_autoCompletePopup.VerticalOffset, y);
@@ -1009,13 +1014,33 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _renderStartRow = totalRows > MaxRenderedLines ? totalRows - MaxRenderedLines : 0;
             int renderRowCount = totalRows - _renderStartRow;
             double cw = _charWidth; double ch = _charHeight;
-            int linePixelHeight = (int)Math.Ceiling(ch); if (linePixelHeight <= 0) linePixelHeight = 1; _linePixelHeight = linePixelHeight;
-            int pixelWidth = (int)Math.Ceiling(cols * cw); if (pixelWidth <= 0) pixelWidth = 1;
+            // Align character cell to device pixels to avoid fuzzy subpixel rendering
+            var dpi = VisualTreeHelper.GetDpi(this);
+            double dpiScaleX = dpi.DpiScaleX;
+            double dpiScaleY = dpi.DpiScaleY;
+            // Compute integer pixel sizes for character cell
+            double pixelCW = Math.Max(1.0, Math.Round(cw * dpiScaleX));
+            double pixelCH = Math.Max(1.0, Math.Round(ch * dpiScaleY));
+            // Convert back to device-independent units that align to whole device pixels
+            cw = pixelCW / dpiScaleX;
+            ch = pixelCH / dpiScaleY;
+            // Persist aligned char sizes so layout and interaction use the same metrics as the bitmap rendering
+            _charWidth = cw;
+            _charHeight = ch;
+            // Store DIP line height for layout; keep pixelLineHeight for bitmap render sizes
+            double lineHeightDip = ch; if (lineHeightDip <= 0) lineHeightDip = 1.0; _lineHeightDip = lineHeightDip;
+            int linePixelHeight = (int)pixelCH; if (linePixelHeight <= 0) linePixelHeight = 1;
+            _linePixelHeight = linePixelHeight;
+            int pixelWidth = (int)Math.Ceiling(cols * pixelCW); if (pixelWidth <= 0) pixelWidth = 1;
             int pixelHeight = linePixelHeight * renderRowCount;
-            bool allocate = _surface == null || _surface.PixelWidth != pixelWidth || _surface.PixelHeight != pixelHeight;
+            // Device DPI in DPI units (pixels per logical 96 DPI unit)
+            double dpiX = 96.0 * dpiScaleX;
+            double dpiY = 96.0 * dpiScaleY;
+            bool allocate = _surface == null || _surface.PixelWidth != pixelWidth || _surface.PixelHeight != pixelHeight || Math.Abs(_surface.DpiX - dpiX) > 0.1 || Math.Abs(_surface.DpiY - dpiY) > 0.1;
             if (allocate)
             {
-                _surface = new WriteableBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32, null);
+                // Create writeable bitmap with actual device DPI so the bitmap maps 1:1 to device pixels
+                _surface = new WriteableBitmap(pixelWidth, pixelHeight, dpiX, dpiY, PixelFormats.Pbgra32, null);
                 _fullRedrawPending = true; _dirtyLines.Clear();
             }
             if (_lastRenderedBufferLines == null || _lastRenderedBufferLines.Length != totalRows)
@@ -1037,9 +1062,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 if (destY + linePixelHeight > _surface?.PixelHeight) continue;
                 var line = buffer.Lines[row];
                 var dv = new DrawingVisual();
+                // Prefer Display formatting and ClearType when rendering text to a bitmap
+                RenderOptions.SetBitmapScalingMode(dv, BitmapScalingMode.NearestNeighbor);
+                RenderOptions.SetClearTypeHint(dv, ClearTypeHint.Enabled);
+                TextOptions.SetTextFormattingMode(dv, TextFormattingMode.Display);
+                TextOptions.SetTextRenderingMode(dv, TextRenderingMode.ClearType);
                 using (var dc = dv.RenderOpen())
                 {
-                    dc.DrawRectangle(bgDefault, null, new Rect(0, 0, pixelWidth, linePixelHeight));
+                    // Convert pixel dimensions to DIPs for drawing into the visual
+                    double dipPixelWidth = pixelWidth / dpiScaleX;
+                    double dipLineHeight = linePixelHeight / dpiScaleY;
+                    dc.DrawRectangle(bgDefault, null, new Rect(0, 0, dipPixelWidth, dipLineHeight));
                     int lineLen = line.Length;
                     for (int col = 0; col < cols; col++)
                     {
@@ -1059,20 +1092,24 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                             new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Medium),
                             theme.FontSize, fg, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 #pragma warning restore CS0618
-                        dc.DrawText(ft, new Point(col * cw, 0));
+                        // Draw text snapped to device pixels
+                        double x = Math.Round(col * cw * dpiScaleX) / dpiScaleX;
+                        dc.DrawText(ft, new Point(x, 0));
                         if (isCursor && _isFocused)
                         {
-                            dc.DrawRectangle(cursorBrush, null, new Rect(col * cw, 0, cw, linePixelHeight));
+                            dc.DrawRectangle(cursorBrush, null, new Rect(col * cw, 0, cw, lineHeightDip));
 #pragma warning disable CS0618
                             var ftC = new FormattedText(chChar.ToString(), System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
                                 new Typeface(theme.FontFamily, FontStyles.Normal, IsBold(attr) ? FontWeights.Bold : FontWeights.Normal, FontStretches.Medium),
                                 theme.FontSize, bgDefault, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 #pragma warning restore CS0618
-                            dc.DrawText(ftC, new Point(col * cw, 0));
+                            double cx = Math.Round(col * cw * dpiScaleX) / dpiScaleX;
+                            dc.DrawText(ftC, new Point(cx, 0));
                         }
                     }
                 }
-                var lineBmp = new RenderTargetBitmap(pixelWidth, linePixelHeight, 96, 96, PixelFormats.Pbgra32);
+                // Use actual device DPI when creating bitmap to avoid scaling artifacts
+                var lineBmp = new RenderTargetBitmap(pixelWidth, linePixelHeight, dpiX, dpiY, PixelFormats.Pbgra32);
                 lineBmp.Render(dv);
                 int stride = pixelWidth * 4; var pixels = new byte[stride * linePixelHeight];
                 lineBmp.CopyPixels(pixels, stride, 0);
@@ -1083,10 +1120,34 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             }
             _dirtyLines.Clear(); _fullRedrawPending = false;
             TerminalBitmapImage.Source = _surface;
-            TerminalBitmapImage.Width = pixelWidth; TerminalBitmapImage.Height = pixelHeight;
-            TerminalCanvas.Width = pixelWidth; TerminalCanvas.Height = pixelHeight;
+            // Determine the bitmap's natural size in DIPs using its DPI so the ScrollViewer sees correct content size
+            // Compute DIP width/height from pixel size and DPI scale
+            double dipWidth = pixelWidth / dpiScaleX;
+            double dipHeight = pixelHeight / dpiScaleY;
+            double srcDipWidth = dipWidth;
+            double srcDipHeight = dipHeight;
+            // Set Image and Canvas to the bitmap's DIP size so the ScrollViewer can scroll the full image.
+            // Also set TerminalGrid MinWidth/MinHeight to ensure ScrollViewer extent accounts for content size.
+            TerminalBitmapImage.Width = srcDipWidth; TerminalBitmapImage.Height = srcDipHeight;
+            TerminalCanvas.Width = srcDipWidth; TerminalCanvas.Height = srcDipHeight;
+            if (TerminalGrid != null)
+            {
+                TerminalGrid.MinWidth = Math.Max(TerminalGrid.MinWidth, srcDipWidth);
+                TerminalGrid.MinHeight = Math.Max(TerminalGrid.MinHeight, srcDipHeight);
+            }
             if (Cursor != null) Cursor.Visibility = Visibility.Collapsed;
-            if (previousRenderStart != _renderStartRow && HasSelection()) UpdateSelectionHighlightRect();
+            // Diagnostic logging to help track DPI / size mismatches
+            try
+            {
+                var dpiInfo = VisualTreeHelper.GetDpi(this);
+                Debug.WriteLine($"[TerminalRender] dpiScaleX={dpiInfo.DpiScaleX} dpiScaleY={dpiInfo.DpiScaleY} dpiX={dpiInfo.PixelsPerInchX} dpiY={dpiInfo.PixelsPerInchY}");
+                Debug.WriteLine($"[TerminalRender] pixelWidth={pixelWidth} pixelHeight={pixelHeight} dipWidth={dipWidth:F2} dipHeight={dipHeight:F2} srcDipWidth={srcDipWidth:F2} srcDipHeight={srcDipHeight:F2}");
+                Debug.WriteLine($"[TerminalRender] TerminalBitmapImage.ActualWidth={TerminalBitmapImage.ActualWidth} ActualHeight={TerminalBitmapImage.ActualHeight}");
+                Debug.WriteLine($"[TerminalRender] TerminalCanvas.ActualWidth={TerminalCanvas.ActualWidth} ActualHeight={TerminalCanvas.ActualHeight}");
+                if (TerminalGrid != null) Debug.WriteLine($"[TerminalRender] TerminalGrid.ActualWidth={TerminalGrid.ActualWidth} ActualHeight={TerminalGrid.ActualHeight}");
+                if (TerminalScrollViewer != null) Debug.WriteLine($"[TerminalRender] ScrollViewer.ViewportWidth={TerminalScrollViewer.ViewportWidth} ViewportHeight={TerminalScrollViewer.ViewportHeight}");
+            }
+            catch { }
         }
         catch (IndexOutOfRangeException ex)
         {
