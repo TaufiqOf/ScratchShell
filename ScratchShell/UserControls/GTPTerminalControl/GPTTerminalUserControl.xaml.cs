@@ -247,6 +247,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     public void AddOutput(string output)
     {
         if (_terminal == null) return;
+        _startRender = true;
+
         // Remote echo suppression: if the first line of output exactly matches the last submitted command, remove it
         if (!string.IsNullOrEmpty(_lastSubmittedCommand))
         {
@@ -802,6 +804,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     }
 
     private Size _lastLayoutSize = Size.Empty; private int _lastCols = -1; private int _lastRows = -1;
+    private bool _startRender = false;
 
     private void UpdateTerminalLayoutAndSize(Size? newSize = null)
     {
@@ -984,7 +987,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void RedrawTerminal(int? onlyRow = null)
     {
-        if (_terminal == null) return;
+        if (_terminal == null || !_startRender) return;
         if (onlyRow.HasValue && !_fullRedrawPending) _dirtyLines.Add(onlyRow.Value);
         else if (!onlyRow.HasValue && _dirtyLines.Count == 0 && !_fullRedrawPending) _fullRedrawPending = true;
         lock (_redrawLock)

@@ -314,7 +314,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
         await Task.CompletedTask;
     }
 
-    private async void ControlLoaded(object sender, RoutedEventArgs e)
+    private void ControlLoaded(object sender, RoutedEventArgs e)
     {
         if (_isInitialized)
         {
@@ -337,7 +337,7 @@ public partial class SshUserControl : UserControl, IWorkspaceControl
             return;
         }
         Terminal.Focus();
-        await ExecuteWithTimeoutDetection(async () => await ConnectToServer(_server));
+        ExecuteWithTimeoutDetection(async () => await ConnectToServer(_server));
     }
 
     private async Task ConnectToServer(ServerViewModel server)
