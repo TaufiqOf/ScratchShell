@@ -604,7 +604,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             if (_terminal != null)
             {
                 var pos = e.GetPosition(TerminalCanvas);
-                int lineHeightForCalc = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
+                // Use the precise DIP line height for hit-testing (avoid truncation)
+                double lineHeightForCalc = _lineHeightDip > 0 ? _lineHeightDip : Math.Ceiling(_charHeight);
                 int visualCol = (int)(pos.X / _charWidth);
                 int visualRow = (int)(pos.Y / lineHeightForCalc);
                 var buffer = _terminal.Buffer;
@@ -645,7 +646,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             var pos = e.GetPosition(TerminalCanvas);
-            int lineHeightForCalc = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
+            // Use precise DIP line height for hit-testing (avoid truncation)
+            double lineHeightForCalc = _lineHeightDip > 0 ? _lineHeightDip : Math.Ceiling(_charHeight);
             int col = (int)(pos.X / _charWidth);
             int row = (int)(pos.Y / lineHeightForCalc) + _renderStartRow;
             if (_isSelecting)
@@ -684,7 +686,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         int startCol = Math.Min(col1, col2);
         int endCol = Math.Max(col1, col2);
         int maxCol = _terminal.Cols - 1;
-        int lineHeight = _lineHeightDip > 0 ? (int)_lineHeightDip : (int)Math.Ceiling(_charHeight);
+        // Use precise DIP line height for rendering selection rects
+        double lineHeight = _lineHeightDip > 0 ? _lineHeightDip : Math.Ceiling(_charHeight);
         for (int row = startRow; row <= endRow; row++)
         {
             if (row < _renderStartRow) continue;
@@ -869,7 +872,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     {
         if (_autoCompletePopup == null || _terminal == null)
             return;
-        if (_lineHeightDip <= 0) _lineHeightDip = (int)Math.Ceiling(_charHeight);
+        if (_lineHeightDip <= 0) _lineHeightDip = Math.Ceiling(_charHeight);
         var buffer = _terminal.Buffer;
         int absRow = buffer.Y + buffer.YBase;
         int visualRow = absRow - _renderStartRow;
@@ -909,9 +912,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private Brush GetAnsiForeground(int attr, bool inverse)
     {
         int fg = (attr >> 9) & 0x1ff;
-        int bg = attr & 0x1ff; 
+        int bg = attr & 0x1ff;
         if (inverse) (fg, bg) = (bg, fg);
-        if (fg >= 0 && fg < Theme.AnsiForegroundPalette.Count) 
+        if (fg >= 0 && fg < Theme.AnsiForegroundPalette.Count)
             return Theme.AnsiForegroundPalette[fg].ToBrush();
         return (Theme.Foreground as SolidColorBrush) ?? Brushes.LightGray;
     }
@@ -1056,9 +1059,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             foreach (var row in linesToDraw)
             {
                 if (row < 0 || row >= buffer.Lines.Length) continue;
-                int visualRow = row - _renderStartRow; 
+                int visualRow = row - _renderStartRow;
                 if (visualRow < 0 || visualRow >= renderRowCount) continue;
-                int destY = visualRow * linePixelHeight; 
+                int destY = visualRow * linePixelHeight;
                 if (destY + linePixelHeight > _surface?.PixelHeight) continue;
                 var line = buffer.Lines[row];
                 var dv = new DrawingVisual();
@@ -1076,7 +1079,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     int lineLen = line.Length;
                     for (int col = 0; col < cols; col++)
                     {
-                        char chChar = ' '; 
+                        char chChar = ' ';
                         int attr = CharData.DefaultAttr;
                         if (col < lineLen)
                         {
@@ -1129,7 +1132,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             // Set Image and Canvas to the bitmap's DIP size so the ScrollViewer can scroll the full image.
             // Also set TerminalGrid MinWidth/MinHeight to ensure ScrollViewer extent accounts for content size.
             TerminalBitmapImage.Width = srcDipWidth; TerminalBitmapImage.Height = srcDipHeight;
-            TerminalCanvas.Width = srcDipWidth; TerminalCanvas.Height = srcDipHeight;
+            TerminalCanvas.Width = srcDipWidth; TerminalCanvas.Height = srcDipHeight - 20;
             if (TerminalGrid != null)
             {
                 TerminalGrid.MinWidth = Math.Max(TerminalGrid.MinWidth, srcDipWidth);
@@ -1163,8 +1166,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         bool again;
         lock (_redrawLock)
         {
-            _isRedrawing = false; 
-            again = _redrawRequested; 
+            _isRedrawing = false;
+            again = _redrawRequested;
             _redrawRequested = false;
         }
         if (again) RedrawTerminal();
@@ -1218,9 +1221,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
     public void PasteText(string text) => PasteAtInputArea(text);
-    public void PasteFromClipboard() 
-    { 
-        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText()); 
+    public void PasteFromClipboard()
+    {
+        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText());
     }
     public void SelectAll()
     {
