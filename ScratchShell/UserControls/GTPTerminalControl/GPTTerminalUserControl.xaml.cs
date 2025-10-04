@@ -488,12 +488,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                     if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.C)
                     {
                         CommandEntered?.Invoke(this, "\u0003");
-                        e.Handled = true; ScheduleAutoCompleteRefresh(); return;
+                        e.Handled = true;
+                        ScheduleAutoCompleteRefresh();
+                        return;
                     }
-                    else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key >= Key.A && e.Key <= Key.Z)
+                    else if ((Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.Alt) && e.Key >= Key.A && e.Key <= Key.Z)
                     {
                         int ctrlCode = (int)e.Key - (int)Key.A + 1;
                         keyToSend = ((char)ctrlCode).ToString();
+                        CommandEntered?.Invoke(this, keyToSend);
+                        e.Handled = true;
+                        ScheduleAutoCompleteRefresh();
+                        return;
                     }
                     else
                     {
@@ -520,7 +526,9 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                                     if (!_fullRedrawPending) _dirtyLines.Add(lastRow2);
                                     RedrawTerminal(onlyRow: lastRow2);
                                     contentChanged = true;
-                                    e.Handled = true; ScheduleAutoCompleteRefresh(); return;
+                                    e.Handled = true;
+                                    ScheduleAutoCompleteRefresh();
+                                    return;
                                 }
                             }
                             keyToSend = c.ToString();
