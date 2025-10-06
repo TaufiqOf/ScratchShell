@@ -1,6 +1,5 @@
 using ScratchShell.UserControls.ThemeControl;
 using ScratchShell.Services.Terminal;
-using ScratchShell.Services.Navigation;
 using System.Diagnostics;
 using System.Text;
 using System.Windows.Controls;
@@ -12,10 +11,9 @@ using System.Windows.Shapes;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using XtermSharp;
-using System.Linq;
-using System.Collections.Generic;
 using System.ComponentModel;
 using Wpf.Ui.Extensions;
+using ScratchShell.Models;
 
 namespace ScratchShell.UserControls.GTPTerminalControl;
 
@@ -42,6 +40,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Selection
     private bool _isSelecting = false;
+
     private readonly List<Rectangle> _selectionHighlightRects = new();
     private (int row, int col)? _selectionStart = null;
     private (int row, int col)? _selectionEnd = null;
@@ -51,6 +50,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Autocomplete
     private ListBox? _autoCompleteListBox;
+
     private Popup? _autoCompletePopup;
     private bool _isAutoCompleteVisible = false;
     private System.Windows.Threading.DispatcherTimer? _autoCompleteRefreshTimer; // debounce
@@ -58,20 +58,28 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     // Incremental rendering surface
     private WriteableBitmap? _surface;
+
     private readonly HashSet<int> _dirtyLines = new();
     private bool _fullRedrawPending = true;
 
+    private Size _lastLayoutSize = Size.Empty; private int _lastCols = -1; private int _lastRows = -1;
+    private bool _startRender = false;
+
     // Virtualization
     private const int MaxRenderedLines = 100;
+
     private int _renderStartRow = 0;
 
     // Input tracking
     private int _currentInputEndCol = 0;
+
     private int _currentInputLineAbsRow = -1;
     private int _currentPromptEndCol = 0;
     private string? _lastSubmittedCommand = null;
+
     // Line height in device-independent units (DIPs) for layout/interaction
     private double _lineHeightDip = 0;
+
     // Line height in device pixels (for bitmap math) - kept for compatibility with existing code paths
     private int _linePixelHeight = 0;
 
@@ -90,12 +98,16 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         set => SetValue(ThemeProperty, value);
     }
 
-    public string InputLineSyntax { get => string.Empty; set { } }
+    public string InputLineSyntax
+    { get => string.Empty; set { } }
+
     public bool IsReadOnly { get; set; }
     public string Text => string.Empty; // placeholder
 
     public event ITerminal.TerminalCommandHandler? CommandEntered;
+
     public event ITerminal.TerminalSizeHandler? TerminalSizeChanged;
+
     public event ITerminal.TabCompletionHandler? TabCompletionRequested;
 
     public void RefreshTheme() => ApplyThemeProperties();
@@ -347,7 +359,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
 
     private void ScrollToBottom() => TerminalScrollViewer.ScrollToEnd();
 
-    private void TerminalControl_KeyDown(object sender, KeyEventArgs e)
+    private void TerminalControlKeyDown(object sender, KeyEventArgs e)
     {
         if (IsReadOnly || _terminal == null) return;
 
@@ -817,9 +829,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionStart = null; _selectionEnd = null;
     }
 
-    private Size _lastLayoutSize = Size.Empty; private int _lastCols = -1; private int _lastRows = -1;
-    private bool _startRender = false;
-
     private void UpdateTerminalLayoutAndSize(Size? newSize = null)
     {
         UpdateCharSize();
@@ -846,7 +855,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             _autoCompleteRefreshTimer.Stop();
             if (_autoCompleteRefreshPending)
             {
-
                 _autoCompleteRefreshPending = false;
                 RaiseAutoCompleteRequest();
             }
@@ -909,12 +917,8 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         }
     }
 
-    private static class DoubleUtil
-    {
-        public static bool AreClose(double a, double b) => Math.Abs(a - b) < 0.5;
-    }
-
     private static bool IsBold(int attr) => ((attr >> 18) & 1) != 0;
+
     private static bool IsInverse(int attr) => ((attr >> 18) & 0x40) != 0;
 
     private Brush GetAnsiForeground(int attr, bool inverse)
@@ -999,7 +1003,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     }
 
     // XAML references MouseDown="TerminalControl_MouseDown" – provide wrapper
-    private void TerminalControl_MouseDown(object sender, MouseButtonEventArgs e) => TerminalCanvasMouseDown(sender, e);
+    private void TerminalControlMouseDown(object sender, MouseButtonEventArgs e) => TerminalCanvasMouseDown(sender, e);
 
     private void RedrawTerminal(int? onlyRow = null)
     {
@@ -1219,60 +1223,6 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         return null;
     }
 
-    public bool HasSelection() => _selectionStart.HasValue && _selectionEnd.HasValue;
-    public void CopySelection()
-    {
-        if (HasSelection())
-        {
-            var text = GetSelectedText();
-            if (!string.IsNullOrEmpty(text)) { Clipboard.SetText(text); StartCopyHighlightTransition(); }
-        }
-    }
-    public void PasteText(string text) => PasteAtInputArea(text);
-    public void PasteFromClipboard()
-    {
-        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText());
-    }
-    public void SelectAll()
-    {
-        if (_terminal == null) return; var buffer = _terminal.Buffer; if (buffer.Lines.Length == 0) return;
-        _selectionStart = (0, 0); _selectionEnd = (buffer.Lines.Length - 1, _terminal.Cols - 1); UpdateSelectionHighlightRect();
-    }
-    public new void Focus() => TerminalCanvas.Focus();
-
-    public void ShowAutoCompleteResults(AutoCompleteResult result)
-    {
-        if (result == null || !result.HasSuggestions) { HideAutoComplete(); return; }
-        CreateAutoCompletePopupIfNeeded();
-        if (_autoCompleteListBox != null && _autoCompletePopup != null)
-        {
-            _autoCompleteListBox.ItemsSource = result.Suggestions.Select(s => new AutoCompleteItem
-            {
-                Text = s.Text,
-                DisplayText = s.DisplayText,
-                Description = s.Description,
-                Type = s.Type
-            }).ToList();
-            UpdateAutoCompletePopupPosition();
-            _autoCompletePopup.IsOpen = true; _isAutoCompleteVisible = true;
-            if (_autoCompleteListBox.Items.Count > 0)
-            {
-                _autoCompleteListBox.SelectedIndex = 0;
-                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
-            }
-        }
-    }
-
-    public void HideAutoComplete()
-    {
-        if (_autoCompletePopup != null) _autoCompletePopup.IsOpen = false; _isAutoCompleteVisible = false;
-    }
-
-    public int GetCursorPosition()
-    {
-        if (_terminal == null) return 0; var buffer = _terminal.Buffer; int promptEnd = GetPromptEndCol(); return Math.Max(0, buffer.X - promptEnd);
-    }
-
     private void CreateAutoCompletePopupIfNeeded()
     {
         if (_autoCompletePopup != null) return;
@@ -1382,20 +1332,82 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         Focus();
     }
 
-    // ITerminalDelegate implementations (unused optional)
-    public void ShowCursor(Terminal source) { }
-    public void SetTerminalTitle(Terminal source, string title) { }
-    public void SetTerminalIconTitle(Terminal source, string title) { }
-    void ITerminalDelegate.SizeChanged(Terminal source) { }
-    public void Send(byte[] data) { }
-    public string WindowCommand(Terminal source, WindowManipulationCommand command, params int[] args) => string.Empty;
-    public bool IsProcessTrusted() => true;
+    public bool HasSelection() => _selectionStart.HasValue && _selectionEnd.HasValue;
 
-    private class AutoCompleteItem
+    public void CopySelection()
     {
-        public string Text { get; set; } = string.Empty;
-        public string DisplayText { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public CompletionType Type { get; set; }
+        if (HasSelection())
+        {
+            var text = GetSelectedText();
+            if (!string.IsNullOrEmpty(text)) { Clipboard.SetText(text); StartCopyHighlightTransition(); }
+        }
     }
+
+    public void PasteText(string text) => PasteAtInputArea(text);
+
+    public void PasteFromClipboard()
+    {
+        if (Clipboard.ContainsText()) PasteAtInputArea(Clipboard.GetText());
+    }
+
+    public void SelectAll()
+    {
+        if (_terminal == null) return; var buffer = _terminal.Buffer; if (buffer.Lines.Length == 0) return;
+        _selectionStart = (0, 0); _selectionEnd = (buffer.Lines.Length - 1, _terminal.Cols - 1); UpdateSelectionHighlightRect();
+    }
+
+    public new void Focus() => TerminalCanvas.Focus();
+
+    public void ShowAutoCompleteResults(AutoCompleteResult result)
+    {
+        if (result == null || !result.HasSuggestions) { HideAutoComplete(); return; }
+        CreateAutoCompletePopupIfNeeded();
+        if (_autoCompleteListBox != null && _autoCompletePopup != null)
+        {
+            _autoCompleteListBox.ItemsSource = result.Suggestions.Select(s => new AutoCompleteItem
+            {
+                Text = s.Text,
+                DisplayText = s.DisplayText,
+                Description = s.Description,
+                Type = s.Type
+            }).ToList();
+            UpdateAutoCompletePopupPosition();
+            _autoCompletePopup.IsOpen = true; _isAutoCompleteVisible = true;
+            if (_autoCompleteListBox.Items.Count > 0)
+            {
+                _autoCompleteListBox.SelectedIndex = 0;
+                _autoCompleteListBox.ScrollIntoView(_autoCompleteListBox.SelectedItem);
+            }
+        }
+    }
+
+    public void HideAutoComplete()
+    {
+        if (_autoCompletePopup != null) _autoCompletePopup.IsOpen = false; _isAutoCompleteVisible = false;
+    }
+
+    public int GetCursorPosition()
+    {
+        if (_terminal == null) return 0; var buffer = _terminal.Buffer; int promptEnd = GetPromptEndCol(); return Math.Max(0, buffer.X - promptEnd);
+    }
+
+    // ITerminalDelegate implementations (unused optional)
+    public void ShowCursor(Terminal source)
+    { }
+
+    public void SetTerminalTitle(Terminal source, string title)
+    { }
+
+    public void SetTerminalIconTitle(Terminal source, string title)
+    { }
+
+    void ITerminalDelegate.SizeChanged(Terminal source)
+    { }
+
+    public void Send(byte[] data)
+    { }
+
+    public string WindowCommand(Terminal source, WindowManipulationCommand command, params int[] args) => string.Empty;
+
+    public bool IsProcessTrusted() => true;
 }

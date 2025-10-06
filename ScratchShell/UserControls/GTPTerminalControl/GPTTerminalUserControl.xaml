@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    KeyDown="TerminalControl_KeyDown"
-    MouseDown="TerminalControl_MouseDown"
+    KeyDown="TerminalControlKeyDown"
+    MouseDown="TerminalControlMouseDown"
     mc:Ignorable="d"
     UseLayoutRounding="True"
     SnapsToDevicePixels="True">
@@ -40,8 +40,8 @@
                     Panel.ZIndex="1"
                     Background="Transparent"
                     Focusable="True"
-                    KeyDown="TerminalControl_KeyDown"
-                    MouseDown="TerminalControl_MouseDown"
+                    KeyDown="TerminalControlKeyDown"
+                    MouseDown="TerminalControlMouseDown"
                     MouseMove="TerminalCanvasMouseMove"
                     MouseUp="TerminalCanvasMouseUp">
                     <Canvas.RenderTransform>
