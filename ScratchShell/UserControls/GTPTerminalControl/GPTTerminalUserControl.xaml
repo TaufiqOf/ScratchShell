@@ -21,7 +21,8 @@
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto"
             CanContentScroll="False">
-            <Grid x:Name="TerminalGrid" Background="Black">
+            <!-- Align to top-left so ScrollViewer extent follows content size -->
+            <Grid x:Name="TerminalGrid" Background="Black" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <!--  Bitmap-based fast rendering  -->
                 <Image
                     x:Name="TerminalBitmapImage"

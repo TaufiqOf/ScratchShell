@@ -173,7 +173,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
                 UpdateTerminalLayoutAndSize(_pendingResizeSize);
         };
 
-        SizeChanged += OnControlSizeChanged;
+        this.SizeChanged += OnControlSizeChanged;
     }
 
     private void BuildAnsiBrushes()
@@ -201,6 +201,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
     private void GPTTerminalUserControlLoaded(object sender, RoutedEventArgs e)
     {
         Focus();
+        SizeChanged += OnControlSizeChanged;
         Focusable = true;
         IsTabStop = true;
         _isFocused = true;
@@ -214,7 +215,10 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         UpdateTerminalLayoutAndSize();
         // Track scroll to reposition autocomplete popup
         if (TerminalScrollViewer != null)
+        {
             TerminalScrollViewer.ScrollChanged += TerminalScrollViewerScrollChanged;
+            TerminalScrollViewer.SizeChanged += TerminalScrollViewer_SizeChanged;
+        }
     }
 
     private void GPTTerminalUserControlUnloaded(object sender, RoutedEventArgs e)
@@ -223,9 +227,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         SizeChanged -= OnControlSizeChanged;
         _resizeRedrawTimer.Stop();
         if (TerminalScrollViewer != null)
+        {
             TerminalScrollViewer.ScrollChanged -= TerminalScrollViewerScrollChanged;
+            TerminalScrollViewer.SizeChanged -= TerminalScrollViewer_SizeChanged;
+        }
         if (Theme != null)
             Theme.PropertyChanged -= Theme_PropertyChanged;
+    }
+
+    private void TerminalScrollViewer_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // Recompute cols/rows when viewport changes due to scrollbars appearing/disappearing
+        UpdateTerminalLayoutAndSize();
     }
 
     private void TerminalScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
@@ -250,8 +263,18 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         var ft = new FormattedText("W@gy", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
             new Typeface(Theme.FontFamily.Source), Theme.FontSize, Brushes.Black, new NumberSubstitution(), 1.0);
 #pragma warning restore CS0618
-        _charWidth = ft.WidthIncludingTrailingWhitespace / ft.Text.Length;
-        _charHeight = ft.Height;
+        var rawCharWidth = ft.WidthIncludingTrailingWhitespace / ft.Text.Length;
+        var rawCharHeight = ft.Height;
+
+        // Snap char cell to device pixels to match rendering in PerformRedraw
+        var dpi = VisualTreeHelper.GetDpi(this);
+        double dpiScaleX = dpi.DpiScaleX;
+        double dpiScaleY = dpi.DpiScaleY;
+        double pixelCW = Math.Max(1.0, Math.Round(rawCharWidth * dpiScaleX));
+        double pixelCH = Math.Max(1.0, Math.Round(rawCharHeight * dpiScaleY));
+        _charWidth = pixelCW / dpiScaleX;
+        _charHeight = pixelCH / dpiScaleY;
+        _lineHeightDip = _charHeight;
     }
 
     private void InitializeTerminalEmulator()
@@ -786,7 +809,7 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             int remainderLength = _currentInputEndCol - insertCol;
             int needed = text.Length;
             // Shift characters to the right (truncate if exceeds line length)
-            for (int i = _currentInputEndCol - 1; i >= insertCol && i < line.Length; i++)
+            for (int i = _currentInputEndCol - 1; i >= insertCol && i < line.Length; i--)
             {
                 int target = i + needed;
                 if (target >= line.Length) continue; // overflow truncated
@@ -829,17 +852,34 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
         _selectionStart = null; _selectionEnd = null;
     }
 
+    private Size GetAvailableContentSize()
+    {
+        // Prefer ScrollViewer viewport when available so we ignore scrollbar thickness
+        if (TerminalScrollViewer != null)
+        {
+            double vw = TerminalScrollViewer.ViewportWidth;
+            double vh = TerminalScrollViewer.ViewportHeight;
+            if (vw > 0 && vh > 0)
+            {
+                return new Size(vw, vh);
+            }
+        }
+        return new Size(ActualWidth, ActualHeight);
+    }
+
     private void UpdateTerminalLayoutAndSize(Size? newSize = null)
     {
         UpdateCharSize();
-        Size size = newSize ?? new Size(ActualWidth, ActualHeight);
-        int cols = Math.Max(10, (int)(size.Width / _charWidth));
-        int rows = Math.Max(2, (int)(size.Height / _charHeight));
+        // Compute available viewport size rather than overall control size
+        Size size = GetAvailableContentSize();
+        int cols = Math.Max(10, (int)Math.Floor(size.Width / _charWidth));
+        int rows = Math.Max(2, (int)Math.Floor(size.Height / _charHeight));
         // Do not set TerminalCanvas size here; canvas represents the full rendered content and is set in PerformRedraw.
         // Use cols/rows to resize the terminal emulator (based on viewport size).
         if (_terminal != null && (size != _lastLayoutSize || cols != _lastCols || rows != _lastRows))
         {
-            _terminal.Resize(cols, rows); _lastLayoutSize = size; _lastCols = cols; _lastRows = rows; _fullRedrawPending = true; _dirtyLines.Clear();
+            _terminal.Resize(cols, rows);
+            _lastLayoutSize = size; _lastCols = cols; _lastRows = rows; _fullRedrawPending = true; _dirtyLines.Clear();
         }
         TerminalSizeChanged?.Invoke(this, size);
         RedrawTerminal();
@@ -1144,11 +1184,17 @@ public partial class GPTTerminalUserControl : UserControl, ITerminal, ITerminalD
             // Set Image and Canvas to the bitmap's DIP size so the ScrollViewer can scroll the full image.
             // Also set TerminalGrid MinWidth/MinHeight to ensure ScrollViewer extent accounts for content size.
             TerminalBitmapImage.Width = srcDipWidth; TerminalBitmapImage.Height = srcDipHeight;
-            TerminalCanvas.Width = srcDipWidth; TerminalCanvas.Height = srcDipHeight - 20;
+            TerminalCanvas.Width = srcDipWidth; TerminalCanvas.Height = srcDipHeight;
             if (TerminalGrid != null)
             {
-                TerminalGrid.MinWidth = Math.Max(TerminalGrid.MinWidth, srcDipWidth);
-                TerminalGrid.MinHeight = Math.Max(TerminalGrid.MinHeight, srcDipHeight);
+                TerminalGrid.MinWidth = Math.Max(TerminalCanvas.MinWidth, srcDipWidth);
+                TerminalGrid.MinHeight = Math.Max(TerminalCanvas.MinHeight, srcDipHeight);
+                // Ensure ScrollViewer recalculates extent after size changes
+                TerminalGrid.InvalidateMeasure();
+            }
+            if (TerminalScrollViewer != null)
+            {
+                TerminalScrollViewer.InvalidateMeasure();
             }
             if (Cursor != null) Cursor.Visibility = Visibility.Collapsed;
             // Diagnostic logging to help track DPI / size mismatches
