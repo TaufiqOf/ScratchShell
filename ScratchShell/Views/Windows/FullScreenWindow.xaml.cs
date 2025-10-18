@@ -39,6 +39,6 @@ public partial class FullScreenWindow : FluentWindow
 
     protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
     {
-        OnSizeChanged.Invoke(sizeInfo.NewSize);
+        OnSizeChanged?.Invoke(sizeInfo.NewSize);
     }
 }
