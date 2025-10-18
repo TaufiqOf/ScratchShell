@@ -1,104 +1,151 @@
 # 🐚 ScratchShell
 
-ScratchShell is a modern, cross-platform SSH and SFTP client designed for developers who work with multiple remote environments.  
-It provides a clean and unified interface for managing remote sessions, transferring files, and customizing terminal preferences.
+ScratchShell is a sleek and modern **SSH + SFTP client** built with .NET, offering developers an elegant interface to manage remote sessions, explore files, and transfer data seamlessly.  
+It’s designed to unify terminal power with visual usability — perfect for developers who work across servers, containers, and WSL environments.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- 🔐 **SSH & SFTP Support** — Connect securely to remote systems with password or key-based authentication.
-- 🧩 **Multi-Session Tabs** — Manage multiple SSH/SFTP connections in tabs simultaneously.
-- 📂 **File Explorer** — Browse, upload, download, and organize remote files visually.
-- 🔄 **Drag & Drop Uploads** — Upload files directly by dragging them into the SFTP tab.
-- ⚙️ **Session Management** — Save and manage SSH/SFTP connections for quick access.
-- 🌙 **Dark/Light Theme** — Choose between light or dark UI themes.
-- ☁️ **Cloud Sync** — Automatically sync settings to the cloud and restore them anywhere.
-- 🧑‍💻 **Custom Shell Integration** — Configure default shells (e.g., Windows Terminal, PowerShell, WSL).
+- 🔐 **SSH & SFTP Support** — Connect securely via password or SSH key authentication.
+- 🧩 **Tabbed Sessions** — Manage multiple SSH and SFTP sessions simultaneously.
+- 📂 **Remote File Explorer** — Browse, upload, download, rename, and delete files visually.
+- 📤 **Drag & Drop Uploads** — Upload files directly from your system to a remote directory.
+- 🎨 **Multiple Terminal Themes** — Choose between One Dark, Light, and Monokai terminal styles.
+- ⚙️ **Session Profiles** — Save and manage connection settings with support for editing and cloning.
+- ☁️ **Cloud Sync** — Automatically synchronize saved sessions and preferences between devices.
+- 🌗 **Dark & Light Modes** — Beautiful, adaptive interface for any workspace lighting.
+- 🧑‍💻 **Custom Shell Integration** — Launch terminals in Windows Terminal, PowerShell, or WSL.
 
 ---
 
 ## 🖼️ Screenshots
 
 ### 🏠 Home Dashboard
-Manage all your saved connections for SSH and SFTP.
+Manage and launch your saved SSH and SFTP connections.
 
-![Home Dashboard](./ScreenShots/Screenshot_Home.png)
+![Home Dashboard](./ScreenShots/Screenshot%202025-10-18%20160526.png)
 
 ---
 
 ### ➕ Add New Server
-Add a new SSH, SFTP, or FTP connection with full configuration support.
+Add SSH, SFTP, or FTP connections with full configuration and authentication options.
 
-![Add New Server](./ScreenShots/Screenshot%202025-10-18%20160543.png)
+![Add Server](./ScreenShots/Screenshot%202025-10-18%20160543.png)
 
 ---
 
-### 🔐 SSH Session
-Start a secure terminal session with your selected server.
+### 🔐 SSH Session (WSL)
+Connect to your local WSL instance via SSH for seamless integration with Linux subsystems.
 
 ![SSH Session](./ScreenShots/Screenshot%202025-10-18%20160651.png)
 
 ---
 
-### ⚡ Dual Connection Example
-Connect to SSH and SFTP simultaneously — perfect for WSL or Linux VM management.
+### ⚡ Dual Session (SSH + SFTP)
+Run SSH and SFTP sessions side-by-side — ideal for quick file access during terminal work.
 
-![Dual Connection](./ScreenShots/Screenshot%202025-10-18%20160723.png)
+![Dual Session](./ScreenShots/Screenshot%202025-10-18%20160723.png)
 
 ---
 
 ### ⚙️ Settings Panel
-Customize appearance, language, and sync preferences.
+Switch themes, select your default shell, and configure cloud sync options.
 
 ![Settings](./ScreenShots/Screenshot%202025-10-18%20160737.png)
 
 ---
 
-### 📁 SFTP Explorer
-Browse and manage remote files visually.
+### 📁 File Explorer (SFTP)
+Browse and manage remote files directly with intuitive controls.
 
-![SFTP Explorer](./ScreenShots/Screenshot%202025-10-18%20160751.png)
-
----
-
-### 📋 File Context Menu
-Quick actions: copy, rename, download, or delete files remotely.
-
-![File Context Menu](./ScreenShots/Screenshot%202025-10-18%20160806.png)
+![File Explorer](./ScreenShots/Screenshot%202025-10-18%20160751.png)
 
 ---
 
-### 🧭 Sorting and Filtering
-Sort files by name, size, or date for better organization.
+### 🖱️ Context Menu
+Right-click any file to quickly **rename**, **delete**, **copy**, **download**, or **paste**.
 
-![File Sorting](./ScreenShots/Screenshot%202025-10-18%20160828.png)
+![Context Menu](./ScreenShots/Screenshot%202025-10-18%20160806.png)
 
 ---
 
-### ☁️ Drag and Drop Upload
-Seamlessly upload files to remote directories via drag & drop.
+### 🔽 Sorting and View Modes
+Sort by name, date, or size, and toggle between grid and list views.
+
+![Sorting and Views](./ScreenShots/Screenshot%202025-10-18%20160828.png)
+
+---
+
+### ☁️ Drag & Drop Upload
+Drag local files and drop them into your SFTP session for instant uploads.
 
 ![File Upload](./ScreenShots/Screenshot%202025-10-18%20160933.png)
 
 ---
 
-## ⚙️ Installation
+### 🗂️ Dual-Tab Interface
+SSH and SFTP tabs working together in one unified workspace.
 
-1. **Download** the latest release from your distribution page or internal deployment.
-2. **Run the installer** for your platform.
-3. **Launch ScratchShell** and log in (optional for cloud sync).
-4. **Add your first connection** using the “+” button.
+![Dual Tab](./ScreenShots/Screenshot%202025-10-18%20161205.png)
 
 ---
 
-## 🧰 Technologies Used
+### 🎨 Theme Selector
+Choose your favorite terminal theme — from **One Dark** to **Light** or **Monokai**.
+
+![Themes](./ScreenShots/Screenshot%202025-10-18%20161231.png)
+
+---
+
+### 🧑‍💻 Active Terminal View
+Experience a fully integrated terminal session with native performance.
+
+![Terminal Active](./ScreenShots/Screenshot%202025-10-18%20161250.png)
+
+---
+
+### 🧾 Modern File Listing View
+Switch to list mode to view file details like name, date, type, and size.
+
+![List View](./ScreenShots/Screenshot%202025-10-18%20163349.png)
+
+---
+
+### 💻 Full Screen Mode
+ScratchShell’s terminal interface in full-screen mode with smooth input and output rendering.
+
+![Full Terminal](./ScreenShots/Screenshot%202025-10-18%20163420.png)
+![Full Terminal](./ScreenShots/Screenshot%202025-10-18%20163349.png)
+---
+
+## ⚙️ Installation
+
+1. **Download** the latest installer or release from your distribution page.
+2. **Run the installer** on Windows (supports Windows 10/11).
+3. **Launch ScratchShell**.
+4. **Log in** (optional) to enable cloud sync.
+5. **Add your first SSH or SFTP connection**.
+
+---
+
+## 🧰 Built With
 
 - **.NET 8 / WPF**
-- **SSH.NET** for secure communication
-- **Avalonia/WPF Hybrid UI**
+- **SSH.NET** — for secure SSH/SFTP communication
+- **MVVM Architecture**
 - **Material Design Icons**
-- **Cloud sync via custom API backend**
+- **Custom Cloud Sync API**
+- **Avalonia/WPF Hybrid UI**
+
+---
+
+## 🧑‍🔧 System Requirements
+
+- Windows 10 or 11
+- .NET 8 Runtime
+- Active network connection (for cloud sync)
+- SSH/SFTP server with port access
 
 ---
 
@@ -112,7 +159,8 @@ Version: **1.0.0.1**
 
 ## 👨‍💻 Author
 
-Developed by **Taufiq Abdur Rahman**
+Developed by **Taufiq Abdur Rahman**  
+🌐 [scratchinteractive.net](https://scratchinteractive.net)  
+📧 [contact@scratchinteractive.net](mailto:contact@scratchinteractive.net)
 
 ---
-
