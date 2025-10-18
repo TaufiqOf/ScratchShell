@@ -116,7 +116,21 @@ Switch to list mode to view file details like name, date, type, and size.
 ScratchShell’s terminal interface in full-screen mode with smooth input and output rendering.
 
 ![Full Terminal](./ScreenShots/Screenshot%202025-10-18%20163420.png)
-![Full Terminal](./ScreenShots/Screenshot%202025-10-18%20163349.png)
+
+---
+
+### 💡 IntelliSense
+Smart command suggestions and inline help for faster terminal input.
+
+![IntelliSense](./ScreenShots/Screenshot%202025-10-18%20164132.png)
+
+---
+
+### 🧩 Code Snippets
+Reusable terminal command snippets for efficiency and consistency.
+
+![Code Snippet](./ScreenShots/Screenshot%202025-10-18%20164158.png)
+
 ---
 
 ## ⚙️ Installation
@@ -142,10 +156,10 @@ ScratchShell’s terminal interface in full-screen mode with smooth input and ou
 
 ## 🧑‍🔧 System Requirements
 
-- Windows 10 or 11
-- .NET 8 Runtime
-- Active network connection (for cloud sync)
-- SSH/SFTP server with port access
+- Windows 10 or 11  
+- .NET 8 Runtime  
+- Active network connection (for cloud sync)  
+- SSH/SFTP server with port access  
 
 ---
 
